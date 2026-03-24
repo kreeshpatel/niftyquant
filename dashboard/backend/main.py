@@ -3,27 +3,19 @@ NiftyQuant Dashboard — FastAPI Backend
 Run: uvicorn main:app --reload --port 8000
 """
 
-import sys
+import os
 import json
 import asyncio
-from pathlib import Path
 from datetime import datetime
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-
-# Add project paths
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
-sys.path.insert(0, str(PROJECT_ROOT))
 
 from ws_manager import WSManager
 from routers import overview, positions, signals, backtest, trades
 from config import RESULTS_DIR, INITIAL_CAPITAL
 
 app = FastAPI(title="NiftyQuant Dashboard", version="1.0.0")
-
-import os
 
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
@@ -32,7 +24,6 @@ ALLOWED_ORIGINS = [
 extra_origin = os.environ.get("ALLOWED_ORIGIN", "")
 if extra_origin:
     ALLOWED_ORIGINS.append(extra_origin)
-    # Also allow any vercel preview URLs
     if "vercel.app" in extra_origin:
         ALLOWED_ORIGINS.append("https://*.vercel.app")
 
@@ -58,12 +49,12 @@ def build_live_payload() -> dict:
     regime = {"regime": "UNKNOWN", "confidence": 0, "vix": 0, "breadth": 0, "nifty_rsi": 0}
 
     try:
-        pp = RESULTS_DIR / "paper_portfolio.json"
-        if pp.exists():
+        pp = os.path.join(RESULTS_DIR, "paper_portfolio.json")
+        if os.path.exists(pp):
             with open(pp) as f:
                 state = json.load(f)
-            positions = state.get("positions", {})
-            invested = sum(p.get("current_value", 0) for p in positions.values())
+            pos = state.get("positions", {})
+            invested = sum(p.get("current_value", 0) for p in pos.values())
             total = state.get("cash", INITIAL_CAPITAL) + invested
             peak = state.get("peak_value", total)
             portfolio = {
@@ -72,17 +63,8 @@ def build_live_payload() -> dict:
                 "invested": round(invested, 2),
                 "total_return_pct": round((total / INITIAL_CAPITAL - 1) * 100, 2),
                 "drawdown_pct": round((total - peak) / max(peak, 1) * 100, 2),
-                "n_positions": len(positions),
+                "n_positions": len(pos),
             }
-    except Exception:
-        pass
-
-    try:
-        from regime_detector import RegimeDetector
-        det = RegimeDetector()
-        r = det.detect()
-        regime = {"regime": r.regime, "confidence": r.confidence,
-                  "vix": r.vix_level, "breadth": r.breadth_ratio, "nifty_rsi": r.rsi_signal}
     except Exception:
         pass
 
