@@ -88,6 +88,16 @@ async def websocket_endpoint(ws: WebSocket):
         ws_manager.disconnect(ws)
 
 
+@app.get("/")
+def root():
+    return {"status": "NiftyQuant API running", "docs": "/docs"}
+
+
+@app.get("/health")
+def health_root():
+    return {"status": "ok", "timestamp": datetime.now().isoformat()}
+
+
 @app.get("/api/health")
 def health():
     return {"status": "ok", "timestamp": datetime.now().isoformat()}
