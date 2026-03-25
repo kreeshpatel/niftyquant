@@ -1,18 +1,26 @@
 {
-  "buildCommand": "cd dashboard/frontend && npm install && npm run build",
-  "outputDirectory": "dashboard/frontend/dist",
-  "framework": null,
-  "functions": {
-    "api/*.py": {
-      "runtime": "vercel-python@latest",
-      "maxDuration": 10
+  "version": 2,
+  "builds": [
+    {
+      "src": "dashboard/frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "api/*.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb"
+      }
     }
-  },
-  "rewrites": [
-    { "source": "/api/trades/stats", "destination": "/api/trades" },
-    { "source": "/api/trades/export", "destination": "/api/trades" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "routes": [
+    { "src": "/api/trades/stats", "dest": "/api/trades" },
+    { "src": "/api/trades/export", "dest": "/api/trades" },
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)", "dest": "/dashboard/frontend/dist/$1" }
   ],
   "headers": [
     {

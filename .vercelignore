@@ -1,0 +1,6 @@
+requirements.txt
+src/
+data/
+models/
+logs/
+dashboard/backend/
