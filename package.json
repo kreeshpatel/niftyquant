@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "dependencies": {
+    "csv-parse": "^6.2.1"
+  }
+}
