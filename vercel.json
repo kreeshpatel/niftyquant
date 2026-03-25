@@ -9,11 +9,8 @@
       }
     },
     {
-      "src": "api/*.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb"
-      }
+      "src": "api/*.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
