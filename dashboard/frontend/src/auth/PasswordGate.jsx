@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ACCESS_HASH } from './config'
+const ACCESS_HASH = import.meta.env.VITE_ACCESS_HASH
 
 const styles = {
   wrapper: {
