@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/*.js": {
-      "includeFiles": "results/**"
-    }
-  },
   "rewrites": [
     { "source": "/api/trades/stats", "destination": "/api/trades" },
     { "source": "/api/trades/export", "destination": "/api/trades" },
