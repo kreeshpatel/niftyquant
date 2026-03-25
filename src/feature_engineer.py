@@ -153,19 +153,79 @@ class FeatureEngineer:
 
         return df
 
+    # ── Group 7: Hybrid Dip Signals ───────────────────────
+
+    def _hybrid_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        # Dip condition A: RSI dip (current or within last 2 days)
+        rsi_low = df["rsi_14"] < 40
+        df["rsi_dip_signal"] = (
+            rsi_low | rsi_low.shift(1).fillna(False) | rsi_low.shift(2).fillna(False)
+        ).astype(int)
+
+        # Dip condition B: Bollinger dip
+        bb_now = df["bb_pct"] < 0.05
+        bb_recent = df["bb_pct"] < 0.10
+        df["bb_dip_signal"] = (
+            bb_now | bb_recent.shift(1).fillna(False) | bb_recent.shift(2).fillna(False)
+        ).astype(int)
+
+        # Dip condition C: Red candle cluster
+        red_candle = (df["Close"] < df["Open"]).astype(int)
+        red_count_5d = red_candle.rolling(5, min_periods=5).sum()
+        df["red_candle_signal"] = (
+            (red_count_5d >= 3) & (df["return_5d"] < -3.0)
+        ).astype(int)
+
+        # Combined dip scoring
+        df["dip_count"] = (
+            df["rsi_dip_signal"] + df["bb_dip_signal"] + df["red_candle_signal"]
+        )
+        df["dip_conviction"] = df["dip_count"].apply(
+            lambda x: 2 if x >= 2 else (1 if x == 1 else 0)
+        )
+
+        # Momentum regime flag
+        df["in_momentum_regime"] = (
+            (df["ema_21_above_50"] == 1)
+            & (df["price_vs_ema21_pct"] > 0)
+            & (df["adx_14"] > 25)
+            & (df["position_in_52w"] > 0.5)
+        ).astype(int)
+
+        # Key hybrid signal: momentum + dip
+        df["hybrid_signal"] = (
+            (df["in_momentum_regime"] == 1) & (df["dip_count"] >= 1)
+        ).astype(int)
+
+        return df
+
     # ── Target Label ─────────────────────────────────────
 
     def _target_label(self, df: pd.DataFrame) -> pd.DataFrame:
         df["future_return_10d"] = (df["Close"].shift(-10) - df["Close"]) / df["Close"] * 100
         df["target"] = (df["future_return_10d"] > 2.0).astype(float)
         df.loc[df["future_return_10d"].isna(), "target"] = float("nan")
+
+        # Hybrid target: did price hit +3% at any point in next 20 days?
+        highs = df["High"]
+        close = df["Close"]
+        max_future_high = pd.Series(index=df.index, dtype=float)
+        for i in range(len(df)):
+            window = highs.iloc[i + 1 : i + 21]
+            if len(window) > 0:
+                max_future_high.iloc[i] = window.max()
+            else:
+                max_future_high.iloc[i] = float("nan")
+        df["hybrid_target"] = (max_future_high >= close * 1.03).astype(float)
+        df.loc[max_future_high.isna(), "hybrid_target"] = float("nan")
+
         return df
 
     # ── Validation ───────────────────────────────────────
 
     def _validate(self, df: pd.DataFrame, ticker: str) -> list[str]:
         warnings = []
-        feature_cols = [c for c in df.columns if c not in ("future_return_10d", "target")]
+        feature_cols = [c for c in df.columns if c not in ("future_return_10d", "target", "hybrid_target")]
         for col in feature_cols:
             nan_pct = df[col].isna().sum() / len(df)
             if nan_pct > 0.05:
@@ -185,6 +245,7 @@ class FeatureEngineer:
         df = self._volume_features(df)
         df = self._price_action_features(df)
         df = self._support_resistance_features(df)
+        df = self._hybrid_features(df)
         df = self._target_label(df)
 
         df = df.iloc[WARMUP_ROWS:]

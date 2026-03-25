@@ -103,18 +103,20 @@ class BacktestResult:
 
 class Backtester:
 
-    def __init__(self, use_ml: bool = False):
+    def __init__(self, use_ml: bool = False, use_hybrid: bool = False):
         self.feature_dir = FEATURES_DIR
         self.results_dir = RESULTS_DIR
         self.use_ml = use_ml
+        self.use_hybrid = use_hybrid
         self.ml_model = None
         self.stock_data: dict[str, pd.DataFrame] = {}
         self._load_all_features()
-        if use_ml:
+        if use_ml or use_hybrid:
             from ml_model import MLModel
             self.ml_model = MLModel()
             self.ml_model.load()
-            print(f"  ML model loaded (threshold={BUY_THRESHOLD})")
+            print(f"  ML model loaded ({len(self.ml_model.feature_columns)} features, "
+                  f"threshold={BUY_THRESHOLD})")
 
     def _load_all_features(self):
         print("Loading feature data...")
@@ -146,6 +148,14 @@ class Backtester:
             and row.get("volume_spike", 0) == 0
         )
 
+    def _check_hybrid_entry(self, row: pd.Series) -> bool:
+        return (
+            row.get("in_momentum_regime", 0) == 1
+            and row.get("hybrid_signal", 0) == 1
+            and row.get("dip_conviction", 0) >= 1
+            and row.get("volume_ratio", 0) > 0.8
+        )
+
     def _fetch_nifty(self, start: pd.Timestamp, end: pd.Timestamp) -> pd.Series:
         print("  Fetching Nifty 50 index benchmark (^NSEI)...")
         raw = yf.download("^NSEI", start=start, end=end + pd.Timedelta(days=5), progress=False)
@@ -175,6 +185,11 @@ class Backtester:
         entry_plot_dates = []
         exit_plot_dates = []
 
+        # Hybrid constants
+        HYBRID_ATR_STOP = 1.5
+        HYBRID_ATR_TARGET = 3.0
+        HYBRID_RISK_PCT = 0.015
+
         for i, date in enumerate(dates):
             # ── Check exits first ────────────────────────
             tickers_to_close = []
@@ -190,20 +205,40 @@ class Backtester:
                 exit_reason = None
                 exit_date = date
 
-                # 1. ATR stop-loss
-                if row["Low"] <= pos.atr_stop:
-                    exit_price = pos.atr_stop
-                    exit_reason = "stop_loss"
-
-                # 2. EMA cross down → exit at next day's Open
-                elif row.get("ema_cross_down", 0) == 1:
-                    next_dates = dates[dates > date]
-                    if len(next_dates) > 0:
-                        next_date = next_dates[0]
-                        if next_date in df.index:
-                            exit_price = df.loc[next_date, "Open"]
-                            exit_date = next_date
-                            exit_reason = "ema_reversal"
+                if self.use_hybrid:
+                    # Hybrid exit 1: Target hit (high reaches target)
+                    target_price = pos.entry_price + HYBRID_ATR_TARGET * (pos.entry_price - pos.atr_stop) / HYBRID_ATR_STOP
+                    if row["High"] >= target_price:
+                        exit_price = round(target_price, 2)
+                        exit_reason = "target_hit"
+                    # Hybrid exit 2: EMA cross down → next open
+                    elif row.get("ema_cross_down", 0) == 1:
+                        next_dates = dates[dates > date]
+                        if len(next_dates) > 0:
+                            next_date = next_dates[0]
+                            if next_date in df.index:
+                                exit_price = df.loc[next_date, "Open"]
+                                exit_date = next_date
+                                exit_reason = "ema_reversal"
+                    # Hybrid exit 3: Stop loss (low breaches stop)
+                    elif row["Low"] <= pos.atr_stop:
+                        exit_price = pos.atr_stop
+                        exit_reason = "stop_loss"
+                else:
+                    # Original exit logic
+                    # 1. ATR stop-loss
+                    if row["Low"] <= pos.atr_stop:
+                        exit_price = pos.atr_stop
+                        exit_reason = "stop_loss"
+                    # 2. EMA cross down → exit at next day's Open
+                    elif row.get("ema_cross_down", 0) == 1:
+                        next_dates = dates[dates > date]
+                        if len(next_dates) > 0:
+                            next_date = next_dates[0]
+                            if next_date in df.index:
+                                exit_price = df.loc[next_date, "Open"]
+                                exit_date = next_date
+                                exit_reason = "ema_reversal"
 
                 if exit_price is not None and exit_reason is not None:
                     proceeds = pos.shares * exit_price * (1 - BROKERAGE_PCT - STT_PCT)
@@ -238,13 +273,21 @@ class Backtester:
                         continue
                     row = df.loc[date]
 
-                    if not self._check_entry(row):
-                        continue
+                    if self.use_hybrid:
+                        if not self._check_hybrid_entry(row):
+                            continue
+                    else:
+                        if not self._check_entry(row):
+                            continue
 
                     # ML filter — score directly from loaded row
                     ml_score = 0.0
-                    if self.use_ml and self.ml_model is not None:
-                        row_df = df.loc[[date], self.ml_model.feature_columns]
+                    if (self.use_ml or self.use_hybrid) and self.ml_model is not None:
+                        feat_cols = self.ml_model.feature_columns
+                        available = [c for c in feat_cols if c in df.columns]
+                        if len(available) < len(feat_cols):
+                            continue
+                        row_df = df.loc[[date], feat_cols]
                         if row_df.isna().any(axis=1).iloc[0]:
                             continue
                         ml_score = float(
@@ -268,40 +311,71 @@ class Backtester:
                     if entry_price <= 0:
                         continue
 
-                    # Position sizing
-                    portfolio_value = cash + sum(
-                        p.shares * self.stock_data[p.ticker].loc[date, "Close"]
-                        for p in positions.values()
-                        if date in self.stock_data[p.ticker].index
-                    )
-                    open_count = len(positions)
-                    slots_left = MAX_POSITIONS - open_count
-                    if slots_left <= 0:
-                        break
-
-                    score = self._signal_score(row)
-                    base_alloc = cash / slots_left
-                    pos_size = base_alloc * (0.5 + score)
-                    pos_size = min(pos_size, portfolio_value * MAX_POSITION_PCT)
-
-                    actual_cost_per_share = entry_price * (1 + BROKERAGE_PCT)
-                    shares = math.floor(pos_size / actual_cost_per_share)
-                    if shares <= 0:
-                        continue
-                    actual_cost = shares * actual_cost_per_share
-
-                    if actual_cost > cash or cash < 5000:
+                    atr = row.get("atr_14", 0)
+                    if atr <= 0:
                         continue
 
-                    atr_stop = round(entry_price - ATR_STOP_MULTIPLIER * row["atr_14"], 2)
+                    if self.use_hybrid:
+                        # Hybrid sizing: 1.5% risk model
+                        portfolio_value = cash + sum(
+                            p.shares * self.stock_data[p.ticker].loc[date, "Close"]
+                            for p in positions.values()
+                            if date in self.stock_data[p.ticker].index
+                        )
+                        risk_amount = portfolio_value * HYBRID_RISK_PCT
+                        atr_stop = round(entry_price - HYBRID_ATR_STOP * atr, 2)
+                        risk_per_share = entry_price - atr_stop
+                        if risk_per_share <= 0:
+                            continue
+
+                        shares = math.floor(risk_amount / risk_per_share)
+                        if shares <= 0:
+                            continue
+
+                        pos_size = shares * entry_price * (1 + BROKERAGE_PCT)
+                        max_pos = portfolio_value * MAX_POSITION_PCT
+                        if pos_size > max_pos:
+                            shares = math.floor(max_pos / (entry_price * (1 + BROKERAGE_PCT)))
+                            pos_size = shares * entry_price * (1 + BROKERAGE_PCT)
+                        if shares <= 0 or pos_size > cash or cash < 5000:
+                            continue
+
+                        score = ml_score
+                    else:
+                        # Original sizing
+                        portfolio_value = cash + sum(
+                            p.shares * self.stock_data[p.ticker].loc[date, "Close"]
+                            for p in positions.values()
+                            if date in self.stock_data[p.ticker].index
+                        )
+                        open_count = len(positions)
+                        slots_left = MAX_POSITIONS - open_count
+                        if slots_left <= 0:
+                            break
+
+                        score = self._signal_score(row)
+                        base_alloc = cash / slots_left
+                        pos_size = base_alloc * (0.5 + score)
+                        pos_size = min(pos_size, portfolio_value * MAX_POSITION_PCT)
+
+                        actual_cost_per_share = entry_price * (1 + BROKERAGE_PCT)
+                        shares = math.floor(pos_size / actual_cost_per_share)
+                        if shares <= 0:
+                            continue
+                        pos_size = shares * actual_cost_per_share
+
+                        if pos_size > cash or cash < 5000:
+                            continue
+
+                        atr_stop = round(entry_price - ATR_STOP_MULTIPLIER * atr, 2)
 
                     positions[ticker] = Position(
                         ticker=ticker, entry_date=next_date,
                         entry_price=entry_price, shares=shares,
-                        position_size=round(actual_cost, 2),
+                        position_size=round(pos_size, 2),
                         signal_score=round(score, 4), atr_stop=atr_stop,
                     )
-                    cash -= actual_cost
+                    cash -= pos_size
                     entry_plot_dates.append(next_date)
 
             # ── Mark-to-market ───────────────────────────
@@ -494,22 +568,120 @@ class Backtester:
         print(f"  +{eq}+")
 
 
+def run_comparison(start_date="2022-01-01", end_date="2026-03-24"):
+    """Run 3-way backtest comparison: Rules-only vs Rules+ML vs Hybrid."""
+    results = {}
+
+    # ── Backtest A: Rules only ──────────────────────
+    print(f"\n{'#'*70}")
+    print(f"  BACKTEST A: Rules-Only (no ML)")
+    print(f"{'#'*70}")
+    bt_a = Backtester(use_ml=False, use_hybrid=False)
+    results["rules"] = bt_a.run(start_date, end_date)
+
+    # ── Backtest B: Rules + ML ──────────────────────
+    print(f"\n{'#'*70}")
+    print(f"  BACKTEST B: Rules + ML Filter")
+    print(f"{'#'*70}")
+    bt_b = Backtester(use_ml=True, use_hybrid=False)
+    results["rules_ml"] = bt_b.run(start_date, end_date)
+
+    # ── Backtest C: Hybrid ──────────────────────────
+    print(f"\n{'#'*70}")
+    print(f"  BACKTEST C: Hybrid Dip Strategy")
+    print(f"{'#'*70}")
+    bt_c = Backtester(use_ml=True, use_hybrid=True)
+    results["hybrid"] = bt_c.run(start_date, end_date)
+
+    # ── Comparison table ────────────────────────────
+    ra = results["rules"]
+    rb = results["rules_ml"]
+    rc = results["hybrid"]
+
+    w = 66
+    eq = "=" * w
+    ln = "-" * w
+    print(f"\n  +{eq}+")
+    print(f"  |{'3-WAY BACKTEST COMPARISON':^{w}}|")
+    print(f"  +{eq}+")
+    print(f"  | {'Metric':<24}{'Rules':>12}{'Rules+ML':>14}{'Hybrid':>14} |")
+    print(f"  +{ln}+")
+
+    rows = [
+        ("Total Return",     f"{ra.total_return_pct:+.1f}%",   f"{rb.total_return_pct:+.1f}%",   f"{rc.total_return_pct:+.1f}%"),
+        ("Annualised Return", f"{ra.annualised_return_pct:+.1f}%", f"{rb.annualised_return_pct:+.1f}%", f"{rc.annualised_return_pct:+.1f}%"),
+        ("Sharpe Ratio",     f"{ra.sharpe_ratio:.2f}",        f"{rb.sharpe_ratio:.2f}",        f"{rc.sharpe_ratio:.2f}"),
+        ("Max Drawdown",     f"{ra.max_drawdown_pct:.1f}%",   f"{rb.max_drawdown_pct:.1f}%",   f"{rc.max_drawdown_pct:.1f}%"),
+        ("Total Trades",     f"{ra.total_trades}",            f"{rb.total_trades}",            f"{rc.total_trades}"),
+        ("Win Rate",         f"{ra.win_rate_pct:.1f}%",       f"{rb.win_rate_pct:.1f}%",       f"{rc.win_rate_pct:.1f}%"),
+        ("Avg Win",          f"{ra.avg_win_pct:+.1f}%",       f"{rb.avg_win_pct:+.1f}%",       f"{rc.avg_win_pct:+.1f}%"),
+        ("Avg Loss",         f"{ra.avg_loss_pct:+.1f}%",      f"{rb.avg_loss_pct:+.1f}%",      f"{rc.avg_loss_pct:+.1f}%"),
+        ("Profit Factor",    f"{ra.profit_factor:.2f}",        f"{rb.profit_factor:.2f}",        f"{rc.profit_factor:.2f}"),
+        ("Avg Hold Days",    f"{ra.avg_hold_days:.1f}",        f"{rb.avg_hold_days:.1f}",        f"{rc.avg_hold_days:.1f}"),
+    ]
+    for label, va, vb, vc in rows:
+        print(f"  | {label:<24}{va:>12}{vb:>14}{vc:>14} |")
+    print(f"  +{eq}+")
+
+    # ── Year-by-year for Hybrid (Backtest C) ────────
+    if rc.total_trades > 0 and len(rc.trade_log) > 0:
+        print(f"\n  +{eq}+")
+        print(f"  |{'HYBRID STRATEGY — YEAR-BY-YEAR':^{w}}|")
+        print(f"  +{eq}+")
+        print(f"  | {'Year':<8}{'Trades':>8}{'Win Rate':>12}{'Avg Return':>14}{'Total PnL':>14} |")
+        print(f"  +{ln}+")
+
+        tl = rc.trade_log.copy()
+        tl["year"] = pd.to_datetime(tl["entry_date"]).dt.year
+        for year in sorted(tl["year"].unique()):
+            yt = tl[tl["year"] == year]
+            n = len(yt)
+            wins = (yt["net_pnl"] > 0).sum()
+            wr = wins / n * 100 if n > 0 else 0
+            avg_r = yt["return_pct"].mean()
+            total_pnl = yt["net_pnl"].sum()
+            print(f"  | {year:<8}{n:>8}{wr:>11.1f}%{avg_r:>+13.2f}%{total_pnl:>+13,.0f} |")
+        print(f"  +{eq}+")
+
+    # ── Save hybrid trade log ───────────────────────
+    if len(rc.trade_log) > 0:
+        hybrid_path = RESULTS_DIR / "hybrid_trade_log.csv"
+        rc.trade_log.to_csv(hybrid_path, index=False)
+        print(f"\n  Hybrid trade log saved to {hybrid_path}")
+
+    # ── Save comparison equity curves ───────────────
+    eq_df = pd.DataFrame({
+        "date": ra.equity_curve.index,
+        "rules_only": ra.equity_curve.values,
+    }).set_index("date")
+
+    # Align all curves to same index
+    eq_df["rules_ml"] = rb.equity_curve.reindex(eq_df.index).values
+    eq_df["hybrid"] = rc.equity_curve.reindex(eq_df.index).values
+    eq_df = eq_df.ffill()
+
+    eq_path = RESULTS_DIR / "comparison_equity.csv"
+    eq_df.to_csv(eq_path)
+    print(f"  Comparison equity curves saved to {eq_path}")
+
+    return results
+
+
 if __name__ == "__main__":
-    bt = Backtester()
-
-    # Use full available date range from features
-    result = bt.run("2024-06-26", "2026-03-24")
-
-    Backtester.print_report(result)
-    bt.plot_equity_curve(result)
-    bt.save_trade_log(result)
-
-    # Show trade log sample
-    tl = result.trade_log
-    if len(tl) > 0:
-        print(f"\n  TRADE LOG — First 10 trades:")
-        print(tl.head(10).to_string(index=False))
-        print(f"\n  TRADE LOG — Last 10 trades:")
-        print(tl.tail(10).to_string(index=False))
+    if "--compare" in sys.argv:
+        run_comparison()
     else:
-        print("\n  No trades were executed.")
+        bt = Backtester()
+        result = bt.run("2022-01-01", "2026-03-24")
+        Backtester.print_report(result)
+        bt.plot_equity_curve(result)
+        bt.save_trade_log(result)
+
+        tl = result.trade_log
+        if len(tl) > 0:
+            print(f"\n  TRADE LOG — First 10 trades:")
+            print(tl.head(10).to_string(index=False))
+            print(f"\n  TRADE LOG — Last 10 trades:")
+            print(tl.tail(10).to_string(index=False))
+        else:
+            print("\n  No trades were executed.")

@@ -1,0 +1,12 @@
+{
+  "adx_threshold": 30.0,
+  "rsi_dip_level": 45.0,
+  "atr_stop_mult": 2.0,
+  "atr_target_mult": 3.5,
+  "momentum_score_min": 0.6,
+  "bb_dip_level": 0.15,
+  "optimized_on": "2026-03-25",
+  "lookback_days": 90,
+  "top_score": 0.0,
+  "n_trades_in_window": 1
+}

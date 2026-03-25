@@ -54,6 +54,52 @@ def run_daily():
     fe = FeatureEngineer()
     fe.compute_all(force=False)
 
+    # Step 3b — Adaptive engine scan
+    print("\n  Step 3b: Running adaptive engine (bandit + optimizer + online ML)...")
+    import json as _json
+    from adaptive_engine import AdaptiveEngine, print_adaptive_plans
+
+    engine = AdaptiveEngine()
+    status = engine.get_engine_status()
+    print(f"  Active model: {status['active_model']} (AUC: {status['model_auc']:.3f})")
+    params = status["current_params"]
+    print(f"  Params: ADX>{params.get('adx_threshold', 25)} "
+          f"RSI<{params.get('rsi_dip_level', 40)} "
+          f"Stop={params.get('atr_stop_mult', 1.5)}xATR")
+    print(f"  Next optimization in: {status['next_optimization_in']}")
+
+    adaptive_plans = engine.run_daily(
+        portfolio_value=INITIAL_CAPITAL,
+        open_positions=[],
+        regime="BULL",  # will be overridden by regime detection below
+    )
+    print(f"  Adaptive plans generated: {len(adaptive_plans)}")
+
+    if adaptive_plans:
+        print_adaptive_plans(adaptive_plans)
+
+    # Convert adaptive plans to signals JSON
+    hybrid_signals_json = []
+    for p in adaptive_plans:
+        hybrid_signals_json.append({
+            "ticker": p["ticker"],
+            "conviction": p["conviction"],
+            "dip_reason": p["dip_reason"],
+            "entry": p["entry"],
+            "stop": p["stop"],
+            "target": p["target"],
+            "stop_pct": p["stop_pct"],
+            "target_pct": p["target_pct"],
+            "rr": p["rr"],
+            "shares": p["shares"],
+            "capital": p["position_value"],
+            "hold_days": p["hold_days"],
+            "expected_value_pct": p["expected_value_pct"],
+            "strategy": "ADAPTIVE",
+            "ml_score": p.get("ml_score", 0),
+            "size_multiplier": p.get("size_multiplier", 1.0),
+        })
+
     # Step 4 — Regime detection
     print("\n  Step 4: Detecting market regime...")
     from regime_detector import RegimeDetector
@@ -87,18 +133,36 @@ def run_daily():
     if circuit_active:
         print("  CIRCUIT BREAKER ACTIVE. No new entries today.")
 
-    # Step 7 — Signal scan and entries
+    # Step 7 — ML signal scan and entries
     n_entries = 0
     n_signals = 0
+    ml_signals_json = []
     if regime != "BEAR" and not circuit_active:
-        print("\n  Step 7: Scanning for entry signals...")
+        print("\n  Step 7: Scanning for ML entry signals (MOMENTUM_CROSSOVER)...")
         signals = pt.scan_signals(regime=regime)
         n_signals = len(signals)
-        print(f"  Signals found: {n_signals} candidates")
+        print(f"  ML signals found: {n_signals} candidates")
 
         for sig in signals:
             print(f"    {sig.ticker}: ML={sig.ml_score:.3f} | "
                   f"Entry={sig.entry_price:.2f} | Sector={sig.sector}")
+
+            ml_signals_json.append({
+                "ticker": sig.ticker,
+                "conviction": "ML",
+                "dip_reason": f"ML score {sig.ml_score:.3f}",
+                "entry": round(sig.entry_price, 2),
+                "stop": round(sig.atr_stop, 2),
+                "target": 0,
+                "stop_pct": 0,
+                "target_pct": 0,
+                "rr": 0,
+                "shares": 0,
+                "capital": 0,
+                "hold_days": 10,
+                "expected_value_pct": 0,
+                "strategy": "MOMENTUM_CROSSOVER",
+            })
 
             decision = rm.can_enter(
                 ticker=sig.ticker, sector=sig.sector,
@@ -119,7 +183,15 @@ def run_daily():
             else:
                 print(f"    -> BLOCKED: {decision.reason}")
     elif regime == "BEAR":
-        print("\n  Step 7: BEAR regime — skipping signal scan.")
+        print("\n  Step 7: BEAR regime — skipping ML signal scan.")
+
+    # Save combined signals (hybrid + ML) to signals_today.json
+    all_signals = hybrid_signals_json + ml_signals_json
+    signals_path = RESULTS_DIR / "signals_today.json"
+    with open(signals_path, "w") as f:
+        _json.dump(all_signals, f, indent=2)
+    print(f"\n  Saved {len(all_signals)} signals -> {signals_path}")
+    print(f"    HYBRID_DIP: {len(hybrid_signals_json)} | MOMENTUM_CROSSOVER: {len(ml_signals_json)}")
 
     # Step 8 — Scan exits
     print("\n  Step 8: Scanning for exits...")

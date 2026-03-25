@@ -36,6 +36,9 @@ MODEL_PATH = MODELS_DIR / "rf_model.pkl"
 FEATURE_COLS_PATH = MODELS_DIR / "feature_columns.pkl"
 METADATA_PATH = MODELS_DIR / "model_metadata.json"
 
+MODEL_V1_PATH = MODELS_DIR / "rf_model_v1.pkl"
+MODEL_V2_PATH = MODELS_DIR / "rf_model_v2.pkl"
+
 RETRAIN_INTERVAL_DAYS = 90
 TRAIN_CUTOFF = "2024-01-01"
 
@@ -67,6 +70,13 @@ FEATURE_COLUMNS = [
     "dist_from_52w_high", "dist_from_52w_low", "position_in_52w",
 ]
 
+HYBRID_FEATURE_COLUMNS = FEATURE_COLUMNS + [
+    # Hybrid dip signals (7)
+    "rsi_dip_signal", "bb_dip_signal", "red_candle_signal",
+    "dip_count", "dip_conviction",
+    "in_momentum_regime", "hybrid_signal",
+]
+
 # Color groups for plotting
 FEATURE_GROUPS = {
     "Trend": ["ema_9", "ema_21", "ema_50", "ema_9_above_21", "ema_21_above_50",
@@ -82,6 +92,8 @@ FEATURE_GROUPS = {
                       "hl_range_pct", "body_pct"],
     "Support/Resistance": ["high_52w", "low_52w", "dist_from_52w_high",
                             "dist_from_52w_low", "position_in_52w"],
+    "Hybrid Dip": ["rsi_dip_signal", "bb_dip_signal", "red_candle_signal",
+                    "dip_count", "dip_conviction", "in_momentum_regime", "hybrid_signal"],
 }
 
 GROUP_COLORS = {
@@ -89,6 +101,7 @@ GROUP_COLORS = {
     "Momentum": "#009688", "Stochastic": "#00796B",
     "Volatility": "#9C27B0", "Volume": "#FF8F00",
     "Price Action": "#FF5722", "Support/Resistance": "#4CAF50",
+    "Hybrid Dip": "#E91E63",
 }
 
 
@@ -108,12 +121,13 @@ class MLModel:
 
     # ── Metadata & retrain schedule ──────────────────────
 
-    def _save_metadata(self):
+    def _save_metadata(self, version="v1"):
         self.last_trained = datetime.now()
         meta = {
             "last_trained": self.last_trained.isoformat(),
             "retrain_interval_days": RETRAIN_INTERVAL_DAYS,
             "n_features": len(self.feature_columns),
+            "model_version": version,
         }
         with open(METADATA_PATH, "w") as f:
             json.dump(meta, f, indent=2)
@@ -175,13 +189,18 @@ class MLModel:
         print(f"  Loaded {len(frames)} stocks, {len(master):,} total rows")
         return master
 
-    def _prepare_dataset(self, master: pd.DataFrame):
-        # Drop rows without target
-        df = master.dropna(subset=["target"]).copy()
+    def _prepare_dataset(self, master: pd.DataFrame, target_col="target"):
+        # Drop rows without the specified target
+        df = master.dropna(subset=[target_col]).copy()
 
-        # Keep only feature columns + target + future_return
-        keep = self.feature_columns + ["target", "future_return_10d", "ticker"]
-        df = df[keep].copy()
+        # Keep only feature columns + targets + future_return
+        keep_cols = list(set(
+            self.feature_columns
+            + [target_col, "target", "future_return_10d", "ticker"]
+            + (["hybrid_target"] if "hybrid_target" in df.columns else [])
+        ))
+        keep_cols = [c for c in keep_cols if c in df.columns]
+        df = df[keep_cols].copy()
 
         # Drop rows with NaN in any feature
         before = len(df)
@@ -652,14 +671,143 @@ class WalkForwardValidator:
         print(f"  Walk-forward chart saved to {path}")
 
 
-if __name__ == "__main__":
-    ml = MLModel()
-    ml.train()
-
-    # Top signals today
+def compare_models():
+    """Train v1 (original) and v2 (hybrid) side-by-side and report."""
     print(f"\n{'='*70}")
-    print("  TOP 5 HIGHEST-SCORING STOCKS (latest date)")
-    print(f"{'='*70}")
-    top = ml.top_signals_today(5)
-    print(top.to_string(index=False))
-    print()
+    print("  MODEL COMPARISON: v1 (original) vs v2 (hybrid)")
+    print(f"{'='*70}\n")
+
+    # ── v1: original features, original target ───────
+    print("  --- Training v1 (original features, target=2% in 10d) ---")
+    v1 = MLModel()
+    v1.feature_columns = FEATURE_COLUMNS
+    master = v1._load_all_features()
+
+    # Check if hybrid columns exist
+    has_hybrid = "hybrid_target" in master.columns and "hybrid_signal" in master.columns
+    if not has_hybrid:
+        print("  ERROR: hybrid features not found. Run feature_engineer.py --force first.")
+        return
+
+    train1, test1 = v1._prepare_dataset(master, target_col="target")
+    X_tr1 = train1[FEATURE_COLUMNS].values
+    y_tr1 = train1["target"].values.astype(int)
+    X_te1 = test1[FEATURE_COLUMNS].values
+    y_te1 = test1["target"].values.astype(int)
+
+    rf1 = RandomForestClassifier(
+        n_estimators=500, max_depth=8, min_samples_leaf=50,
+        max_features="sqrt", class_weight="balanced",
+        random_state=42, n_jobs=-1,
+    )
+    rf1.fit(X_tr1, y_tr1)
+    y_prob1 = rf1.predict_proba(X_te1)[:, 1]
+    auc1 = roc_auc_score(y_te1, y_prob1)
+    joblib.dump(rf1, MODEL_V1_PATH)
+    print(f"  v1 saved to {MODEL_V1_PATH}")
+
+    # ── v2: hybrid features, hybrid target ───────────
+    print("\n  --- Training v2 (hybrid features, target=3% high in 20d) ---")
+    v2 = MLModel()
+    v2.feature_columns = HYBRID_FEATURE_COLUMNS
+
+    train2, test2 = v2._prepare_dataset(master, target_col="hybrid_target")
+    X_tr2 = train2[HYBRID_FEATURE_COLUMNS].values
+    y_tr2 = train2["hybrid_target"].values.astype(int)
+    X_te2 = test2[HYBRID_FEATURE_COLUMNS].values
+    y_te2 = test2["hybrid_target"].values.astype(int)
+
+    rf2 = RandomForestClassifier(
+        n_estimators=500, max_depth=8, min_samples_leaf=50,
+        max_features="sqrt", class_weight="balanced",
+        random_state=42, n_jobs=-1,
+    )
+    rf2.fit(X_tr2, y_tr2)
+    y_prob2 = rf2.predict_proba(X_te2)[:, 1]
+    auc2 = roc_auc_score(y_te2, y_prob2)
+    joblib.dump(rf2, MODEL_V2_PATH)
+    print(f"  v2 saved to {MODEL_V2_PATH}")
+
+    # ── Side-by-side comparison ──────────────────────
+    thr = BUY_THRESHOLD
+
+    def _stats(y_true, y_prob, future_ret=None):
+        mask = y_prob >= thr
+        n_sig = mask.sum()
+        if n_sig > 0:
+            prec = (y_true[mask] == 1).sum() / n_sig * 100
+            wr = prec  # precision at threshold = win rate
+        else:
+            prec = wr = 0.0
+        return n_sig, prec, wr
+
+    n1, prec1, wr1 = _stats(y_te1, y_prob1)
+    n2, prec2, wr2 = _stats(y_te2, y_prob2)
+
+    w = 58
+    eq = "=" * w
+    ln = "-" * w
+    print(f"\n  +{eq}+")
+    print(f"  |{'MODEL COMPARISON':^{w}}|")
+    print(f"  +{eq}+")
+    print(f"  | {'Metric':<30} {'v1 (orig)':>12} {'v2 (hybrid)':>12} |")
+    print(f"  +{ln}+")
+    print(f"  | {'ROC-AUC':<30} {auc1:>12.4f} {auc2:>12.4f} |")
+    print(f"  | {'Precision @ threshold':<30} {prec1:>11.1f}% {prec2:>11.1f}% |")
+    print(f"  | {'Win rate @ threshold':<30} {wr1:>11.1f}% {wr2:>11.1f}% |")
+    print(f"  | {'Signal count':<30} {n1:>12,} {n2:>12,} |")
+    print(f"  | {'Features':<30} {len(FEATURE_COLUMNS):>12} {len(HYBRID_FEATURE_COLUMNS):>12} |")
+    print(f"  | {'Target':<30} {'2% / 10d':>12} {'3% high/20d':>12} |")
+    print(f"  +{eq}+")
+
+    # ── Set active model ─────────────────────────────
+    if auc2 >= auc1:
+        winner = "v2_hybrid"
+        print(f"\n  v2 wins (AUC {auc2:.4f} >= {auc1:.4f})")
+        print("  Setting v2 as active model...")
+        v2.model = rf2
+        v2.feature_columns = HYBRID_FEATURE_COLUMNS
+        joblib.dump(rf2, MODEL_PATH)
+        joblib.dump(HYBRID_FEATURE_COLUMNS, FEATURE_COLS_PATH)
+        v2._save_metadata(version="v2_hybrid")
+
+        # Save v2 feature importance
+        importances = pd.DataFrame({
+            "feature": HYBRID_FEATURE_COLUMNS,
+            "importance": rf2.feature_importances_,
+        }).sort_values("importance", ascending=False)
+        importances.to_csv(RESULTS_DIR / "feature_importance.csv", index=False)
+    else:
+        winner = "v1"
+        print(f"\n  v1 wins (AUC {auc1:.4f} > {auc2:.4f})")
+        print("  Keeping v1 as active model.")
+        v1.model = rf1
+        v1.feature_columns = FEATURE_COLUMNS
+        joblib.dump(rf1, MODEL_PATH)
+        joblib.dump(FEATURE_COLUMNS, FEATURE_COLS_PATH)
+        v1._save_metadata(version="v1")
+
+        importances = pd.DataFrame({
+            "feature": FEATURE_COLUMNS,
+            "importance": rf1.feature_importances_,
+        }).sort_values("importance", ascending=False)
+        importances.to_csv(RESULTS_DIR / "feature_importance.csv", index=False)
+
+    print(f"  Active model: {winner}\n")
+    return {"v1_auc": auc1, "v2_auc": auc2, "winner": winner}
+
+
+if __name__ == "__main__":
+    if "--compare" in sys.argv:
+        compare_models()
+    else:
+        ml = MLModel()
+        ml.train()
+
+        # Top signals today
+        print(f"\n{'='*70}")
+        print("  TOP 5 HIGHEST-SCORING STOCKS (latest date)")
+        print(f"{'='*70}")
+        top = ml.top_signals_today(5)
+        print(top.to_string(index=False))
+        print()
