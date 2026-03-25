@@ -1,6 +1,6 @@
 requirements.txt
-src/
-data/
-models/
-logs/
-dashboard/backend/
+/src/
+/data/
+/models/
+/logs/
+/dashboard/backend/
