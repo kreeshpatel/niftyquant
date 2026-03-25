@@ -1,11 +1,10 @@
 """Overview API — portfolio metrics and equity curve."""
 
-import os
-import json
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
-from config import RESULTS_DIR, INITIAL_CAPITAL
+from config import INITIAL_CAPITAL
+from github_data import fetch_github_json, fetch_github_csv, fetch_github_file
 
 router = APIRouter(tags=["overview"])
 
@@ -21,10 +20,8 @@ def get_overview():
              "avg_win": 0, "avg_loss": 0, "avg_hold_days": 0, "sharpe_ratio": 0}
 
     try:
-        pp = os.path.join(RESULTS_DIR, "paper_portfolio.json")
-        if os.path.exists(pp):
-            with open(pp) as f:
-                state = json.load(f)
+        state = fetch_github_json("results/paper_portfolio.json")
+        if state:
             positions = state.get("positions", {})
             invested = sum(p.get("current_value", 0) for p in positions.values())
             total = state.get("cash", INITIAL_CAPITAL) + invested
@@ -42,10 +39,8 @@ def get_overview():
         pass
 
     try:
-        import pandas as pd
-        hist = os.path.join(RESULTS_DIR, "portfolio_history.csv")
-        if os.path.exists(hist):
-            df = pd.read_csv(hist)
+        df = fetch_github_csv("results/portfolio_history.csv")
+        if df is not None and not df.empty:
             for _, row in df.tail(500).iterrows():
                 equity_curve.append({
                     "date": row.get("date", ""),
@@ -56,21 +51,18 @@ def get_overview():
         pass
 
     try:
-        import pandas as pd
-        tl_path = os.path.join(RESULTS_DIR, "trade_log.csv")
-        if os.path.exists(tl_path):
-            tl = pd.read_csv(tl_path)
-            if not tl.empty and "return_pct" in tl.columns:
-                wins = tl[tl["return_pct"] > 0]
-                losses = tl[tl["return_pct"] <= 0]
-                stats["total_trades"] = len(tl)
-                stats["win_rate"] = round(len(wins) / len(tl) * 100, 1) if len(tl) > 0 else 0
-                stats["avg_win"] = round(wins["return_pct"].mean(), 2) if len(wins) > 0 else 0
-                stats["avg_loss"] = round(losses["return_pct"].mean(), 2) if len(losses) > 0 else 0
-                gw = wins["net_pnl"].sum() if "net_pnl" in tl.columns and len(wins) > 0 else 0
-                gl = abs(losses["net_pnl"].sum()) if "net_pnl" in tl.columns and len(losses) > 0 else 1
-                stats["profit_factor"] = round(gw / gl, 2) if gl > 0 else 0
-                stats["avg_hold_days"] = round(tl["hold_days"].mean(), 1) if "hold_days" in tl.columns else 0
+        tl = fetch_github_csv("results/trade_log.csv")
+        if tl is not None and not tl.empty and "return_pct" in tl.columns:
+            wins = tl[tl["return_pct"] > 0]
+            losses = tl[tl["return_pct"] <= 0]
+            stats["total_trades"] = len(tl)
+            stats["win_rate"] = round(len(wins) / len(tl) * 100, 1) if len(tl) > 0 else 0
+            stats["avg_win"] = round(wins["return_pct"].mean(), 2) if len(wins) > 0 else 0
+            stats["avg_loss"] = round(losses["return_pct"].mean(), 2) if len(losses) > 0 else 0
+            gw = wins["net_pnl"].sum() if "net_pnl" in tl.columns and len(wins) > 0 else 0
+            gl = abs(losses["net_pnl"].sum()) if "net_pnl" in tl.columns and len(losses) > 0 else 1
+            stats["profit_factor"] = round(gw / gl, 2) if gl > 0 else 0
+            stats["avg_hold_days"] = round(tl["hold_days"].mean(), 1) if "hold_days" in tl.columns else 0
     except Exception:
         pass
 
@@ -80,10 +72,9 @@ def get_overview():
 @router.get("/overview/tearsheet", response_class=HTMLResponse)
 def get_tearsheet():
     try:
-        path = os.path.join(RESULTS_DIR, "tearsheet.html")
-        if os.path.exists(path):
-            with open(path, encoding="utf-8") as f:
-                return f.read()
+        html = fetch_github_file("results/tearsheet.html")
+        if html:
+            return html
     except Exception:
         pass
     return "<html><body><h1>No tearsheet generated yet.</h1></body></html>"

@@ -13,7 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from ws_manager import WSManager
 from routers import overview, positions, signals, backtest, trades
-from config import RESULTS_DIR, INITIAL_CAPITAL
+from config import INITIAL_CAPITAL
+from github_data import fetch_github_json
 
 app = FastAPI(title="NiftyQuant Dashboard", version="1.0.0")
 
@@ -49,10 +50,8 @@ def build_live_payload() -> dict:
     regime = {"regime": "UNKNOWN", "confidence": 0, "vix": 0, "breadth": 0, "nifty_rsi": 0}
 
     try:
-        pp = os.path.join(RESULTS_DIR, "paper_portfolio.json")
-        if os.path.exists(pp):
-            with open(pp) as f:
-                state = json.load(f)
+        state = fetch_github_json("results/paper_portfolio.json")
+        if state:
             pos = state.get("positions", {})
             invested = sum(p.get("current_value", 0) for p in pos.values())
             total = state.get("cash", INITIAL_CAPITAL) + invested

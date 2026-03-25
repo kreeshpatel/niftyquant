@@ -1,11 +1,10 @@
 """Positions API — open positions."""
 
-import os
-import json
 from datetime import datetime
 from fastapi import APIRouter
 
-from config import RESULTS_DIR, get_sector
+from config import get_sector
+from github_data import fetch_github_json
 
 router = APIRouter(tags=["positions"])
 
@@ -13,12 +12,9 @@ router = APIRouter(tags=["positions"])
 @router.get("/positions")
 def get_positions():
     try:
-        pp = os.path.join(RESULTS_DIR, "paper_portfolio.json")
-        if not os.path.exists(pp):
+        state = fetch_github_json("results/paper_portfolio.json")
+        if not state:
             return []
-
-        with open(pp) as f:
-            state = json.load(f)
 
         positions = []
         for ticker, pos in state.get("positions", {}).items():

@@ -1,24 +1,21 @@
 """Trades API — trade history and stats."""
 
-import os
+import pandas as pd
 from fastapi import APIRouter, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import PlainTextResponse
 
-from config import RESULTS_DIR
+from github_data import fetch_github_csv, fetch_github_file
 
 router = APIRouter(tags=["trades"])
 
 
 def _load_trades():
-    import pandas as pd
     frames = []
-    for name in ["trade_log.csv", "paper_trades.csv"]:
+    for name in ["results/trade_log.csv", "results/paper_trades.csv"]:
         try:
-            path = os.path.join(RESULTS_DIR, name)
-            if os.path.exists(path):
-                df = pd.read_csv(path)
-                if not df.empty:
-                    frames.append(df)
+            df = fetch_github_csv(name)
+            if df is not None and not df.empty:
+                frames.append(df)
         except Exception:
             pass
     if not frames:
@@ -87,9 +84,13 @@ def get_trade_stats():
 @router.get("/trades/export")
 def export_trades():
     try:
-        path = os.path.join(RESULTS_DIR, "trade_log.csv")
-        if os.path.exists(path):
-            return FileResponse(path, media_type="text/csv", filename="trade_log.csv")
+        text = fetch_github_file("results/trade_log.csv")
+        if text:
+            return PlainTextResponse(
+                content=text,
+                media_type="text/csv",
+                headers={"Content-Disposition": "attachment; filename=trade_log.csv"},
+            )
     except Exception:
         pass
     return {"error": "No trade log found"}

@@ -1,9 +1,8 @@
 """Backtest API — returns history (running requires local src/)."""
 
-import os
 from fastapi import APIRouter
 
-from config import RESULTS_DIR
+from github_data import fetch_github_csv
 
 router = APIRouter(tags=["backtest"])
 
@@ -21,10 +20,8 @@ def get_backtest_result(job_id: str):
 @router.get("/backtest/history")
 def get_backtest_history():
     try:
-        import pandas as pd
-        path = os.path.join(RESULTS_DIR, "version_history.csv")
-        if os.path.exists(path):
-            df = pd.read_csv(path)
+        df = fetch_github_csv("results/version_history.csv")
+        if df is not None and not df.empty:
             return df.to_dict("records")
     except Exception:
         pass
