@@ -1,8 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/trades/stats", "destination": "/api/trades" },
-    { "source": "/api/trades/export", "destination": "/api/trades" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

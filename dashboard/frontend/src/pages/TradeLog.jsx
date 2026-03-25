@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { fetchTrades, fetchTradeStats, EXPORT_URL } from '../api'
+import { fetchTrades, fetchTradeStats, getExportURL } from '../api'
 import { T, pnlColor } from '../theme'
 import TerminalTable from '../components/TerminalTable'
 
@@ -60,7 +60,7 @@ export default function TradeLog() {
             borderRight: `1px solid ${T.bgLine}`, textTransform: 'uppercase',
           }}>{s}</span>
         ))}
-        <a href={EXPORT_URL} target="_blank" rel="noreferrer" style={{
+        <a href={getExportURL()} download="trade_log.csv" style={{
           marginLeft: 'auto', padding: '5px 14px', fontSize: 10, letterSpacing: 1.5,
           color: T.amber, border: `1px solid ${T.amber}30`, textTransform: 'uppercase',
         }}>EXPORT CSV</a>
