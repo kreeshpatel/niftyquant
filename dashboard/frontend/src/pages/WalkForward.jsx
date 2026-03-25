@@ -10,39 +10,40 @@ export default function WalkForward() {
 
   const folds = data?.folds || []
 
+  const avgAuc = folds.length > 0
+    ? (folds.reduce((s, f) => s + (f.roc_auc || 0), 0) / folds.length).toFixed(3) : 0
   const avgReturn = folds.length > 0
-    ? (folds.reduce((s, f) => s + (f.return_pct || 0), 0) / folds.length).toFixed(2) : 0
-  const avgSharpe = folds.length > 0
-    ? (folds.reduce((s, f) => s + (f.sharpe || 0), 0) / folds.length).toFixed(2) : 0
+    ? (folds.reduce((s, f) => s + (f.avg_return || 0), 0) / folds.length).toFixed(2) : 0
   const avgWinRate = folds.length > 0
     ? (folds.reduce((s, f) => s + (f.win_rate || 0), 0) / folds.length).toFixed(1) : 0
-  const totalTrades = folds.reduce((s, f) => s + (f.trades || 0), 0)
+  const totalSignals = folds.reduce((s, f) => s + (f.n_signals || 0), 0)
 
   const columns = [
     { key: 'fold', label: 'Fold', render: v => <span style={{ fontWeight: 700 }}>#{v}</span> },
-    { key: 'train_start', label: 'Train Start', style: () => ({ fontSize: 11 }) },
-    { key: 'train_end', label: 'Train End', style: () => ({ fontSize: 11 }) },
     { key: 'test_start', label: 'Test Start', style: () => ({ fontSize: 11 }) },
     { key: 'test_end', label: 'Test End', style: () => ({ fontSize: 11 }) },
-    { key: 'return_pct', label: 'Return %', align: 'right',
-      render: v => <span style={{ color: pnlColor(v), fontWeight: 700 }}>{v >= 0 ? '+' : ''}{v?.toFixed?.(2) ?? v}%</span> },
-    { key: 'sharpe', label: 'Sharpe', align: 'right',
-      render: v => <span style={{ color: v > 0.5 ? T.green : T.red }}>{v?.toFixed?.(2) ?? v}</span> },
-    { key: 'max_drawdown', label: 'Max DD', align: 'right',
-      render: v => <span style={{ color: T.red }}>{v?.toFixed?.(2) ?? v}%</span> },
+    { key: 'n_train', label: 'Train', align: 'right',
+      render: v => v?.toLocaleString?.() ?? v },
+    { key: 'n_test', label: 'Test', align: 'right',
+      render: v => v?.toLocaleString?.() ?? v },
+    { key: 'roc_auc', label: 'ROC-AUC', align: 'right',
+      render: v => <span style={{ color: v > 0.52 ? T.green : T.red, fontWeight: 700 }}>{v?.toFixed?.(3) ?? v}</span> },
+    { key: 'n_signals', label: 'Signals', align: 'right',
+      render: v => v?.toLocaleString?.() ?? v },
     { key: 'win_rate', label: 'Win Rate', align: 'right',
-      render: v => `${v?.toFixed?.(1) ?? v}%` },
-    { key: 'trades', label: 'Trades', align: 'right' },
+      render: v => <span style={{ color: pnlColor(v - 35) }}>{v?.toFixed?.(1) ?? v}%</span> },
+    { key: 'avg_return', label: 'Avg Return', align: 'right',
+      render: v => <span style={{ color: pnlColor(v), fontWeight: 700 }}>{v >= 0 ? '+' : ''}{v?.toFixed?.(2) ?? v}%</span> },
   ]
 
   return (
     <div>
       {/* Summary metrics */}
       <div style={{ display: 'flex', border: `1px solid ${T.bgLine}`, marginBottom: 1 }}>
+        <MetricCard label="Mean ROC-AUC" value={avgAuc} color={avgAuc > 0.52 ? 'pos' : 'neg'} />
         <MetricCard label="Avg Return" value={`${avgReturn >= 0 ? '+' : ''}${avgReturn}%`} color={avgReturn >= 0 ? 'pos' : 'neg'} />
-        <MetricCard label="Avg Sharpe" value={avgSharpe} color={avgSharpe > 0.5 ? 'pos' : 'neg'} />
         <MetricCard label="Avg Win Rate" value={`${avgWinRate}%`} color={avgWinRate > 30 ? 'pos' : 'neg'} />
-        <MetricCard label="Total Trades" value={totalTrades} />
+        <MetricCard label="Total Signals" value={totalSignals.toLocaleString()} />
         <MetricCard label="Folds" value={folds.length} />
       </div>
 

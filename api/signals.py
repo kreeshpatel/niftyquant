@@ -28,16 +28,13 @@ class handler(BaseHTTPRequestHandler):
         # Repurposed: return walk-forward analysis results
         folds = _read_csv('walk_forward.csv')
         for f in folds:
-            for key in ['return_pct', 'sharpe', 'max_drawdown', 'win_rate']:
+            for key in ['roc_auc', 'win_rate', 'avg_return']:
                 f[key] = _safe_float(f.get(key))
-            try:
-                f['trades'] = int(float(f.get('trades', 0)))
-            except (ValueError, TypeError):
-                f['trades'] = 0
-            try:
-                f['fold'] = int(float(f.get('fold', 0)))
-            except (ValueError, TypeError):
-                f['fold'] = 0
+            for key in ['fold', 'n_train', 'n_test', 'n_signals']:
+                try:
+                    f[key] = int(float(f.get(key, 0)))
+                except (ValueError, TypeError):
+                    f[key] = 0
 
         data = {
             "folds": folds,

@@ -43,7 +43,7 @@ class handler(BaseHTTPRequestHandler):
                 equity_curve.append({
                     "date": row.get("date", ""),
                     "value": _safe_float(row.get("total_value", INITIAL_CAPITAL)),
-                    "regime": row.get("regime", "UNKNOWN"),
+                    "regime": row.get("regime", ""),
                 })
             last_val = _safe_float(rows[-1].get("total_value", INITIAL_CAPITAL))
             peak_val = max(_safe_float(r.get("total_value", 0)) for r in rows)
