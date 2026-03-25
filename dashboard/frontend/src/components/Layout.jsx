@@ -20,13 +20,18 @@ export default function Layout({ children }) {
 
       {/* Top nav */}
       <nav style={{
-        height: 38, background: T.bgElevated, borderBottom: `1px solid ${T.bgLine}`,
+        minHeight: 38, background: T.bgElevated, borderBottom: `1px solid ${T.bgLine}`,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: T.amber, letterSpacing: 3, marginRight: 24 }}>
-            NIFTYQUANT
-          </span>
+          <div style={{ marginRight: 24 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: T.amber, letterSpacing: 3 }}>
+              NIFTYQUANT
+            </span>
+            <div style={{ fontSize: 10, color: '#444', letterSpacing: 0.5, marginTop: 1 }}>
+              NSE Algorithmic Trading &middot; 359 Stocks &middot; ML-Enhanced Signals
+            </div>
+          </div>
           {tabs.map(([path, label]) => (
             <NavLink key={path} to={path} className={({ isActive }) => `nav-tab${isActive ? ' active' : ''}`}>
               {label}
@@ -52,7 +57,7 @@ export default function Layout({ children }) {
       }}>
         {[
           'MODE: BACKTEST RESULTS',
-          'INITIAL CAPITAL: Rs 10,00,000',
+          'INITIAL CAPITAL: \u20B910,00,000',
           'PLATFORM: VERCEL',
         ].map((s, i) => (
           <span key={i} style={{ padding: '0 12px', borderRight: `1px solid ${T.bgLine}` }}>{s}</span>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts'
 import { T } from '../theme'
+import { fmtINR } from '../format'
 
 const ranges = { '3M': 63, '6M': 126, '1Y': 252, 'ALL': 99999 }
 
@@ -11,14 +12,14 @@ const CustomTooltip = ({ active, payload, label }) => {
       <div style={{ color: T.textDim, marginBottom: 4 }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color }}>
-          {p.name}: Rs {Number(p.value).toLocaleString()}
+          {p.name}: {fmtINR(p.value)}
         </div>
       ))}
     </div>
   )
 }
 
-export default function EquityChart({ data = [] }) {
+export default function EquityChart({ data = [], initialCapital = 1000000 }) {
   const [range, setRange] = useState('ALL')
   const sliced = data.slice(-ranges[range])
 
@@ -40,6 +41,9 @@ export default function EquityChart({ data = [] }) {
           <YAxis stroke={T.textDim} tick={{ fill: T.textDim, fontSize: 10 }}
             tickFormatter={v => `${(v / 100000).toFixed(1)}L`} />
           <Tooltip content={<CustomTooltip />} />
+          <ReferenceLine y={initialCapital} stroke={T.textDim} strokeDasharray="6 4" label={{
+            value: `${fmtINR(initialCapital)} start`, fill: T.textDim, fontSize: 9, position: 'right',
+          }} />
           <Line type="monotone" dataKey="value" stroke={T.blue} strokeWidth={2} dot={false} name="Strategy" />
         </ComposedChart>
       </ResponsiveContainer>

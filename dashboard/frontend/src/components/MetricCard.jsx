@@ -2,12 +2,14 @@ import React from 'react'
 import { T } from '../theme'
 
 const colorMap = { pos: T.green, neg: T.red, amb: T.amber, dim: T.textMuted }
+const borderMap = { pos: T.green, neg: T.red, amb: T.amber, dim: T.amber }
 
 export default function MetricCard({ label, value, sub, color = 'dim' }) {
   return (
     <div style={{
       background: T.bgPanel, padding: '14px 16px', flex: 1, minWidth: 140,
       borderRight: `1px solid ${T.bgLine}`,
+      borderLeft: `2px solid ${borderMap[color] || color}`,
     }}>
       <div style={{ fontSize: 10, color: T.textDim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
         {label}
