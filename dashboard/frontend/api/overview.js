@@ -20,7 +20,7 @@ function readCSV(filename) {
 
 export default function handler(req, res) {
   console.log('RESULTS_DIR:', RESULTS_DIR)
-  console.log('Files:', readdirSync(RESULTS_DIR))
+  try { console.log('Files:', readdirSync(RESULTS_DIR)) } catch (e) { console.log('readdirSync error:', e.message) }
   res.setHeader('Access-Control-Allow-Origin', '*')
 
   const portfolio = {
