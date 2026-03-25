@@ -1,12 +1,17 @@
-import { readFileSync } from 'fs'
-import { join } from 'path'
+import { readFileSync, readdirSync } from 'fs'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
 import { parse } from 'csv-parse/sync'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const RESULTS_DIR = join(__dirname, '..', 'results')
 
 const INITIAL_CAPITAL = 1_000_000
 
 function readCSV(filename) {
   try {
-    const csv = readFileSync(join(process.cwd(), 'results', filename), 'utf8')
+    const csv = readFileSync(join(RESULTS_DIR, filename), 'utf8')
     return parse(csv, { columns: true, skip_empty_lines: true })
   } catch {
     return []
@@ -14,6 +19,8 @@ function readCSV(filename) {
 }
 
 export default function handler(req, res) {
+  console.log('RESULTS_DIR:', RESULTS_DIR)
+  console.log('Files:', readdirSync(RESULTS_DIR))
   res.setHeader('Access-Control-Allow-Origin', '*')
 
   const portfolio = {
