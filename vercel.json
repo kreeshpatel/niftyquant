@@ -2,6 +2,12 @@
   "buildCommand": "cd dashboard/frontend && npm install && npm run build",
   "outputDirectory": "dashboard/frontend/dist",
   "framework": null,
+  "functions": {
+    "api/*.py": {
+      "runtime": "vercel-python@latest",
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
     { "source": "/api/trades/stats", "destination": "/api/trades" },
     { "source": "/api/trades/export", "destination": "/api/trades" },
