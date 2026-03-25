@@ -1,5 +1,5 @@
-const DEPLOY_TOKEN = 'deploy-780f272-test'
+const DEPLOY_TOKEN = 'deploy-070322c-test'
 
 export default function handler(req, res) {
-  return res.json({ ok: true, token: DEPLOY_TOKEN, ts: Date.now() })
+  return res.json({ source: 'frontend-api', ok: true, token: DEPLOY_TOKEN, ts: Date.now() })
 }
