@@ -1,0 +1,2 @@
+ticker,entry_date,exit_date,entry_price,exit_price,return_pct,net_pnl,hold_days,exit_reason,shares,position_size
+PLACEHOLDER,2024-01-15,2024-01-25,100.00,105.00,5.0,2500.00,10,ema_reversal,500,50000

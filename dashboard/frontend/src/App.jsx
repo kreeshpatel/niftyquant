@@ -4,9 +4,8 @@ import { globalCSS } from './theme'
 import PasswordGate from './auth/PasswordGate'
 import Layout from './components/Layout'
 import Overview from './pages/Overview'
-import Positions from './pages/Positions'
-import Signals from './pages/Signals'
-import Backtest from './pages/Backtest'
+import Features from './pages/Features'
+import WalkForward from './pages/WalkForward'
 import TradeLog from './pages/TradeLog'
 
 export default function App() {
@@ -22,9 +21,8 @@ export default function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Overview />} />
-          <Route path="/positions" element={<Positions />} />
-          <Route path="/signals" element={<Signals />} />
-          <Route path="/backtest" element={<Backtest />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/walk-forward" element={<WalkForward />} />
           <Route path="/trades" element={<TradeLog />} />
         </Routes>
       </Layout>

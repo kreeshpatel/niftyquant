@@ -1,24 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { useWebSocket } from '../api'
-import { T, regimeColor } from '../theme'
+import { T } from '../theme'
 
 const tabs = [
-  ['/', 'OVERVIEW'], ['/positions', 'POSITIONS'], ['/signals', 'SIGNALS'],
-  ['/backtest', 'BACKTEST'], ['/trades', 'TRADE LOG'],
+  ['/', 'OVERVIEW'], ['/features', 'FEATURES'], ['/walk-forward', 'WALK-FORWARD'],
+  ['/trades', 'TRADE LOG'],
 ]
 
 export default function Layout({ children }) {
-  const { data, connected } = useWebSocket()
-  const [time, setTime] = useState('')
-  useEffect(() => {
-    const tick = () => setTime(new Date().toLocaleTimeString('en-IN', { hour12: false, timeZone: 'Asia/Kolkata' }))
-    tick(); const id = setInterval(tick, 1000); return () => clearInterval(id)
-  }, [])
-
-  const regime = data?.regime?.regime || '—'
-  const p = data?.portfolio || {}
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <style>{`
@@ -47,14 +36,8 @@ export default function Layout({ children }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: T.textMuted }}>
           <span style={{
             padding: '2px 8px', fontSize: 10, fontWeight: 700, letterSpacing: 1,
-            background: regimeColor(regime) + '18', color: regimeColor(regime), border: `1px solid ${regimeColor(regime)}30`,
-          }}>{regime}</span>
-          <span style={{
-            width: 6, height: 6, borderRadius: '50%', display: 'inline-block',
-            background: connected ? T.green : T.red,
-            animation: connected ? 'pulse 2s ease infinite' : 'none',
-          }} />
-          <span style={{ color: T.textDim }}>{time} IST</span>
+            background: T.amber + '18', color: T.amber, border: `1px solid ${T.amber}30`,
+          }}>BACKTEST</span>
         </div>
       </nav>
 
@@ -68,11 +51,9 @@ export default function Layout({ children }) {
         fontSize: 10, color: T.textDim, letterSpacing: 1, textTransform: 'uppercase',
       }}>
         {[
-          `POSITIONS: ${p.n_positions || 0}/20`,
-          `CASH: Rs ${(p.cash || 0).toLocaleString()}`,
-          `INVESTED: Rs ${(p.invested || 0).toLocaleString()}`,
-          `CIRCUIT BREAKER: OFF`,
-          `WS: ${connected ? 'LIVE' : 'DOWN'}`,
+          'MODE: BACKTEST RESULTS',
+          'INITIAL CAPITAL: Rs 10,00,000',
+          'PLATFORM: VERCEL',
         ].map((s, i) => (
           <span key={i} style={{ padding: '0 12px', borderRight: `1px solid ${T.bgLine}` }}>{s}</span>
         ))}
