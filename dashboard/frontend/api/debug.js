@@ -1,3 +1,5 @@
+const DEPLOY_TOKEN = 'deploy-780f272-test'
+
 export default function handler(req, res) {
-  res.json({ ok: true, cwd: process.cwd(), nodeVersion: process.version })
+  return res.json({ ok: true, token: DEPLOY_TOKEN, ts: Date.now() })
 }
