@@ -606,23 +606,6 @@ class Backtester:
                 funnel["nifty_blocked"] += 1
 
             # ── Health score sizing (bear shield) ────────
-            health_mult = 1.0
-            health_score = 100
-            if self.use_bear_shield and hasattr(self, '_health_cache'):
-                health_score = self._health_cache.get(date, 50)
-                if health_score >= HEALTH_SCORE_FULL:
-                    health_mult = 1.0
-                    funnel["full_size"] += 1
-                elif health_score >= HEALTH_SCORE_CAUTION:
-                    health_mult = 0.5
-                    funnel["half_size"] += 1
-                elif health_score >= HEALTH_SCORE_WARNING:
-                    health_mult = 0.25
-                    funnel["quarter_size"] += 1
-                else:
-                    nifty_blocked = True  # DANGER = no entries
-                    funnel["health_blocked"] += 1
-
             # ── Determine regime for dynamic threshold ───
             if self.use_refined:
                 current_regime = self._get_regime(date)
@@ -630,6 +613,37 @@ class Backtester:
                     current_regime = "CORRECTION"
             else:
                 current_regime = "BULL"
+
+            # ── Health score sizing (bear shield, regime-aware) ──
+            health_mult = 1.0
+            health_score = 100
+            if self.use_bear_shield and hasattr(self, '_health_cache'):
+                health_score = self._health_cache.get(date, 50)
+                if current_regime == "BULL":
+                    # BULL: full size always (health >= 40)
+                    if health_score >= HEALTH_SCORE_CAUTION:
+                        health_mult = 1.0
+                        funnel["full_size"] += 1
+                    else:
+                        health_mult = 0.5
+                        funnel["half_size"] += 1
+                elif current_regime == "CHOPPY":
+                    if health_score >= HEALTH_SCORE_FULL:
+                        health_mult = 1.0
+                        funnel["full_size"] += 1
+                    elif health_score >= HEALTH_SCORE_CAUTION:
+                        health_mult = 0.75
+                        funnel["half_size"] += 1
+                    else:
+                        health_mult = 0.50
+                        funnel["quarter_size"] += 1
+                else:  # BEAR or CORRECTION
+                    if health_score >= HEALTH_SCORE_CAUTION:
+                        health_mult = 0.25
+                        funnel["quarter_size"] += 1
+                    else:
+                        nifty_blocked = True
+                        funnel["health_blocked"] += 1
 
             # ── Check entries ────────────────────────────
             if len(positions) < MAX_POSITIONS and not nifty_blocked:
