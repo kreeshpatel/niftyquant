@@ -1,0 +1,12 @@
+{
+  "total_return_pct": 8.78,
+  "annualised_return_pct": 1.79,
+  "sharpe_ratio": 0.53,
+  "sortino_ratio": 0.51,
+  "max_drawdown_pct": -9.11,
+  "total_trades": 62,
+  "win_rate_pct": 25.8,
+  "profit_factor": 1.79,
+  "avg_hold_days": 28.8,
+  "alpha": -37.28
+}

@@ -1,0 +1,3 @@
+ticker,date,conviction,dip_reason,momentum_score,rsi_14,entry_price,stop_price,target_price,stop_pct,target_pct,rr_ratio,shares,position_value,position_pct,risk_amount,estimated_hold_days,expected_value_pct,sizing_flag
+BAJAJHLDNG,2024-09-13,MEDIUM,5 red candles / -3.0%,0.5264,57.37,10258.15,9819.1,11136.25,4.28,8.56,2.0,14,143614.1,14.36,6146.7,6,1.5,CAPPED
+EVEREADY,2024-09-13,MEDIUM,BB%: 0.54 (lower band),0.4557,56.42,463.85,435.15,521.25,6.19,12.37,2.0,323,149823.55,14.98,9270.1,6,2.16,CAPPED

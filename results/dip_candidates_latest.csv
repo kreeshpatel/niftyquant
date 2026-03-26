@@ -1,0 +1,3 @@
+ticker,date,close,momentum_score,rsi_14,bb_pct,return_5d,rsi_dip,bb_dip,red_dip,dip_count,conviction,dip_reason,atr_14
+BAJAJHLDNG,2024-09-13,10237.67,0.5264,57.37,0.5772,-3.01,False,False,True,1,MEDIUM,5 red candles / -3.0%,292.6836
+EVEREADY,2024-09-13,462.93,0.4557,56.42,0.5442,2.54,False,True,False,1,MEDIUM,BB%: 0.54 (lower band),19.126
