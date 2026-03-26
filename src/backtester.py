@@ -26,6 +26,8 @@ from config import (
     MIN_HOLD_DAYS, BLOCKED_SECTORS, PRIORITY_SECTORS, WEAK_MONTHS,
     HEALTH_SCORE_FULL, HEALTH_SCORE_CAUTION, HEALTH_SCORE_WARNING,
     MAX_PORTFOLIO_HEAT, TRAILING_ACTIVATION,
+    BEAR_STRONG_BREADTH, BEAR_MILD_BREADTH, BEAR_MILD_SIZE_MULT,
+    BEAR_MILD_MAX_POS, BEAR_MILD_ML_THRESH,
 )
 
 ensure_dirs()
@@ -187,6 +189,16 @@ class Backtester:
         return (row.get("in_momentum_regime", 0) == 1 and row.get("hybrid_signal", 0) == 1
                 and row.get("dip_conviction", 0) >= 1 and row.get("volume_ratio", 0) > 0.8)
 
+    def _check_bear_entry(self, row):
+        """Strict filter for bear mild entries — stock must show exceptional individual strength."""
+        return (row.get("ema_21_above_50", 0) == 1
+                and row.get("position_in_52w", 0) > 0.60
+                and row.get("return_20d", 0) > 2.0
+                and row.get("adx_14", 0) > 28
+                and row.get("volume_ratio", 0) > 1.2
+                and 50 < row.get("rsi_14", 0) < 70
+                and row.get("dip_count", 0) >= 1)
+
     def _check_hybrid_entry_refined(self, row):
         """Relaxed 4-of-5 momentum filter + dip signal."""
         cond1 = row.get("ema_21_above_50", 0) == 1
@@ -243,25 +255,34 @@ class Backtester:
     def _precompute_regimes(self):
         """Precompute market regime for all dates using vectorized breadth."""
         self._regime_cache = {}
+        self._breadth_cache = {}
         # Build a single breadth series: fraction of stocks bullish per date
         bullish_counts = pd.Series(dtype=float)
         total_counts = pd.Series(dtype=float)
+        rsi_sums = pd.Series(dtype=float)
         for df in self.stock_data.values():
             is_bull = ((df.get("ema_21_above_50", pd.Series(dtype=float)) == 1) &
                        (df.get("rsi_14", pd.Series(dtype=float)) > 50)).astype(int)
             bullish_counts = bullish_counts.add(is_bull, fill_value=0)
             total_counts = total_counts.add(pd.Series(1, index=df.index), fill_value=0)
+            rsi_sums = rsi_sums.add(df.get("rsi_14", pd.Series(dtype=float)).fillna(50), fill_value=0)
         ratio = bullish_counts / total_counts.replace(0, np.nan)
+        avg_rsi = rsi_sums / total_counts.replace(0, np.nan)
         for date in ratio.index:
             r = ratio.get(date, 0)
+            breadth_pct = (r * 100) if not pd.isna(r) else 0
+            market_rsi = avg_rsi.get(date, 50) if not pd.isna(avg_rsi.get(date, 50)) else 50
+            self._breadth_cache[date] = breadth_pct
             if pd.isna(r):
                 self._regime_cache[date] = "CHOPPY"
-            elif r > 0.5:
+            elif breadth_pct > 55:
                 self._regime_cache[date] = "BULL"
-            elif r < 0.2:
-                self._regime_cache[date] = "BEAR"
-            else:
+            elif breadth_pct >= BEAR_MILD_BREADTH:
                 self._regime_cache[date] = "CHOPPY"
+            elif breadth_pct >= BEAR_STRONG_BREADTH or market_rsi >= 35:
+                self._regime_cache[date] = "BEAR_MILD"
+            else:
+                self._regime_cache[date] = "BEAR_STRONG"
 
     def _get_regime(self, date):
         return self._regime_cache.get(date, "CHOPPY")
@@ -609,10 +630,17 @@ class Backtester:
             # ── Determine regime for dynamic threshold ───
             if self.use_refined:
                 current_regime = self._get_regime(date)
-                if nifty_blocked:
+                if nifty_blocked and current_regime not in ("BEAR_STRONG",):
                     current_regime = "CORRECTION"
             else:
                 current_regime = "BULL"
+
+            # ── Tiered bear regime (freq improvement) ────
+            is_bear_mild = current_regime == "BEAR_MILD"
+            is_bear_strong = current_regime == "BEAR_STRONG"
+            bear_max_pos = BEAR_MILD_MAX_POS if is_bear_mild else MAX_POSITIONS
+            if is_bear_strong:
+                nifty_blocked = True  # full block
 
             # ── Health score sizing (bear shield, regime-aware) ──
             health_mult = 1.0
@@ -646,7 +674,8 @@ class Backtester:
                         funnel["health_blocked"] += 1
 
             # ── Check entries ────────────────────────────
-            if len(positions) < MAX_POSITIONS and not nifty_blocked:
+            effective_max_pos = bear_max_pos if is_bear_mild else MAX_POSITIONS
+            if len(positions) < effective_max_pos and not nifty_blocked:
                 for ticker, df in self.stock_data.items():
                     if ticker in positions:
                         continue
@@ -669,7 +698,10 @@ class Backtester:
                     funnel["after_nifty_filter"] += 1
 
                     if self.use_hybrid:
-                        if self.use_refined:
+                        if is_bear_mild:
+                            if not self._check_bear_entry(row):
+                                continue
+                        elif self.use_refined:
                             if not self._check_hybrid_entry_refined(row):
                                 continue
                         else:
@@ -709,6 +741,8 @@ class Backtester:
                                 threshold = 0.50
                             elif current_regime == "CHOPPY":
                                 threshold = 0.54
+                            elif current_regime == "BEAR_MILD":
+                                threshold = BEAR_MILD_ML_THRESH
                             elif current_regime == "CORRECTION":
                                 threshold = 0.58
                             if row.get("dip_conviction", 0) >= 2:
@@ -725,7 +759,7 @@ class Backtester:
 
                     funnel["after_ml"] += 1
 
-                    if len(positions) >= MAX_POSITIONS:
+                    if len(positions) >= effective_max_pos:
                         break
 
                     next_dates = dates[dates > date]
@@ -803,6 +837,10 @@ class Backtester:
                             funnel["overfit_flagged"] += 1
                         # Bear shield: health score sizing
                         size_mult *= health_mult
+                        # Bear mild: smaller positions
+                        if is_bear_mild:
+                            size_mult *= BEAR_MILD_SIZE_MULT
+                            funnel["bear_mild_entries"] = funnel.get("bear_mild_entries", 0) + 1
                         shares = max(1, round(shares * size_mult))
                         pos_size = shares * entry_price * (1 + BROKERAGE_PCT)
                         if pos_size > cash or cash < 5000:
@@ -1442,8 +1480,97 @@ def run_bear_shield(start_date="2022-01-01", end_date="2026-03-24"):
     return {"Optimised_v2": ro, "Bear_Shield": rb}
 
 
+def run_freq(start_date="2022-01-01", end_date="2026-03-24"):
+    """Run Freq Improved (bear mild entries) — compare vs known Optimised v2 numbers."""
+    # Known Optimised v2 baseline (from previous run)
+    ro_numbers = {"total_return_pct": 36.6, "win_rate_pct": 36.7, "total_trades": 641,
+                  "profit_factor": 1.07, "max_drawdown_pct": -35.7, "sharpe_ratio": 0.46,
+                  "avg_win_pct": 9.8, "avg_loss_pct": -5.1}
+
+    print(f"\n{'#'*70}")
+    print(f"  FREQ IMPROVED (BEAR_MILD allows selective entries)")
+    print(f"{'#'*70}")
+    bt_f = Backtester(use_ml=True, use_hybrid=True, use_optimised_v2=True)
+    rf = bt_f.run(start_date, end_date)
+
+    w = 56
+    eq = "=" * w
+    ln = "-" * w
+    print(f"\n  +{eq}+")
+    print(f"  |{'OPTIMISED v2 vs FREQ IMPROVED':^{w}}|")
+    print(f"  +{eq}+")
+    o = ro_numbers
+    print(f"  | {'Metric':<24}{'Optim v2':>14}{'Freq Impr':>14} |")
+    print(f"  +{ln}+")
+    for label, vo, vf in [
+        ("Total Return", f"{o['total_return_pct']:+.1f}%", f"{rf.total_return_pct:+.1f}%"),
+        ("Win Rate", f"{o['win_rate_pct']:.1f}%", f"{rf.win_rate_pct:.1f}%"),
+        ("Trades/Month", f"{o['total_trades'] / 48:.1f}", f"{rf.total_trades / 48:.1f}"),
+        ("Total Trades", f"{o['total_trades']}", f"{rf.total_trades}"),
+        ("Profit Factor", f"{o['profit_factor']:.2f}", f"{rf.profit_factor:.2f}"),
+        ("Max Drawdown", f"{o['max_drawdown_pct']:.1f}%", f"{rf.max_drawdown_pct:.1f}%"),
+        ("Sharpe", f"{o['sharpe_ratio']:.2f}", f"{rf.sharpe_ratio:.2f}"),
+        ("Avg Win", f"{o['avg_win_pct']:+.1f}%", f"{rf.avg_win_pct:+.1f}%"),
+        ("Avg Loss", f"{o['avg_loss_pct']:+.1f}%", f"{rf.avg_loss_pct:+.1f}%"),
+    ]:
+        print(f"  | {label:<24}{vo:>14}{vf:>14} |")
+    print(f"  +{eq}+")
+
+    # Year-by-year for freq improved
+    if rf.total_trades > 0 and len(rf.trade_log) > 0:
+        print(f"\n  +{eq}+")
+        print(f"  |{'FREQ IMPROVED -- YEAR BY YEAR':^{w}}|")
+        print(f"  +{eq}+")
+        tl = rf.trade_log.copy()
+        tl["year"] = pd.to_datetime(tl["entry_date"]).dt.year
+        print(f"  | {'Year':<6}{'Trades':>7}{'WR':>7}{'AvgRet':>9}{'TotalPnL':>13}{'CumPnL':>12} |")
+        print(f"  +{ln}+")
+        cum = 0
+        for year in sorted(tl["year"].unique()):
+            yt = tl[tl["year"] == year]
+            n = len(yt); wc = (yt["net_pnl"] > 0).sum()
+            wr = wc / n * 100 if n > 0 else 0; ar = yt["return_pct"].mean()
+            tp = yt["net_pnl"].sum(); cum += tp
+            print(f"  | {year:<6}{n:>7}{wr:>6.1f}%{ar:>+8.2f}%{tp:>+12,.0f}{cum:>+11,.0f} |")
+        print(f"  +{eq}+")
+
+    # Monthly trade count
+    if rf.total_trades > 0 and len(rf.trade_log) > 0:
+        tl = rf.trade_log.copy()
+        tl["month"] = pd.to_datetime(tl["entry_date"]).dt.to_period("M")
+        monthly = tl.groupby("month").size()
+        all_months = pd.period_range(tl["month"].min(), tl["month"].max(), freq="M")
+        print(f"\n  Monthly Trade Frequency:")
+        low = high = 0
+        for m in all_months:
+            c = monthly.get(m, 0)
+            flag = " <-- LOW" if c < 15 else (" <-- HIGH" if c > 50 else "")
+            if c < 15: low += 1
+            if c > 50: high += 1
+            print(f"    {m}: {c:>3} trades{flag}")
+        avg = rf.total_trades / len(all_months)
+        print(f"\n  Avg trades/month: {avg:.1f}")
+        print(f"  Months < 15 trades: {low}")
+        print(f"  Months > 50 trades: {high}")
+        print(f"  Months 30-40 trades: {sum(1 for m in all_months if 30 <= monthly.get(m, 0) <= 40)}")
+
+    # Regime breakdown
+    f = getattr(rf, '_funnel', {})
+    if f:
+        print(f"\n  Bear Mild Entries: {f.get('bear_mild_entries', 0)}")
+
+    # Save
+    if len(rf.trade_log) > 0:
+        rf.trade_log.to_csv(RESULTS_DIR / "backtest_freq.csv", index=False)
+        print(f"\n  Saved: {RESULTS_DIR / 'backtest_freq.csv'}")
+
+    return {"Freq": rf}
+
+
 if __name__ == "__main__":
-    if "--bear-shield" in sys.argv:
+    if "--freq" in sys.argv:
+        run_freq()
+    elif "--bear-shield" in sys.argv:
         run_bear_shield()
     elif "--optimised" in sys.argv:
         run_optimised_v2()

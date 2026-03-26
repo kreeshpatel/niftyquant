@@ -34,6 +34,13 @@ BLOCKED_SECTORS = ['IT', 'FMCG', 'Auto']
 PRIORITY_SECTORS = ['Infrastructure', 'Energy', 'Metals', 'Consumer']
 WEAK_MONTHS = [7]  # July: 25.5% WR historically
 
+# ── Tiered bear regime ─────────────────────────────────
+BEAR_STRONG_BREADTH = 20
+BEAR_MILD_BREADTH = 35
+BEAR_MILD_SIZE_MULT = 0.6
+BEAR_MILD_MAX_POS = 10
+BEAR_MILD_ML_THRESH = 0.58
+
 # ── Bear protection (market health) ────────────────────
 HEALTH_SCORE_FULL = 45
 HEALTH_SCORE_CAUTION = 25
