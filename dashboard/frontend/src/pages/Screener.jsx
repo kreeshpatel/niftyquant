@@ -67,7 +67,7 @@ export default function Screener() {
             )}</tr>
           </thead>
           <tbody>
-            {filtered.slice(0, shown).map(r => (
+            {filtered.slice(0, shown).map((r, i) => (
               <tr key={r.ticker} onClick={() => setSelected(r.ticker)} style={{
                 cursor: 'pointer', transition: 'background 0.1s',
                 borderLeft: r.signal === 'BUY' ? '2px solid var(--green)' : r.signal === 'WATCHLIST' ? '2px solid var(--amber)' : '2px solid transparent',
