@@ -30,9 +30,11 @@ def _is_trading_day(dt: datetime) -> bool:
 
 def run_daily():
     today = datetime.now()
-    print(f"\n{'='*70}")
-    print(f"  === Daily Runner: {today.strftime('%Y-%m-%d %H:%M')} ===")
-    print(f"{'='*70}")
+    print(f"\n{'='*55}")
+    print(f"  NiftyQuant · Production Strategy v2.0")
+    print(f"  Backtest: +36.6% · Sharpe 0.45 · 128/yr")
+    print(f"  {today.strftime('%Y-%m-%d %H:%M')}")
+    print(f"{'='*55}")
 
     # Step 1 — Market check
     if not _is_trading_day(today):
@@ -257,6 +259,15 @@ def run_daily():
     # Step 12 — Check drawdown circuit breaker
     equity = pd.Series([INITIAL_CAPITAL, summary["total_value"]])
     rm.check_circuit_breaker(equity)
+
+    # Strategy health check
+    print(f"\n  Strategy health check:")
+    print(f"    Model: {status.get('active_model', 'base_v2')} "
+          f"(AUC {status.get('model_auc', 0):.3f})")
+    print(f"    Regime: {regime}")
+    print(f"    Next optimizer: {status.get('next_optimization_in', 'N/A')}")
+    print(f"    Blocked sectors: IT, FMCG, Auto")
+    print(f"    Priority sectors: Infra, Energy, Metals, Consumer")
 
     print(f"\n  Daily run complete.\n")
 

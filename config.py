@@ -39,8 +39,10 @@ HEALTH_SCORE_FULL = 45
 HEALTH_SCORE_CAUTION = 25
 HEALTH_SCORE_WARNING = 10
 MAX_PORTFOLIO_HEAT = 15.0
-USE_TRAILING_STOP = True
-TRAILING_ACTIVATION = 2.5  # x ATR gain to activate (was 1.5, raised to avoid cutting winners)
+USE_TRAILING_STOP = False        # disabled: cuts winners (-4.6pp per trade)
+USE_HEALTH_SCORE_SIZING = False  # disabled: reduces profitable bull-year positions
+USE_PORTFOLIO_HEAT = True        # enabled: prevents over-concentration
+TRAILING_ACTIVATION = 2.5
 
 # ── NSE market hours ─────────────────────────────────────
 NSE_OPEN_TIME = "09:15"

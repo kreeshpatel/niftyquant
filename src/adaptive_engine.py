@@ -41,7 +41,26 @@ class AdaptiveEngine:
         self.bandit = ContextualBandit()
         self.optimizer = AutoOptimizer()
         self.learner = OnlineLearner()
-        self.params = self.optimizer.get_current_params()
+        self.params = self._load_optimal_params()
+
+    def _load_optimal_params(self):
+        """Load production strategy params, fall back to optimizer, then defaults."""
+        try:
+            with open(RESULTS_DIR / "production_strategy.json") as f:
+                data = json.load(f)
+                params = data["parameters"]
+                print(f"  Loaded production strategy v{data['version']}: "
+                      f"WR {data['performance']['win_rate_pct']}% "
+                      f"PF {data['performance']['profit_factor']}")
+                return params
+        except Exception:
+            pass
+        try:
+            return self.optimizer.get_current_params()
+        except Exception:
+            pass
+        return {"adx_threshold": 25, "rsi_dip_level": 40, "atr_stop_mult": 1.5,
+                "atr_target_mult": 3.0, "momentum_score_min": 0.5, "bb_dip_level": 0.10}
 
     def run_daily(self, portfolio_value=1_000_000, open_positions=None,
                   regime="BULL", date=None):
