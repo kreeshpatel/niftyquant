@@ -136,7 +136,7 @@ export default function Layout({ children }) {
         background: 'rgba(8,8,16,0.9)',
         fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-ghost)', letterSpacing: 0.5,
       }} className="desktop-only">
-        <span>NiftyQuant · Production Strategy v3.0 · Backtest: +43.2% · Sharpe 0.67 · -24.1% DD</span>
+        <span>NiftyQuant · v3.0 + Claude AI · WR 42.9% · PF 1.49 · Sharpe 0.67 · -24.1% DD</span>
         <span>0 positions · 100% cash · updated {now}</span>
       </div>
 

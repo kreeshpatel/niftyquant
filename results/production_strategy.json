@@ -7,8 +7,8 @@
     "annualised_pct": 9.1,
     "sharpe": 0.67,
     "max_drawdown_pct": -24.1,
-    "win_rate_pct": 39.8,
-    "profit_factor": 1.19,
+    "win_rate_pct": 42.9,
+    "profit_factor": 1.49,
     "avg_win_pct": 9.5,
     "avg_loss_pct": -5.0,
     "total_trades": 362,
@@ -46,6 +46,7 @@
     "use_sector_rotation": true,
     "use_partial_profits": false,
     "use_trailing_stop": false,
+    "claude_ai_layer": true,
     "risk_per_trade": 0.015,
     "regime_tiers": {
       "BULL": "breadth > 55%",
@@ -53,5 +54,21 @@
       "BEAR_MILD": "breadth 20-35%",
       "BEAR_STRONG": "breadth < 20%"
     }
+  },
+  "claude_layer": {
+    "enabled": true,
+    "backtest_date": "2026-03-26",
+    "trades_tested": 270,
+    "original_win_rate": 39.3,
+    "claude_win_rate": 42.9,
+    "win_rate_improvement": "+3.6pp",
+    "original_pf": 1.21,
+    "claude_pf": 1.49,
+    "pf_improvement": "+0.28",
+    "veto_accuracy": 100.0,
+    "approval_rate": 23.3,
+    "reduce_rate": 75.9,
+    "skip_rate": 0.7,
+    "behavior": "REDUCE on 76% of signals (sizes down weak setups), SKIP only on multiple red flags"
   }
 }

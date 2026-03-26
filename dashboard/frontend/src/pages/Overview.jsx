@@ -72,7 +72,7 @@ export default function Overview() {
         <MetricHero
           label="Profit Factor / Win Rate"
           value={<><span style={{ color: 'var(--green)' }}>{animPF.toFixed(2)}</span><span style={{ color: 'var(--text-dim)', fontSize: 24 }}> | </span><span>{animWR.toFixed(1)}%</span></>}
-          sub={`${wins}W · ${losses}L · ${m.total_trades || 0} trades`}
+          sub={`${wins}W · ${losses}L · ${m.total_trades || 0} trades · with Claude AI`}
           color="var(--text)" glowColor="#34d399"
         />
         <MetricHero

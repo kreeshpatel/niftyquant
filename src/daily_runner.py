@@ -206,9 +206,10 @@ def run_daily():
     print(f"\n  Saved {len(all_signals)} signals -> {signals_path}")
     print(f"    HYBRID_DIP: {len(hybrid_signals_json)} | MOMENTUM_CROSSOVER: {len(ml_signals_json)}")
 
-    # Step 7b — Claude AI signal analysis
+    # Step 7b — Claude AI signal analysis (production gate)
+    # Validated: +3.6pp WR, +0.28 PF on 270-trade backtest
     if CLAUDE_AVAILABLE and all_signals:
-        print("\n  Step 7b: Claude AI signal analysis...")
+        print("\n  Step 7b: Claude AI signal review (production)...")
         regime_data = {
             "regime": regime,
             "breadth": regime_result.breadth_ratio * 100,
@@ -222,10 +223,11 @@ def run_daily():
             "cash": summary["cash"],
             "today_pnl": 0,
             "current_drawdown": summary["drawdown_pct"],
-            "recent_win_rate": 39.8,
-            "recent_pf": 1.19,
+            "recent_win_rate": 42.9,
+            "recent_pf": 1.49,
             "sector_wr": {},
         }
+        filtered_signals = []
         for sig_json in all_signals:
             sig_for_claude = {
                 "ticker": sig_json["ticker"],
@@ -238,7 +240,7 @@ def run_daily():
                 "hold_days": sig_json.get("hold_days", 10),
                 "risk_amount": 0,
             }
-            features_for_claude = {}  # features already consumed by ML
+            features_for_claude = {}
             try:
                 analysis = analyse_signal(
                     signal=sig_for_claude,
@@ -248,15 +250,34 @@ def run_daily():
                 )
                 decision = analysis.get("decision", "APPROVE")
                 conf = analysis.get("confidence", 50)
-                icon = {"APPROVE": "+", "REDUCE": "~", "SKIP": "x"}.get(decision, "?")
-                print(f"    [{icon}] {sig_json['ticker']}: {decision} ({conf}% confidence)")
-                print(f"        {analysis.get('reasoning', '')[:100]}")
+                reasoning = analysis.get("reasoning", "")[:60]
+
                 sig_json["claude_decision"] = decision
                 sig_json["claude_confidence"] = conf
                 sig_json["claude_reasoning"] = analysis.get("reasoning", "")
                 sig_json["claude_size_mult"] = analysis.get("size_multiplier", 1.0)
+
+                if decision == "SKIP":
+                    print(f"    [x] {sig_json['ticker']}: SKIPPED -- {reasoning}")
+                    continue  # do not pass to entries
+
+                elif decision == "REDUCE":
+                    sig_json["size_multiplier"] = analysis.get("size_multiplier", 0.6)
+                    print(f"    [~] {sig_json['ticker']}: REDUCED to {sig_json['size_multiplier']:.0%} -- {reasoning}")
+
+                else:  # APPROVE
+                    sig_json["size_multiplier"] = analysis.get("size_multiplier", 1.0)
+                    print(f"    [+] {sig_json['ticker']}: APPROVED ({conf}%) -- {reasoning}")
+
+                filtered_signals.append(sig_json)
+
             except Exception as e:
-                print(f"    [?] {sig_json['ticker']}: Claude unavailable ({e})")
+                print(f"    [?] {sig_json['ticker']}: Claude unavailable ({e}), passing through")
+                filtered_signals.append(sig_json)
+
+        skipped = len(all_signals) - len(filtered_signals)
+        print(f"\n  Claude: {len(filtered_signals)} passed / {skipped} skipped of {len(all_signals)} signals")
+        all_signals = filtered_signals
 
         # Re-save signals with Claude annotations
         with open(signals_path, "w") as f:

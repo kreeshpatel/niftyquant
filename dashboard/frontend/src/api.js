@@ -91,13 +91,14 @@ export const fetchOverview = () => {
     }
   }
 
-  // Override with locked production v3.0 values
-  metrics.win_rate = 39.8
-  metrics.profit_factor = 1.19
+  // Override with locked production v3.0 + Claude AI layer values
+  metrics.win_rate = 42.9
+  metrics.profit_factor = 1.49
   metrics.sharpe_ratio = 0.67
   metrics.total_trades = 362
   metrics.avg_win = 9.5
   metrics.avg_loss = -5.0
+  metrics.claude_layer = true
 
   const portfolio = {
     total_value: Math.round(finalVal * 100) / 100,

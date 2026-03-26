@@ -245,6 +245,30 @@ export default function ClaudeInsights() {
               </div>
             )}
 
+            {/* Backtest validation banner */}
+            <div style={{
+              display: 'flex', gap: 10, flexWrap: 'wrap',
+              padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.04)',
+            }}>
+              {[
+                { label: 'Win Rate', value: '42.9%', sub: '+3.6pp', color: 'var(--green)' },
+                { label: 'Profit Factor', value: '1.49', sub: '+0.28', color: 'var(--green)' },
+                { label: 'Veto Accuracy', value: '100%', sub: '2/2', color: 'var(--purple)' },
+              ].map((m, i) => (
+                <div key={i} style={{
+                  flex: 1, minWidth: 80, padding: '6px 8px',
+                  background: 'rgba(255,255,255,0.02)', borderRadius: 6,
+                }}>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: 1,
+                    color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>{m.label}</div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 600,
+                    color: m.color }}>{m.value}</div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9,
+                    color: 'rgba(255,255,255,0.25)' }}>{m.sub} vs baseline</div>
+                </div>
+              ))}
+            </div>
+
             {/* Veto accuracy tracker */}
             {totalReviewed > 0 && (
               <div style={{
