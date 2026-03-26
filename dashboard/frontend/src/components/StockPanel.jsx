@@ -235,15 +235,7 @@ export default function StockPanel({ ticker, onClose }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[0, 1, 2].map(i => <div key={i} className="skeleton" style={{ height: 64, borderRadius: 10 }} />)}
               </div>
-            ) : news.length === 0 ? (
-              <div style={{ padding: '32px 0', textAlign: 'center' }}>
-                <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.15 }}>No news</div>
-                <div style={{ ...m, fontSize: 12, color: 'rgba(255,255,255,0.25)', lineHeight: 1.6 }}>
-                  No recent news for {d.ticker}<br />
-                  <span style={{ fontSize: 10 }}>Try <a href={`https://finance.yahoo.com/quote/${ticker}.NS/news`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--purple)', textDecoration: 'none' }}>Yahoo Finance {'\u2197'}</a></span>
-                </div>
-              </div>
-            ) : news.map((n, i) => (
+            ) : news.length > 0 ? news.map((n, i) => (
               <a key={i} href={n.link} target="_blank" rel="noopener noreferrer" style={{
                 display: 'block', padding: '14px 12px', textDecoration: 'none', borderRadius: 10,
                 borderBottom: i < news.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
@@ -258,9 +250,21 @@ export default function StockPanel({ ticker, onClose }) {
                   <span style={{ ...m, fontSize: 9, color: 'rgba(255,255,255,0.15)', marginLeft: 'auto' }}>{relTime(n.published)}</span>
                 </div>
                 <div style={{ ...s, fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.85)', lineHeight: 1.4, marginTop: 5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{n.title}</div>
-                {n.summary && n.summary !== n.title && <div style={{ ...m, fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{n.summary}</div>}
               </a>
-            ))}
+            )) : null}
+            {/* Always show Yahoo Finance link */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: news.length > 0 ? '12px 0 0' : '24px 0 0' }}>
+              {news.length === 0 && <div style={{ ...m, fontSize: 11, color: 'rgba(255,255,255,0.2)', textAlign: 'center' }}>News unavailable in preview</div>}
+              <a href={`https://finance.yahoo.com/quote/${ticker}.NS/news`} target="_blank" rel="noopener noreferrer" style={{
+                display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+                background: 'rgba(129,140,248,0.1)', border: '1px solid rgba(129,140,248,0.25)',
+                borderRadius: 20, ...m, fontSize: 11, color: '#818cf8', textDecoration: 'none',
+                transition: 'all 0.2s',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(129,140,248,0.18)'; e.currentTarget.style.borderColor = 'rgba(129,140,248,0.4)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(129,140,248,0.1)'; e.currentTarget.style.borderColor = 'rgba(129,140,248,0.25)' }}
+              >View on Yahoo Finance {'\u2197'}</a>
+            </div>
           </div>
         </>}
       </div>
