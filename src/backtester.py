@@ -24,6 +24,8 @@ from config import (
     BROKERAGE_PCT, STT_PCT, ATR_STOP_MULTIPLIER, MIN_ADX,
     BUY_THRESHOLD, ensure_dirs, get_sector,
     MIN_HOLD_DAYS, BLOCKED_SECTORS, PRIORITY_SECTORS, WEAK_MONTHS,
+    HEALTH_SCORE_FULL, HEALTH_SCORE_CAUTION, HEALTH_SCORE_WARNING,
+    MAX_PORTFOLIO_HEAT, TRAILING_ACTIVATION,
 )
 
 ensure_dirs()
@@ -43,6 +45,8 @@ class Position:
     signal_score: float
     atr_stop: float
     atr_at_entry: float = 0.0
+    trailing_stop: float = 0.0
+    trailing_active: bool = False
     # Partial profit tracking
     partial_exit_done: bool = False
     partial_target: float = 0.0
@@ -109,15 +113,17 @@ class Backtester:
 
     def __init__(self, use_ml=False, use_hybrid=False,
                  use_partial_profits=False, use_sector_rotation=False,
-                 use_refined=False, use_optimised_v2=False):
+                 use_refined=False, use_optimised_v2=False,
+                 use_bear_shield=False):
         self.feature_dir = FEATURES_DIR
         self.results_dir = RESULTS_DIR
         self.use_ml = use_ml
         self.use_hybrid = use_hybrid
         self.use_partial_profits = use_partial_profits
         self.use_sector_rotation = use_sector_rotation
-        self.use_optimised_v2 = use_optimised_v2
-        if use_optimised_v2:
+        self.use_optimised_v2 = use_optimised_v2 or use_bear_shield
+        self.use_bear_shield = use_bear_shield
+        if self.use_optimised_v2:
             self.use_sector_rotation = True
             self.use_refined = True
         else:
@@ -146,6 +152,10 @@ class Backtester:
             print("  Precomputing ML scores (batch)...")
             self._precompute_ml_scores()
             print(f"  ML score cache: {len(self._ml_score_cache)} ticker-dates")
+        if self.use_bear_shield:
+            print("  Precomputing market health scores...")
+            self._precompute_health_scores()
+            print(f"  Health score cache: {len(self._health_cache)} dates")
 
     def _load_all_features(self):
         print("Loading feature data...")
@@ -256,6 +266,75 @@ class Backtester:
     def _get_regime(self, date):
         return self._regime_cache.get(date, "CHOPPY")
 
+    def _precompute_health_scores(self):
+        """Precompute 0-100 market health score for all dates."""
+        self._health_cache = {}
+        # Use the breadth ratio from regime cache + proxy RSI/trend
+        proxies = ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK",
+                    "HINDUNILVR", "BHARTIARTL", "SBIN", "BAJFINANCE", "ITC"]
+        proxy_dfs = [self.stock_data[t] for t in proxies if t in self.stock_data]
+        if not proxy_dfs:
+            return
+
+        # Precompute proxy averages
+        all_dates = sorted(set().union(*[set(df.index) for df in self.stock_data.values()]))
+
+        # Vectorized breadth (reuse from regime)
+        bullish_counts = pd.Series(dtype=float)
+        total_counts = pd.Series(dtype=float)
+        for df in self.stock_data.values():
+            ema_above = df.get("ema_21_above_50", pd.Series(dtype=float))
+            rsi_above = df.get("rsi_14", pd.Series(dtype=float))
+            is_bull = ((ema_above == 1) & (rsi_above > 50)).astype(int)
+            bullish_counts = bullish_counts.add(is_bull, fill_value=0)
+            total_counts = total_counts.add(pd.Series(1, index=df.index), fill_value=0)
+        breadth = (bullish_counts / total_counts.replace(0, np.nan) * 100).fillna(0)
+
+        # Proxy EMA and RSI
+        proxy_close = pd.DataFrame({t: self.stock_data[t]["Close"] for t in proxies if t in self.stock_data})
+        avg_close = proxy_close.mean(axis=1)
+        ema50 = avg_close.ewm(span=50, adjust=False).mean()
+        ema21 = avg_close.ewm(span=21, adjust=False).mean()
+
+        # Proxy RSI (14-day)
+        delta = avg_close.diff()
+        gain = delta.clip(lower=0).rolling(14).mean()
+        loss = (-delta.clip(upper=0)).rolling(14).mean()
+        rs = gain / loss.replace(0, np.nan)
+        proxy_rsi = 100 - (100 / (1 + rs))
+        proxy_rsi = proxy_rsi.fillna(50)
+
+        for date in all_dates:
+            score = 0
+            # 1. Trend (30 pts)
+            if date in avg_close.index and date in ema50.index:
+                if avg_close.get(date, 0) > ema50.get(date, 0):
+                    score += 15
+                if date in ema21.index and ema21.get(date, 0) > ema50.get(date, 0):
+                    score += 15
+            # 2. Momentum (25 pts)
+            rsi_val = proxy_rsi.get(date, 50)
+            if rsi_val > 60: score += 25
+            elif rsi_val > 50: score += 15
+            elif rsi_val > 40: score += 5
+            # 3. Breadth (25 pts)
+            br = breadth.get(date, 0)
+            if br > 65: score += 25
+            elif br > 50: score += 15
+            elif br > 35: score += 5
+            # 4. VIX proxy: use inverse of avg ATR% as volatility (20 pts)
+            # Lower volatility = healthier market
+            atr_vals = []
+            for pdf in proxy_dfs:
+                if date in pdf.index:
+                    atr_vals.append(pdf.loc[date].get("atr_pct", 2))
+            avg_atr = np.mean(atr_vals) if atr_vals else 2
+            if avg_atr < 1.5: score += 20
+            elif avg_atr < 2.0: score += 12
+            elif avg_atr < 2.5: score += 5
+
+            self._health_cache[date] = score
+
     def _precompute_ml_scores(self):
         """Batch-predict ML scores for all stocks on all dates."""
         self._ml_score_cache = {}
@@ -341,6 +420,8 @@ class Backtester:
             flags.append("partial_profits")
         if self.use_sector_rotation:
             flags.append("sector_rotation")
+        if self.use_bear_shield:
+            flags.append("bear_shield")
         print(f"\n  Running backtest: {dates[0].date()} to {dates[-1].date()}")
         print(f"  Trading days: {len(dates)}  Flags: {', '.join(flags) or 'none'}")
 
@@ -371,7 +452,9 @@ class Backtester:
         funnel = {"total_stockdays": 0, "after_nifty_filter": 0, "after_momentum": 0,
                   "after_dip": 0, "after_ml": 0, "after_risk": 0, "entered": 0,
                   "nifty_blocked": 0, "sector_blocked": 0, "ema_hold_blocked": 0,
-                  "priority_entries": 0, "weak_month_blocked": 0, "overfit_flagged": 0}
+                  "priority_entries": 0, "weak_month_blocked": 0, "overfit_flagged": 0,
+                  "health_blocked": 0, "heat_blocked": 0, "trailing_exits": 0,
+                  "full_size": 0, "half_size": 0, "quarter_size": 0}
 
         for i, date in enumerate(dates):
             # ── Sector rotation: lookup from precomputed cache ──
@@ -414,8 +497,23 @@ class Backtester:
                     target_price = pos.full_target if self.use_partial_profits else (
                         pos.entry_price + HYBRID_ATR_TARGET * pos.atr_at_entry)
 
+                    # Trailing stop update (bear shield)
+                    if self.use_bear_shield and pos.atr_at_entry > 0:
+                        gain = row["High"] - pos.entry_price
+                        if not pos.trailing_active and gain >= TRAILING_ACTIVATION * pos.atr_at_entry:
+                            pos.trailing_active = True
+                            pos.trailing_stop = pos.entry_price  # breakeven
+                        if pos.trailing_active:
+                            new_trail = row["High"] - 1.5 * pos.atr_at_entry
+                            pos.trailing_stop = max(pos.trailing_stop, new_trail)
+
+                    # Trailing stop exit
+                    if self.use_bear_shield and pos.trailing_active and row["Low"] <= pos.trailing_stop:
+                        exit_price = round(pos.trailing_stop, 2)
+                        exit_reason = "trailing_stop"
+                        funnel["trailing_exits"] += 1
                     # Stop loss always allowed (safety first)
-                    if row["Low"] <= pos.atr_stop:
+                    elif row["Low"] <= pos.atr_stop:
                         exit_price = pos.atr_stop
                         exit_reason = "stop_loss"
                         if pos.partial_exit_done and abs(pos.atr_stop - pos.entry_price) < 0.01:
@@ -506,6 +604,24 @@ class Backtester:
             if self.use_refined and self._nifty_correction_cache.get(date, False):
                 nifty_blocked = True
                 funnel["nifty_blocked"] += 1
+
+            # ── Health score sizing (bear shield) ────────
+            health_mult = 1.0
+            health_score = 100
+            if self.use_bear_shield and hasattr(self, '_health_cache'):
+                health_score = self._health_cache.get(date, 50)
+                if health_score >= HEALTH_SCORE_FULL:
+                    health_mult = 1.0
+                    funnel["full_size"] += 1
+                elif health_score >= HEALTH_SCORE_CAUTION:
+                    health_mult = 0.5
+                    funnel["half_size"] += 1
+                elif health_score >= HEALTH_SCORE_WARNING:
+                    health_mult = 0.25
+                    funnel["quarter_size"] += 1
+                else:
+                    nifty_blocked = True  # DANGER = no entries
+                    funnel["health_blocked"] += 1
 
             # ── Determine regime for dynamic threshold ───
             if self.use_refined:
@@ -671,9 +787,26 @@ class Backtester:
                         if ml_score > 0.72:
                             size_mult *= 0.75
                             funnel["overfit_flagged"] += 1
+                        # Bear shield: health score sizing
+                        size_mult *= health_mult
                         shares = max(1, round(shares * size_mult))
                         pos_size = shares * entry_price * (1 + BROKERAGE_PCT)
                         if pos_size > cash or cash < 5000:
+                            continue
+
+                    # Portfolio heat check (bear shield)
+                    if self.use_bear_shield:
+                        current_heat = sum(
+                            (p.entry_price - p.atr_stop) * p.shares
+                            for p in positions.values()
+                        ) / max(cash + sum(
+                            p.shares * self.stock_data[p.ticker].loc[date, "Close"]
+                            for p in positions.values()
+                            if date in self.stock_data[p.ticker].index
+                        ), 1) * 100
+                        new_heat = (entry_price - atr_stop) * shares / max(cash, 1) * 100
+                        if current_heat + new_heat > MAX_PORTFOLIO_HEAT:
+                            funnel["heat_blocked"] += 1
                             continue
 
                     funnel["after_risk"] += 1
@@ -1192,8 +1325,113 @@ def run_optimised_v2(start_date="2022-01-01", end_date="2026-03-24"):
     return {"Refined": rr, "Optimised_v2": ro}
 
 
+def run_bear_shield(start_date="2022-01-01", end_date="2026-03-24"):
+    """Compare Optimised v2 vs Bear Shield."""
+    print(f"\n{'#'*70}")
+    print(f"  OPTIMISED v2 (baseline)")
+    print(f"{'#'*70}")
+    bt_o = Backtester(use_ml=True, use_hybrid=True, use_optimised_v2=True)
+    ro = bt_o.run(start_date, end_date)
+
+    print(f"\n{'#'*70}")
+    print(f"  BEAR SHIELD (health score + heat + trailing)")
+    print(f"{'#'*70}")
+    bt_b = Backtester(use_ml=True, use_hybrid=True, use_bear_shield=True)
+    rb = bt_b.run(start_date, end_date)
+
+    w = 56
+    eq = "=" * w
+    ln = "-" * w
+    print(f"\n  +{eq}+")
+    print(f"  |{'OPTIMISED v2 vs BEAR SHIELD':^{w}}|")
+    print(f"  +{eq}+")
+    print(f"  | {'Metric':<24}{'Optim v2':>14}{'Bear Shield':>14} |")
+    print(f"  +{ln}+")
+    for label, vo, vb in [
+        ("Total Return", f"{ro.total_return_pct:+.1f}%", f"{rb.total_return_pct:+.1f}%"),
+        ("Annualised", f"{ro.annualised_return_pct:+.1f}%", f"{rb.annualised_return_pct:+.1f}%"),
+        ("Sharpe Ratio", f"{ro.sharpe_ratio:.2f}", f"{rb.sharpe_ratio:.2f}"),
+        ("Max Drawdown", f"{ro.max_drawdown_pct:.1f}%", f"{rb.max_drawdown_pct:.1f}%"),
+        ("Total Trades", f"{ro.total_trades}", f"{rb.total_trades}"),
+        ("Win Rate", f"{ro.win_rate_pct:.1f}%", f"{rb.win_rate_pct:.1f}%"),
+        ("Avg Win", f"{ro.avg_win_pct:+.1f}%", f"{rb.avg_win_pct:+.1f}%"),
+        ("Avg Loss", f"{ro.avg_loss_pct:+.1f}%", f"{rb.avg_loss_pct:+.1f}%"),
+        ("Profit Factor", f"{ro.profit_factor:.2f}", f"{rb.profit_factor:.2f}"),
+        ("Avg Hold Days", f"{ro.avg_hold_days:.1f}", f"{rb.avg_hold_days:.1f}"),
+    ]:
+        print(f"  | {label:<24}{vo:>14}{vb:>14} |")
+    print(f"  +{eq}+")
+
+    # Year-by-year
+    for label, result in [("OPTIMISED v2", ro), ("BEAR SHIELD", rb)]:
+        if result.total_trades > 0 and len(result.trade_log) > 0:
+            print(f"\n  +{eq}+")
+            print(f"  |{f'{label} -- YEAR BY YEAR':^{w}}|")
+            print(f"  +{eq}+")
+            print(f"  | {'Year':<6}{'Trades':>7}{'WR':>7}{'AvgRet':>9}{'TotalPnL':>13}{'CumPnL':>12} |")
+            print(f"  +{ln}+")
+            tl = result.trade_log.copy()
+            tl["year"] = pd.to_datetime(tl["entry_date"]).dt.year
+            cum = 0
+            for year in sorted(tl["year"].unique()):
+                yt = tl[tl["year"] == year]
+                n = len(yt)
+                wc = (yt["net_pnl"] > 0).sum()
+                wr = wc / n * 100 if n > 0 else 0
+                ar = yt["return_pct"].mean()
+                tp = yt["net_pnl"].sum()
+                cum += tp
+                print(f"  | {year:<6}{n:>7}{wr:>6.1f}%{ar:>+8.2f}%{tp:>+12,.0f}{cum:>+11,.0f} |")
+            print(f"  +{eq}+")
+
+    # Diagnostics
+    f = getattr(rb, '_funnel', {})
+    if f:
+        print(f"\n  Bear Shield Diagnostics:")
+        print(f"    Health score blocked (DANGER): {f.get('health_blocked', 0):>6} days")
+        print(f"    Full size (health>=60):        {f.get('full_size', 0):>6} days")
+        print(f"    Half size (40-59):             {f.get('half_size', 0):>6} days")
+        print(f"    Quarter size (20-39):          {f.get('quarter_size', 0):>6} days")
+        print(f"    Portfolio heat blocked:         {f.get('heat_blocked', 0):>6} entries")
+        print(f"    Trailing stop exits:            {f.get('trailing_exits', 0):>6} trades")
+        print(f"    EMA exits blocked (hold):       {f.get('ema_hold_blocked', 0):>6}")
+
+    # Health score by year
+    if hasattr(bt_b, '_health_cache') and bt_b._health_cache:
+        print(f"\n  Avg Health Score by Year:")
+        hs = pd.Series(bt_b._health_cache)
+        hs.index = pd.to_datetime(hs.index)
+        for year in sorted(hs.index.year.unique()):
+            yr_scores = hs[hs.index.year == year]
+            print(f"    {year}: {yr_scores.mean():.1f}/100 "
+                  f"(min={yr_scores.min():.0f}, max={yr_scores.max():.0f})")
+
+    # Exit breakdown
+    if len(rb.trade_log) > 0:
+        tl = rb.trade_log
+        print(f"\n  Exit Reason Breakdown:")
+        for reason in sorted(tl["exit_reason"].unique()):
+            sub = tl[tl["exit_reason"] == reason]
+            n = len(sub)
+            wr = (sub["net_pnl"] > 0).sum() / n * 100 if n > 0 else 0
+            ar = sub["return_pct"].mean()
+            print(f"    {reason:<20s} {n:>4} trades  WR={wr:>5.1f}%  Avg={ar:>+6.2f}%")
+
+    # Save
+    if len(rb.trade_log) > 0:
+        rb.trade_log.to_csv(RESULTS_DIR / "backtest_bear_shield.csv", index=False)
+        print(f"\n  Trade log: {RESULTS_DIR / 'backtest_bear_shield.csv'}")
+    eq_df = pd.DataFrame({"date": rb.equity_curve.index, "equity": rb.equity_curve.values})
+    eq_df.to_csv(RESULTS_DIR / "backtest_bear_shield_equity.csv", index=False)
+    print(f"  Equity: {RESULTS_DIR / 'backtest_bear_shield_equity.csv'}")
+
+    return {"Optimised_v2": ro, "Bear_Shield": rb}
+
+
 if __name__ == "__main__":
-    if "--optimised" in sys.argv:
+    if "--bear-shield" in sys.argv:
+        run_bear_shield()
+    elif "--optimised" in sys.argv:
         run_optimised_v2()
     elif "--refined" in sys.argv:
         run_refined()

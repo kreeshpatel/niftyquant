@@ -34,6 +34,14 @@ BLOCKED_SECTORS = ['IT', 'FMCG', 'Auto']
 PRIORITY_SECTORS = ['Infrastructure', 'Energy', 'Metals', 'Consumer']
 WEAK_MONTHS = [7]  # July: 25.5% WR historically
 
+# ── Bear protection (market health) ────────────────────
+HEALTH_SCORE_FULL = 60
+HEALTH_SCORE_CAUTION = 40
+HEALTH_SCORE_WARNING = 20
+MAX_PORTFOLIO_HEAT = 15.0
+USE_TRAILING_STOP = True
+TRAILING_ACTIVATION = 1.5  # x ATR gain to activate
+
 # ── NSE market hours ─────────────────────────────────────
 NSE_OPEN_TIME = "09:15"
 NSE_CLOSE_TIME = "15:30"
