@@ -1,5 +1,6 @@
 import React from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
+import StockSearch from './StockSearch'
 
 const tabs = [
   { to: '/', label: 'Overview' },
@@ -64,6 +65,8 @@ export default function Layout({ children }) {
             )
           })}
         </div>
+
+        <StockSearch />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <RegimePill regime="BEAR" />

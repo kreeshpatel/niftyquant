@@ -8,8 +8,10 @@
   --text-primary: #e8e8ec;
   --text-secondary: #ffffff50;
   --text-dim: #ffffff25;
-  --text-mono: 'Fira Code', monospace;
-  --text-display: 'Syne', sans-serif;
+  --font-mono: 'Fira Code', 'JetBrains Mono', 'Cascadia Code', 'Consolas', 'SF Mono', monospace;
+  --font-display: 'Syne', 'DM Sans', system-ui, sans-serif;
+  --text-mono: var(--font-mono);
+  --text-display: var(--font-display);
   --green: #34d399;
   --green-bg: #34d39912;
   --green-border: #34d39925;
@@ -29,11 +31,15 @@
   --radius-xl: 20px;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 body {
   background: var(--bg-base);
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-display);
   color: var(--text-primary);
   margin: 0;
   min-height: 100vh;
@@ -91,6 +97,11 @@ input, select, button { font-family: var(--text-mono); }
 .fade-up-4 { animation-delay: 200ms; }
 .fade-up-5 { animation-delay: 240ms; }
 .shake { animation: shake 0.3s ease-in-out; }
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
