@@ -4,6 +4,7 @@
   "locked_date": "2026-03-26",
   "performance": {
     "total_return_pct": 43.2,
+    "annualised_pct": 9.1,
     "sharpe": 0.67,
     "max_drawdown_pct": -24.1,
     "win_rate_pct": 39.8,
@@ -12,5 +13,45 @@
     "avg_loss_pct": -5.0,
     "total_trades": 362,
     "trades_per_month": 7.5
+  },
+  "year_by_year": {
+    "2022": "+Rs 1.90L",
+    "2023": "+Rs 4.44L",
+    "2024": "+Rs 1.41L",
+    "2025": "-Rs 2.57L (bear)",
+    "2026": "ongoing"
+  },
+  "parameters": {
+    "adx_threshold": 22,
+    "momentum_conditions": 4,
+    "rsi_dip_level": 45,
+    "bb_dip_level": 0.1,
+    "atr_stop_mult": 1.5,
+    "atr_target_mult": 3.0,
+    "ml_threshold_bull": 0.5,
+    "ml_threshold_choppy": 0.54,
+    "ml_threshold_bear_mild": 0.58,
+    "min_hold_days": 8,
+    "blocked_sectors": [
+      "IT",
+      "FMCG",
+      "Auto"
+    ],
+    "priority_sectors": [
+      "Infrastructure",
+      "Energy",
+      "Metals",
+      "Consumer"
+    ],
+    "use_sector_rotation": true,
+    "use_partial_profits": false,
+    "use_trailing_stop": false,
+    "risk_per_trade": 0.015,
+    "regime_tiers": {
+      "BULL": "breadth > 55%",
+      "CHOPPY": "breadth 35-55%",
+      "BEAR_MILD": "breadth 20-35%",
+      "BEAR_STRONG": "breadth < 20%"
+    }
   }
 }

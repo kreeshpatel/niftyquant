@@ -2,7 +2,10 @@
   "cash": 1000000,
   "positions": {},
   "total_trades": 0,
-  "created_date": "2026-03-24",
+  "total_pnl": 0,
+  "peak_value": 1000000,
+  "created_date": "2026-03-26",
   "last_updated": "2026-03-26",
-  "peak_value": 1000000
+  "strategy_version": "3.0",
+  "note": "Reset to v3.0 production strategy"
 }
