@@ -1,85 +1,67 @@
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET')
+
   const { ticker } = req.query
-  if (!ticker) {
-    return res.status(400).json({ news: [], error: 'Missing ticker param' })
-  }
+  if (!ticker) return res.json({ news: [], source: 'none' })
 
-  const symbol = ticker.replace('.NS', '') + '.NS'
+  const symbol = ticker.replace('.NS', '')
 
-  // Try Yahoo Finance RSS feed
+  // Source 1: Yahoo Finance search API
   try {
-    const rssUrl = `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${encodeURIComponent(symbol)}&region=IN&lang=en-IN`
-    const rssRes = await fetch(rssUrl, { headers: { 'User-Agent': 'NiftyQuant/1.0' }, signal: AbortSignal.timeout(8000) })
-
-    if (rssRes.ok) {
-      const xml = await rssRes.text()
-      const items = parseRssItems(xml).slice(0, 4)
-      if (items.length > 0) {
-        return res.status(200).json({ news: items })
+    const r = await fetch(
+      `https://query1.finance.yahoo.com/v1/finance/search?q=${symbol}.NS&newsCount=6&enableFuzzyQuery=false`,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+          'Accept': 'application/json',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+        signal: AbortSignal.timeout(8000),
       }
-    }
-  } catch (_) { /* fall through */ }
-
-  // Fallback: Yahoo Finance search API
-  try {
-    const searchUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}&newsCount=5&quotesCount=0`
-    const searchRes = await fetch(searchUrl, { headers: { 'User-Agent': 'NiftyQuant/1.0' }, signal: AbortSignal.timeout(8000) })
-
-    if (searchRes.ok) {
-      const data = await searchRes.json()
-      const items = (data.news || []).slice(0, 4).map(n => ({
-        title: stripHtml(n.title || ''),
+    )
+    const data = await r.json()
+    if (data.news && data.news.length > 0) {
+      const news = data.news.slice(0, 5).map(n => ({
+        title: n.title || '',
         link: n.link || '',
-        published: n.providerPublishTime ? new Date(n.providerPublishTime * 1000).toISOString() : '',
-        source: n.publisher || extractDomain(n.link || ''),
-        summary: stripHtml(n.title || '').slice(0, 120),
+        source: n.publisher || 'Yahoo Finance',
+        published: n.providerPublishTime
+          ? new Date(n.providerPublishTime * 1000).toISOString()
+          : '',
+        summary: (n.title || '').slice(0, 120),
       }))
-      return res.status(200).json({ news: items })
+      return res.json({ news, source: 'yahoo' })
     }
-  } catch (_) { /* fall through */ }
-
-  return res.status(200).json({ news: [] })
-}
-
-function parseRssItems(xml) {
-  const items = []
-  const itemRegex = /<item>([\s\S]*?)<\/item>/g
-  let match
-  while ((match = itemRegex.exec(xml)) !== null) {
-    const block = match[1]
-    const title = extractTag(block, 'title')
-    const link = extractTag(block, 'link')
-    const pubDate = extractTag(block, 'pubDate')
-    const description = extractTag(block, 'description')
-    if (title) {
-      items.push({
-        title: stripHtml(title),
-        link: link || '',
-        published: pubDate ? new Date(pubDate).toISOString() : '',
-        source: extractDomain(link || ''),
-        summary: stripHtml(description || '').slice(0, 120),
-      })
-    }
+  } catch (e) {
+    console.log('Yahoo failed:', e.message)
   }
-  return items
-}
 
-function extractTag(xml, tag) {
-  const cdataMatch = xml.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>`))
-  if (cdataMatch) return cdataMatch[1]
-  const simpleMatch = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`))
-  return simpleMatch ? simpleMatch[1] : ''
-}
-
-function stripHtml(str) {
-  return str.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim()
-}
-
-function extractDomain(url) {
+  // Source 2: Yahoo quote summary (different endpoint)
   try {
-    const hostname = new URL(url).hostname
-    return hostname.replace(/^www\./, '').split('.').slice(-2, -1)[0] || hostname
-  } catch {
-    return 'Yahoo Finance'
+    const r = await fetch(
+      `https://query2.finance.yahoo.com/v1/finance/search?q=${symbol}&newsCount=5`,
+      {
+        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(8000),
+      }
+    )
+    const data = await r.json()
+    if (data.news && data.news.length > 0) {
+      const news = data.news.slice(0, 5).map(n => ({
+        title: n.title || '',
+        link: n.link || '',
+        source: n.publisher || 'Yahoo Finance',
+        published: n.providerPublishTime
+          ? new Date(n.providerPublishTime * 1000).toISOString()
+          : '',
+        summary: (n.title || '').slice(0, 120),
+      }))
+      return res.json({ news, source: 'yahoo2' })
+    }
+  } catch (e) {
+    console.log('Yahoo2 failed:', e.message)
   }
+
+  return res.json({ news: [], source: 'none' })
 }
