@@ -27,6 +27,12 @@ BROKERAGE_PCT = 0.001
 STT_PCT = 0.001
 ATR_STOP_MULTIPLIER = 2.0
 MIN_ADX = 25.0
+MIN_HOLD_DAYS = 8
+
+# ── Data-driven sector filters (from trade analysis) ───
+BLOCKED_SECTORS = ['IT', 'FMCG', 'Auto']
+PRIORITY_SECTORS = ['Infrastructure', 'Energy', 'Metals', 'Consumer']
+WEAK_MONTHS = [7]  # July: 25.5% WR historically
 
 # ── NSE market hours ─────────────────────────────────────
 NSE_OPEN_TIME = "09:15"

@@ -23,6 +23,7 @@ from config import (
     INITIAL_CAPITAL, MAX_POSITIONS, MAX_POSITION_PCT,
     BROKERAGE_PCT, STT_PCT, ATR_STOP_MULTIPLIER, MIN_ADX,
     BUY_THRESHOLD, ensure_dirs, get_sector,
+    MIN_HOLD_DAYS, BLOCKED_SECTORS, PRIORITY_SECTORS, WEAK_MONTHS,
 )
 
 ensure_dirs()
@@ -108,14 +109,19 @@ class Backtester:
 
     def __init__(self, use_ml=False, use_hybrid=False,
                  use_partial_profits=False, use_sector_rotation=False,
-                 use_refined=False):
+                 use_refined=False, use_optimised_v2=False):
         self.feature_dir = FEATURES_DIR
         self.results_dir = RESULTS_DIR
         self.use_ml = use_ml
         self.use_hybrid = use_hybrid
         self.use_partial_profits = use_partial_profits
         self.use_sector_rotation = use_sector_rotation
-        self.use_refined = use_refined
+        self.use_optimised_v2 = use_optimised_v2
+        if use_optimised_v2:
+            self.use_sector_rotation = True
+            self.use_refined = True
+        else:
+            self.use_refined = use_refined
         self.ml_model = None
         self.stock_data = {}
         self._nifty_correction_cache = {}
@@ -126,11 +132,11 @@ class Backtester:
             self.ml_model.load()
             print(f"  ML model loaded ({len(self.ml_model.feature_columns)} features, "
                   f"threshold={BUY_THRESHOLD})")
-        if use_sector_rotation:
+        if self.use_sector_rotation:
             print("  Precomputing sector rankings...")
             self._precompute_sector_data()
             print(f"  Sector cache: {len(self._sector_cache)} dates")
-        if use_refined:
+        if self.use_refined:
             print("  Precomputing Nifty correction periods...")
             self._precompute_nifty_correction()
             print(f"  Nifty correction cache: {sum(self._nifty_correction_cache.values())} correction days")
@@ -225,23 +231,27 @@ class Backtester:
                 self._nifty_correction_cache[date] = False
 
     def _precompute_regimes(self):
-        """Precompute market regime for all dates."""
+        """Precompute market regime for all dates using vectorized breadth."""
         self._regime_cache = {}
-        all_dates = sorted(set().union(*[set(df.index) for df in self.stock_data.values()]))
-        for date in all_dates:
-            bullish = 0
-            total = 0
-            for df in self.stock_data.values():
-                if date not in df.index:
-                    continue
-                total += 1
-                if df.loc[date].get("ema_21_above_50", 0) == 1 and df.loc[date].get("rsi_14", 50) > 50:
-                    bullish += 1
-            if total == 0:
+        # Build a single breadth series: fraction of stocks bullish per date
+        bullish_counts = pd.Series(dtype=float)
+        total_counts = pd.Series(dtype=float)
+        for df in self.stock_data.values():
+            is_bull = ((df.get("ema_21_above_50", pd.Series(dtype=float)) == 1) &
+                       (df.get("rsi_14", pd.Series(dtype=float)) > 50)).astype(int)
+            bullish_counts = bullish_counts.add(is_bull, fill_value=0)
+            total_counts = total_counts.add(pd.Series(1, index=df.index), fill_value=0)
+        ratio = bullish_counts / total_counts.replace(0, np.nan)
+        for date in ratio.index:
+            r = ratio.get(date, 0)
+            if pd.isna(r):
                 self._regime_cache[date] = "CHOPPY"
+            elif r > 0.5:
+                self._regime_cache[date] = "BULL"
+            elif r < 0.2:
+                self._regime_cache[date] = "BEAR"
             else:
-                ratio = bullish / total
-                self._regime_cache[date] = "BULL" if ratio > 0.5 else ("BEAR" if ratio < 0.2 else "CHOPPY")
+                self._regime_cache[date] = "CHOPPY"
 
     def _get_regime(self, date):
         return self._regime_cache.get(date, "CHOPPY")
@@ -360,7 +370,8 @@ class Backtester:
         # Signal funnel counters (for diagnostics)
         funnel = {"total_stockdays": 0, "after_nifty_filter": 0, "after_momentum": 0,
                   "after_dip": 0, "after_ml": 0, "after_risk": 0, "entered": 0,
-                  "nifty_blocked": 0}
+                  "nifty_blocked": 0, "sector_blocked": 0, "ema_hold_blocked": 0,
+                  "priority_entries": 0, "weak_month_blocked": 0, "overfit_flagged": 0}
 
         for i, date in enumerate(dates):
             # ── Sector rotation: lookup from precomputed cache ──
@@ -399,26 +410,34 @@ class Backtester:
                             partial_exit_count += 1
 
                 if self.use_hybrid:
+                    days_held = (date - pos.entry_date).days
                     target_price = pos.full_target if self.use_partial_profits else (
                         pos.entry_price + HYBRID_ATR_TARGET * pos.atr_at_entry)
-                    if row["High"] >= target_price and target_price > 0:
-                        exit_price = round(target_price, 2)
-                        exit_reason = "target_hit_full" if pos.partial_exit_done else "target_hit"
-                        if pos.partial_exit_done:
-                            partial_hit_full_count += 1
-                    elif row.get("ema_cross_down", 0) == 1:
-                        next_dates = dates[dates > date]
-                        if len(next_dates) > 0:
-                            nd = next_dates[0]
-                            if nd in df.index:
-                                exit_price = df.loc[nd, "Open"]
-                                exit_date = nd
-                                exit_reason = "ema_reversal"
-                    elif row["Low"] <= pos.atr_stop:
+
+                    # Stop loss always allowed (safety first)
+                    if row["Low"] <= pos.atr_stop:
                         exit_price = pos.atr_stop
                         exit_reason = "stop_loss"
                         if pos.partial_exit_done and abs(pos.atr_stop - pos.entry_price) < 0.01:
                             partial_breakeven_count += 1
+                    # Target hit always allowed
+                    elif row["High"] >= target_price and target_price > 0:
+                        exit_price = round(target_price, 2)
+                        exit_reason = "target_hit_full" if pos.partial_exit_done else "target_hit"
+                        if pos.partial_exit_done:
+                            partial_hit_full_count += 1
+                    # EMA reversal — blocked if held < MIN_HOLD_DAYS (Fix 1)
+                    elif row.get("ema_cross_down", 0) == 1:
+                        if self.use_optimised_v2 and days_held < MIN_HOLD_DAYS:
+                            funnel["ema_hold_blocked"] += 1
+                        else:
+                            next_dates = dates[dates > date]
+                            if len(next_dates) > 0:
+                                nd = next_dates[0]
+                                if nd in df.index:
+                                    exit_price = df.loc[nd, "Open"]
+                                    exit_date = nd
+                                    exit_reason = "ema_reversal"
                 else:
                     if row["Low"] <= pos.atr_stop:
                         exit_price = pos.atr_stop
@@ -435,8 +454,9 @@ class Backtester:
                 # ── Sector rotation exit ─────────────────
                 if exit_price is None and self.use_sector_rotation:
                     sector = get_sector(ticker)
-                    hold_days = (date - pos.entry_date).days
-                    if sector in bottom3_sectors and hold_days > 5:
+                    hold_days_sr = (date - pos.entry_date).days
+                    min_sr_days = max(MIN_HOLD_DAYS, 5) if self.use_optimised_v2 else 5
+                    if sector in bottom3_sectors and hold_days_sr > min_sr_days:
                         next_dates = dates[dates > date]
                         if len(next_dates) > 0:
                             nd = next_dates[0]
@@ -509,6 +529,13 @@ class Backtester:
                     if self.use_sector_rotation and get_sector(ticker) in bottom3_sectors:
                         continue
 
+                    # Fix 2: Block losing sectors
+                    if self.use_optimised_v2:
+                        ticker_sector = get_sector(ticker)
+                        if ticker_sector in BLOCKED_SECTORS:
+                            funnel["sector_blocked"] += 1
+                            continue
+
                     funnel["after_nifty_filter"] += 1
 
                     if self.use_hybrid:
@@ -556,6 +583,10 @@ class Backtester:
                                 threshold = 0.58
                             if row.get("dip_conviction", 0) >= 2:
                                 threshold -= 0.02
+                            # Fix 5: Stricter in weak months
+                            if self.use_optimised_v2 and date.month in WEAK_MONTHS:
+                                threshold += 0.04
+                                funnel["weak_month_blocked"] += 1 if ml_score < threshold else 0
                         else:
                             threshold = BUY_THRESHOLD
 
@@ -629,6 +660,21 @@ class Backtester:
 
                     partial_tgt = entry_price + PARTIAL_ATR_TARGET * atr if self.use_partial_profits else 0
                     full_tgt = entry_price + HYBRID_ATR_TARGET * atr if self.use_hybrid else 0
+
+                    # Fix 3 + Fix 4: Adjust position size
+                    if self.use_optimised_v2:
+                        size_mult = 1.0
+                        t_sector = get_sector(ticker)
+                        if t_sector in PRIORITY_SECTORS:
+                            size_mult = 1.2
+                            funnel["priority_entries"] += 1
+                        if ml_score > 0.72:
+                            size_mult *= 0.75
+                            funnel["overfit_flagged"] += 1
+                        shares = max(1, round(shares * size_mult))
+                        pos_size = shares * entry_price * (1 + BROKERAGE_PCT)
+                        if pos_size > cash or cash < 5000:
+                            continue
 
                     funnel["after_risk"] += 1
                     funnel["entered"] += 1
@@ -1049,8 +1095,107 @@ def run_refined(start_date="2022-01-01", end_date="2026-03-24"):
     return {"C": rc, "Refined": rr}
 
 
+def run_optimised_v2(start_date="2022-01-01", end_date="2026-03-24"):
+    """Compare Refined vs Optimised v2 (all 5 data-driven fixes)."""
+    print(f"\n{'#'*70}")
+    print(f"  REFINED (previous)")
+    print(f"{'#'*70}")
+    bt_r = Backtester(use_ml=True, use_hybrid=True, use_sector_rotation=True, use_refined=True)
+    rr = bt_r.run(start_date, end_date)
+
+    print(f"\n{'#'*70}")
+    print(f"  OPTIMISED v2 (5 data-driven fixes)")
+    print(f"{'#'*70}")
+    bt_o = Backtester(use_ml=True, use_hybrid=True, use_optimised_v2=True)
+    ro = bt_o.run(start_date, end_date)
+
+    w = 56
+    eq = "=" * w
+    ln = "-" * w
+    print(f"\n  +{eq}+")
+    print(f"  |{'REFINED vs OPTIMISED v2':^{w}}|")
+    print(f"  +{eq}+")
+    print(f"  | {'Metric':<24}{'Refined':>14}{'Optimised v2':>14} |")
+    print(f"  +{ln}+")
+    for label, vr, vo in [
+        ("Total Return", f"{rr.total_return_pct:+.1f}%", f"{ro.total_return_pct:+.1f}%"),
+        ("Annualised", f"{rr.annualised_return_pct:+.1f}%", f"{ro.annualised_return_pct:+.1f}%"),
+        ("Sharpe Ratio", f"{rr.sharpe_ratio:.2f}", f"{ro.sharpe_ratio:.2f}"),
+        ("Max Drawdown", f"{rr.max_drawdown_pct:.1f}%", f"{ro.max_drawdown_pct:.1f}%"),
+        ("Total Trades", f"{rr.total_trades}", f"{ro.total_trades}"),
+        ("Win Rate", f"{rr.win_rate_pct:.1f}%", f"{ro.win_rate_pct:.1f}%"),
+        ("Avg Win", f"{rr.avg_win_pct:+.1f}%", f"{ro.avg_win_pct:+.1f}%"),
+        ("Avg Loss", f"{rr.avg_loss_pct:+.1f}%", f"{ro.avg_loss_pct:+.1f}%"),
+        ("Profit Factor", f"{rr.profit_factor:.2f}", f"{ro.profit_factor:.2f}"),
+        ("Avg Hold Days", f"{rr.avg_hold_days:.1f}", f"{ro.avg_hold_days:.1f}"),
+        ("Target Hits", f"{rr.target_hits}", f"{ro.target_hits}"),
+        ("Sector Exits", f"{rr.sector_exits}", f"{ro.sector_exits}"),
+    ]:
+        print(f"  | {label:<24}{vr:>14}{vo:>14} |")
+    print(f"  +{eq}+")
+
+    # Year-by-year
+    if ro.total_trades > 0 and len(ro.trade_log) > 0:
+        print(f"\n  +{eq}+")
+        print(f"  |{'OPTIMISED v2 -- YEAR BY YEAR':^{w}}|")
+        print(f"  +{eq}+")
+        print(f"  | {'Year':<6}{'Trades':>7}{'WR':>7}{'AvgRet':>9}{'TotalPnL':>13}{'CumPnL':>12} |")
+        print(f"  +{ln}+")
+        tl = ro.trade_log.copy()
+        tl["year"] = pd.to_datetime(tl["entry_date"]).dt.year
+        cum = 0
+        for year in sorted(tl["year"].unique()):
+            yt = tl[tl["year"] == year]
+            n = len(yt)
+            wc = (yt["net_pnl"] > 0).sum()
+            wr = wc / n * 100 if n > 0 else 0
+            ar = yt["return_pct"].mean()
+            tp = yt["net_pnl"].sum()
+            cum += tp
+            print(f"  | {year:<6}{n:>7}{wr:>6.1f}%{ar:>+8.2f}%{tp:>+12,.0f}{cum:>+11,.0f} |")
+        print(f"  +{eq}+")
+
+    # Diagnostics
+    f = getattr(ro, '_funnel', {})
+    if f:
+        print(f"\n  Signal Funnel:")
+        print(f"    Total stock-days:         {f.get('total_stockdays',0):>10,}")
+        print(f"    Sector blocked (IT/FMCG): {f.get('sector_blocked',0):>10,}")
+        print(f"    After momentum filter:    {f.get('after_momentum',0):>10,}")
+        print(f"    After ML filter:          {f.get('after_ml',0):>10,}")
+        print(f"    Final entries:            {f.get('entered',0):>10,}")
+        print(f"    EMA exits blocked (hold): {f.get('ema_hold_blocked',0):>10,}")
+        print(f"    Priority sector entries:  {f.get('priority_entries',0):>10,}")
+        print(f"    Weak month blocked:       {f.get('weak_month_blocked',0):>10,}")
+        print(f"    Overfit ML flagged:       {f.get('overfit_flagged',0):>10,}")
+        print(f"    Nifty correction blocked: {f.get('nifty_blocked',0):>10,} days")
+
+    # Exit reason breakdown
+    if len(ro.trade_log) > 0:
+        tl = ro.trade_log
+        print(f"\n  Exit Reason Breakdown:")
+        for reason in sorted(tl["exit_reason"].unique()):
+            sub = tl[tl["exit_reason"] == reason]
+            n = len(sub)
+            wr = (sub["net_pnl"] > 0).sum() / n * 100 if n > 0 else 0
+            ar = sub["return_pct"].mean()
+            print(f"    {reason:<20s} {n:>4} trades  WR={wr:>5.1f}%  Avg={ar:>+6.2f}%")
+
+    # Save
+    if len(ro.trade_log) > 0:
+        ro.trade_log.to_csv(RESULTS_DIR / "backtest_optimised_v2.csv", index=False)
+        print(f"\n  Trade log: {RESULTS_DIR / 'backtest_optimised_v2.csv'}")
+    eq_df = pd.DataFrame({"date": ro.equity_curve.index, "equity": ro.equity_curve.values})
+    eq_df.to_csv(RESULTS_DIR / "backtest_optimised_v2_equity.csv", index=False)
+    print(f"  Equity: {RESULTS_DIR / 'backtest_optimised_v2_equity.csv'}")
+
+    return {"Refined": rr, "Optimised_v2": ro}
+
+
 if __name__ == "__main__":
-    if "--refined" in sys.argv:
+    if "--optimised" in sys.argv:
+        run_optimised_v2()
+    elif "--refined" in sys.argv:
         run_refined()
     elif "--4way" in sys.argv or "--compare" in sys.argv:
         run_4way()
