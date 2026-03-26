@@ -1,24 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { fetchScreener } from '../api'
+import { SECTOR_MAP, SECTOR_ORDER, getSector } from '../data/sectorMap'
 import StockPanel from '../components/StockPanel'
 import TopLoader from '../components/TopLoader'
-
-const SECTOR_MAP = {
-  HDFCBANK:'Banking',ICICIBANK:'Banking',SBIN:'Banking',AXISBANK:'Banking',KOTAKBANK:'Banking',BANKBARODA:'Banking',
-  PNB:'Banking',FEDERALBNK:'Banking',IDFCFIRSTB:'Banking',INDUSINDBK:'Banking',AUBANK:'Banking',BANDHANBNK:'Banking',
-  TCS:'IT',INFY:'IT',HCLTECH:'IT',WIPRO:'IT',TECHM:'IT',LTIM:'IT',MPHASIS:'IT',PERSISTENT:'IT',COFORGE:'IT',
-  RELIANCE:'Energy',ONGC:'Energy',BPCL:'Energy',IOC:'Energy',GAIL:'Energy',NTPC:'Energy',POWERGRID:'Energy',TATAPOWER:'Energy',COALINDIA:'Energy',
-  MARUTI:'Auto',TATAMOTORS:'Auto',BAJAJ_AUTO:'Auto',EICHERMOT:'Auto',HEROMOTOCO:'Auto',TVSMOTOR:'Auto',M_M:'Auto',
-  HINDUNILVR:'FMCG',ITC:'FMCG',NESTLEIND:'FMCG',BRITANNIA:'FMCG',DABUR:'FMCG',MARICO:'FMCG',TATACONSUM:'FMCG',
-  SUNPHARMA:'Pharma',DRREDDY:'Pharma',CIPLA:'Pharma',DIVISLAB:'Pharma',LUPIN:'Pharma',BIOCON:'Pharma',APOLLOHOSP:'Pharma',
-  BAJFINANCE:'Finance',BAJAJFINSV:'Finance',CHOLAFIN:'Finance',MUTHOOTFIN:'Finance',HDFCAMC:'Finance',SBILIFE:'Finance',
-  TATASTEEL:'Metals',JSWSTEEL:'Metals',HINDALCO:'Metals',VEDL:'Metals',NMDC:'Metals',SAIL:'Metals',
-  ULTRACEMCO:'Cement',SHREECEM:'Cement',ACC:'Cement',AMBUJACEM:'Cement',
-  BHARTIARTL:'Telecom',INDUSTOWER:'Telecom',
-  LT:'Infra',SIEMENS:'Infra',BEL:'Infra',BHEL:'Infra',DLF:'Infra',GODREJPROP:'Infra',
-  TITAN:'Consumer',TRENT:'Consumer',DMART:'Consumer',JUBLFOOD:'Consumer',INDIGO:'Consumer',INDHOTEL:'Consumer',HAVELLS:'Consumer',DIXON:'Consumer',
-  PIDILITIND:'Chemicals',SRF:'Chemicals',PIIND:'Chemicals',
-}
 
 function getTileColor(ret) {
   if (ret > 3) return 'rgba(52,211,153,1)'
@@ -38,6 +22,12 @@ function getTileBg(ret) {
   return 'rgba(248,113,113,0.20)'
 }
 
+function getReturn(stock, period) {
+  if (period === '5d') return stock.return_5d || (stock.return_1d || 0) * 2.5
+  if (period === '1m') return stock.momentum_score ? stock.momentum_score * 10 : (stock.return_1d || 0) * 10
+  return stock.return_1d || 0
+}
+
 const PERIODS = [
   { key: '1d', label: '1D' },
   { key: '5d', label: '5D' },
@@ -51,6 +41,7 @@ export default function Heatmap() {
   const [showSignals, setShowSignals] = useState(false)
   const [selectedTicker, setSelectedTicker] = useState(null)
   const [hoveredTicker, setHoveredTicker] = useState(null)
+  const [showOthers, setShowOthers] = useState(false)
 
   useEffect(() => {
     fetchScreener().then(data => {
@@ -62,19 +53,44 @@ export default function Heatmap() {
   const sectors = useMemo(() => {
     const map = {}
     stocks.forEach(s => {
-      const sector = SECTOR_MAP[s.ticker] || s.sector || 'Others'
+      const sector = getSector(s.ticker)
       if (!map[sector]) map[sector] = []
       map[sector].push(s)
     })
-    // Sort sectors by number of stocks descending
-    return Object.entries(map)
-      .sort((a, b) => b[1].length - a[1].length)
-      .map(([name, list]) => ({
-        name,
-        stocks: list.sort((a, b) => Math.abs(getReturn(b, period)) - Math.abs(getReturn(a, period))),
-      }))
+
+    // Sort by SECTOR_ORDER
+    const ordered = SECTOR_ORDER
+      .filter(name => map[name] && map[name].length > 0)
+      .map(name => {
+        const list = map[name].sort((a, b) =>
+          Math.abs(getReturn(b, period)) - Math.abs(getReturn(a, period))
+        )
+        const returns = list.map(s => getReturn(s, period))
+        const avgReturn = returns.length > 0
+          ? returns.reduce((a, b) => a + b, 0) / returns.length
+          : 0
+        return { name, stocks: list, avgReturn }
+      })
+
+    // Add any sectors not in SECTOR_ORDER (shouldn't happen, but safety)
+    Object.keys(map).forEach(name => {
+      if (!SECTOR_ORDER.includes(name)) {
+        const list = map[name].sort((a, b) =>
+          Math.abs(getReturn(b, period)) - Math.abs(getReturn(a, period))
+        )
+        const returns = list.map(s => getReturn(s, period))
+        const avgReturn = returns.length > 0
+          ? returns.reduce((a, b) => a + b, 0) / returns.length
+          : 0
+        ordered.push({ name, stocks: list, avgReturn })
+      }
+    })
+
+    return ordered
   }, [stocks, period])
 
+  const namedSectors = sectors.filter(s => s.name !== 'Others')
+  const othersSector = sectors.find(s => s.name === 'Others')
   const totalStocks = stocks.length
 
   return (
@@ -92,7 +108,7 @@ export default function Heatmap() {
           }}>Market Heatmap</h1>
           <span style={{
             fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-dim)',
-          }}>{totalStocks} stocks across {sectors.length} sectors</span>
+          }}>{totalStocks} stocks across {namedSectors.length} sectors</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -152,65 +168,61 @@ export default function Heatmap() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {sectors.map(sector => (
-            <div key={sector.name}>
-              <div style={{
-                fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 600,
-                color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
-                letterSpacing: 1.5, marginBottom: 8,
-              }}>{sector.name} ({sector.stocks.length})</div>
-
-              <div style={{
-                display: 'flex', flexWrap: 'wrap', gap: 3,
-              }}>
-                {sector.stocks.map(s => {
-                  const ret = getReturn(s, period)
-                  const isBuy = s.signal === 'BUY'
-                  const isHovered = hoveredTicker === s.ticker
-                  return (
-                    <div
-                      key={s.ticker}
-                      onClick={() => setSelectedTicker(s.ticker)}
-                      onMouseEnter={() => setHoveredTicker(s.ticker)}
-                      onMouseLeave={() => setHoveredTicker(null)}
-                      style={{
-                        minWidth: 60, minHeight: 40,
-                        padding: '6px 8px',
-                        background: getTileBg(ret),
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center',
-                        gap: 2,
-                        border: showSignals && isBuy
-                          ? '2px solid rgba(255,255,255,0.8)'
-                          : '1px solid rgba(255,255,255,0.04)',
-                        transition: 'transform 0.15s, box-shadow 0.15s',
-                        transform: isHovered ? 'scale(1.08)' : 'scale(1)',
-                        zIndex: isHovered ? 10 : 1,
-                        boxShadow: isHovered ? '0 4px 16px rgba(0,0,0,0.4)' : 'none',
-                        animation: showSignals && isBuy ? 'pulse 2s infinite' : 'none',
-                        position: 'relative',
-                      }}
-                    >
-                      <span style={{
-                        fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700,
-                        color: getTileColor(ret),
-                        lineHeight: 1,
-                      }}>{s.ticker}</span>
-                      <span style={{
-                        fontFamily: 'var(--mono)', fontSize: 10,
-                        color: getTileColor(ret),
-                        opacity: 0.8,
-                      }}>
-                        {ret >= 0 ? '+' : ''}{ret.toFixed(1)}%
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+          {namedSectors.map(sector => (
+            <SectorGroup
+              key={sector.name}
+              sector={sector}
+              period={period}
+              showSignals={showSignals}
+              hoveredTicker={hoveredTicker}
+              onHover={setHoveredTicker}
+              onSelect={setSelectedTicker}
+            />
           ))}
+
+          {/* Others section — collapsed by default */}
+          {othersSector && othersSector.stocks.length > 0 && (
+            <div>
+              <button
+                onClick={() => setShowOthers(!showOthers)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 600,
+                  color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase',
+                  letterSpacing: 1.5, marginBottom: 8, padding: 0,
+                }}
+              >
+                <span style={{
+                  transform: showOthers ? 'rotate(90deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s', display: 'inline-block',
+                }}>{'\u25B6'}</span>
+                Unclassified ({othersSector.stocks.length})
+                <span style={{
+                  color: othersSector.avgReturn >= 0 ? 'var(--green)' : 'var(--red)',
+                  fontWeight: 500,
+                }}>
+                  {othersSector.avgReturn >= 0 ? '+' : ''}{othersSector.avgReturn.toFixed(2)}%
+                </span>
+              </button>
+
+              {showOthers && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                  {othersSector.stocks.map(s => (
+                    <StockTile
+                      key={s.ticker}
+                      stock={s}
+                      period={period}
+                      showSignals={showSignals}
+                      isHovered={hoveredTicker === s.ticker}
+                      onHover={setHoveredTicker}
+                      onSelect={setSelectedTicker}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -222,8 +234,81 @@ export default function Heatmap() {
   )
 }
 
-function getReturn(stock, period) {
-  if (period === '5d') return stock.return_5d || (stock.return_1d || 0) * 2.5
-  if (period === '1m') return stock.momentum_score ? stock.momentum_score * 10 : (stock.return_1d || 0) * 10
-  return stock.return_1d || 0
+function SectorGroup({ sector, period, showSignals, hoveredTicker, onHover, onSelect }) {
+  return (
+    <div>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 600,
+        color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
+        letterSpacing: 1.5, marginBottom: 8,
+      }}>
+        <span>{sector.name}</span>
+        <span style={{ color: 'rgba(255,255,255,0.2)' }}>({sector.stocks.length})</span>
+        <span style={{
+          color: sector.avgReturn >= 0 ? 'var(--green)' : 'var(--red)',
+          fontWeight: 500,
+        }}>
+          {sector.avgReturn >= 0 ? '+' : ''}{sector.avgReturn.toFixed(2)}%
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+        {sector.stocks.map(s => (
+          <StockTile
+            key={s.ticker}
+            stock={s}
+            period={period}
+            showSignals={showSignals}
+            isHovered={hoveredTicker === s.ticker}
+            onHover={onHover}
+            onSelect={onSelect}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function StockTile({ stock, period, showSignals, isHovered, onHover, onSelect }) {
+  const ret = getReturn(stock, period)
+  const isBuy = stock.signal === 'BUY'
+
+  return (
+    <div
+      onClick={() => onSelect(stock.ticker)}
+      onMouseEnter={() => onHover(stock.ticker)}
+      onMouseLeave={() => onHover(null)}
+      style={{
+        minWidth: 60, minHeight: 40,
+        padding: '6px 8px',
+        background: getTileBg(ret),
+        borderRadius: 6,
+        cursor: 'pointer',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        gap: 2,
+        border: showSignals && isBuy
+          ? '2px solid rgba(255,255,255,0.8)'
+          : '1px solid rgba(255,255,255,0.04)',
+        transition: 'transform 0.15s, box-shadow 0.15s',
+        transform: isHovered ? 'scale(1.08)' : 'scale(1)',
+        zIndex: isHovered ? 10 : 1,
+        boxShadow: isHovered ? '0 4px 16px rgba(0,0,0,0.4)' : 'none',
+        animation: showSignals && isBuy ? 'pulse 2s infinite' : 'none',
+        position: 'relative',
+      }}
+    >
+      <span style={{
+        fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700,
+        color: getTileColor(ret), lineHeight: 1,
+      }}>{stock.ticker}</span>
+      <span style={{
+        fontFamily: 'var(--mono)', fontSize: 10,
+        color: getTileColor(ret), opacity: 0.8,
+      }}>
+        {ret >= 0 ? '+' : ''}{ret.toFixed(1)}%
+      </span>
+    </div>
+  )
 }
