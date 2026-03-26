@@ -107,15 +107,18 @@ class BacktestResult:
 class Backtester:
 
     def __init__(self, use_ml=False, use_hybrid=False,
-                 use_partial_profits=False, use_sector_rotation=False):
+                 use_partial_profits=False, use_sector_rotation=False,
+                 use_refined=False):
         self.feature_dir = FEATURES_DIR
         self.results_dir = RESULTS_DIR
         self.use_ml = use_ml
         self.use_hybrid = use_hybrid
         self.use_partial_profits = use_partial_profits
         self.use_sector_rotation = use_sector_rotation
+        self.use_refined = use_refined
         self.ml_model = None
         self.stock_data = {}
+        self._nifty_correction_cache = {}
         self._load_all_features()
         if use_ml or use_hybrid:
             from ml_model import MLModel
@@ -127,6 +130,16 @@ class Backtester:
             print("  Precomputing sector rankings...")
             self._precompute_sector_data()
             print(f"  Sector cache: {len(self._sector_cache)} dates")
+        if use_refined:
+            print("  Precomputing Nifty correction periods...")
+            self._precompute_nifty_correction()
+            print(f"  Nifty correction cache: {sum(self._nifty_correction_cache.values())} correction days")
+            print("  Precomputing market regimes...")
+            self._precompute_regimes()
+            print(f"  Regime cache: {len(self._regime_cache)} dates")
+            print("  Precomputing ML scores (batch)...")
+            self._precompute_ml_scores()
+            print(f"  ML score cache: {len(self._ml_score_cache)} ticker-dates")
 
     def _load_all_features(self):
         print("Loading feature data...")
@@ -157,6 +170,100 @@ class Backtester:
     def _check_hybrid_entry(self, row):
         return (row.get("in_momentum_regime", 0) == 1 and row.get("hybrid_signal", 0) == 1
                 and row.get("dip_conviction", 0) >= 1 and row.get("volume_ratio", 0) > 0.8)
+
+    def _check_hybrid_entry_refined(self, row):
+        """Relaxed 4-of-5 momentum filter + dip signal."""
+        cond1 = row.get("ema_21_above_50", 0) == 1
+        cond2 = row.get("price_vs_ema21_pct", 0) > -2
+        cond3 = row.get("adx_14", 0) > 22
+        cond4 = row.get("position_in_52w", 0) > 0.45
+        cond5 = row.get("volume_ratio", 0) > 0.7
+        conditions_met = sum([cond1, cond2, cond3, cond4, cond5])
+        if conditions_met < 4:
+            return False
+        # Still require dip signal
+        return row.get("dip_count", 0) >= 1
+
+    def _precompute_nifty_correction(self):
+        """Precompute Nifty correction flag for all dates."""
+        # Use a large-cap proxy: average close of top stocks
+        # Build a simple Nifty proxy from available data
+        proxies = ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK",
+                    "HINDUNILVR", "BHARTIARTL", "SBIN", "BAJFINANCE", "ITC"]
+        proxy_dfs = [self.stock_data[t] for t in proxies if t in self.stock_data]
+        if not proxy_dfs:
+            return
+
+        # Average close across proxies, normalised
+        all_dates = sorted(set().union(*[set(df.index) for df in proxy_dfs]))
+        for date in all_dates:
+            closes = []
+            for df in proxy_dfs:
+                if date in df.index:
+                    closes.append(df.loc[date, "Close"])
+            if not closes:
+                self._nifty_correction_cache[date] = False
+                continue
+            avg_close = np.mean(closes)
+
+            # 20-day high
+            lookback_dates = [d for d in all_dates if d <= date][-20:]
+            highs = []
+            for lb_date in lookback_dates:
+                lb_closes = []
+                for df in proxy_dfs:
+                    if lb_date in df.index:
+                        lb_closes.append(df.loc[lb_date, "Close"])
+                if lb_closes:
+                    highs.append(np.mean(lb_closes))
+
+            if highs:
+                high_20d = max(highs)
+                dd = (avg_close - high_20d) / high_20d * 100
+                self._nifty_correction_cache[date] = dd < -8
+            else:
+                self._nifty_correction_cache[date] = False
+
+    def _precompute_regimes(self):
+        """Precompute market regime for all dates."""
+        self._regime_cache = {}
+        all_dates = sorted(set().union(*[set(df.index) for df in self.stock_data.values()]))
+        for date in all_dates:
+            bullish = 0
+            total = 0
+            for df in self.stock_data.values():
+                if date not in df.index:
+                    continue
+                total += 1
+                if df.loc[date].get("ema_21_above_50", 0) == 1 and df.loc[date].get("rsi_14", 50) > 50:
+                    bullish += 1
+            if total == 0:
+                self._regime_cache[date] = "CHOPPY"
+            else:
+                ratio = bullish / total
+                self._regime_cache[date] = "BULL" if ratio > 0.5 else ("BEAR" if ratio < 0.2 else "CHOPPY")
+
+    def _get_regime(self, date):
+        return self._regime_cache.get(date, "CHOPPY")
+
+    def _precompute_ml_scores(self):
+        """Batch-predict ML scores for all stocks on all dates."""
+        self._ml_score_cache = {}
+        if self.ml_model is None or self.ml_model.model is None:
+            return
+        feat_cols = self.ml_model.feature_columns
+        for ticker, df in self.stock_data.items():
+            avail = [c for c in feat_cols if c in df.columns]
+            if len(avail) < len(feat_cols):
+                continue
+            X = df[feat_cols]
+            valid = ~X.isna().any(axis=1)
+            if valid.sum() == 0:
+                continue
+            scores = np.zeros(len(df))
+            scores[valid] = self.ml_model.model.predict_proba(X[valid].values)[:, 1]
+            for date, score in zip(df.index[valid], scores[valid]):
+                self._ml_score_cache[(ticker, date)] = float(score)
 
     def _precompute_sector_data(self):
         """Pre-build sector lookup for all dates (called once)."""
@@ -246,10 +353,14 @@ class Backtester:
         partial_hit_full_count = 0
         partial_breakeven_count = 0
 
-        HYBRID_ATR_STOP = 1.5
         HYBRID_ATR_TARGET = 3.0
         HYBRID_RISK_PCT = 0.015
         PARTIAL_ATR_TARGET = 2.0
+
+        # Signal funnel counters (for diagnostics)
+        funnel = {"total_stockdays": 0, "after_nifty_filter": 0, "after_momentum": 0,
+                  "after_dip": 0, "after_ml": 0, "after_risk": 0, "entered": 0,
+                  "nifty_blocked": 0}
 
         for i, date in enumerate(dates):
             # ── Sector rotation: lookup from precomputed cache ──
@@ -370,38 +481,88 @@ class Backtester:
             for t in tickers_to_close:
                 del positions[t]
 
+            # ── Nifty correction check (refined) ────────
+            nifty_blocked = False
+            if self.use_refined and self._nifty_correction_cache.get(date, False):
+                nifty_blocked = True
+                funnel["nifty_blocked"] += 1
+
+            # ── Determine regime for dynamic threshold ───
+            if self.use_refined:
+                current_regime = self._get_regime(date)
+                if nifty_blocked:
+                    current_regime = "CORRECTION"
+            else:
+                current_regime = "BULL"
+
             # ── Check entries ────────────────────────────
-            if len(positions) < MAX_POSITIONS:
+            if len(positions) < MAX_POSITIONS and not nifty_blocked:
                 for ticker, df in self.stock_data.items():
                     if ticker in positions:
                         continue
                     if date not in df.index:
                         continue
                     row = df.loc[date]
+                    funnel["total_stockdays"] += 1
 
                     # Sector rotation: block entries in bottom 3
                     if self.use_sector_rotation and get_sector(ticker) in bottom3_sectors:
                         continue
 
+                    funnel["after_nifty_filter"] += 1
+
                     if self.use_hybrid:
-                        if not self._check_hybrid_entry(row):
-                            continue
+                        if self.use_refined:
+                            if not self._check_hybrid_entry_refined(row):
+                                continue
+                        else:
+                            if not self._check_hybrid_entry(row):
+                                continue
                     else:
                         if not self._check_entry(row):
                             continue
 
+                    funnel["after_momentum"] += 1
+
+                    # Dip check (for funnel tracking)
+                    if self.use_hybrid and row.get("dip_count", 0) >= 1:
+                        funnel["after_dip"] += 1
+
                     ml_score = 0.0
                     if (self.use_ml or self.use_hybrid) and self.ml_model is not None:
-                        feat_cols = self.ml_model.feature_columns
-                        available = [c for c in feat_cols if c in df.columns]
-                        if len(available) < len(feat_cols):
+                        # Use precomputed cache if available (refined mode)
+                        if self.use_refined and hasattr(self, '_ml_score_cache'):
+                            ml_score = self._ml_score_cache.get((ticker, date), 0.0)
+                            if ml_score == 0.0:
+                                continue
+                        else:
+                            feat_cols = self.ml_model.feature_columns
+                            available = [c for c in feat_cols if c in df.columns]
+                            if len(available) < len(feat_cols):
+                                continue
+                            row_df = df.loc[[date], feat_cols]
+                            if row_df.isna().any(axis=1).iloc[0]:
+                                continue
+                            ml_score = float(self.ml_model.model.predict_proba(row_df.values)[:, 1][0])
+
+                        # Dynamic ML threshold (refined)
+                        if self.use_refined:
+                            threshold = BUY_THRESHOLD
+                            if current_regime == "BULL":
+                                threshold = 0.50
+                            elif current_regime == "CHOPPY":
+                                threshold = 0.54
+                            elif current_regime == "CORRECTION":
+                                threshold = 0.58
+                            if row.get("dip_conviction", 0) >= 2:
+                                threshold -= 0.02
+                        else:
+                            threshold = BUY_THRESHOLD
+
+                        if ml_score < threshold:
                             continue
-                        row_df = df.loc[[date], feat_cols]
-                        if row_df.isna().any(axis=1).iloc[0]:
-                            continue
-                        ml_score = float(self.ml_model.model.predict_proba(row_df.values)[:, 1][0])
-                        if ml_score < BUY_THRESHOLD:
-                            continue
+
+                    funnel["after_ml"] += 1
 
                     if len(positions) >= MAX_POSITIONS:
                         break
@@ -427,7 +588,12 @@ class Backtester:
                             for p in positions.values()
                             if date in self.stock_data[p.ticker].index)
                         risk_amount = portfolio_value * HYBRID_RISK_PCT
-                        atr_stop = round(entry_price - HYBRID_ATR_STOP * atr, 2)
+                        # Dynamic ATR stop (refined)
+                        if self.use_refined and current_regime == "CHOPPY":
+                            atr_stop_mult = 1.2
+                        else:
+                            atr_stop_mult = 1.5
+                        atr_stop = round(entry_price - atr_stop_mult * atr, 2)
                         risk_per_share = entry_price - atr_stop
                         if risk_per_share <= 0:
                             continue
@@ -463,6 +629,9 @@ class Backtester:
 
                     partial_tgt = entry_price + PARTIAL_ATR_TARGET * atr if self.use_partial_profits else 0
                     full_tgt = entry_price + HYBRID_ATR_TARGET * atr if self.use_hybrid else 0
+
+                    funnel["after_risk"] += 1
+                    funnel["entered"] += 1
 
                     positions[ticker] = Position(
                         ticker=ticker, entry_date=next_date,
@@ -577,6 +746,7 @@ class Backtester:
         result._partial_hit_full = partial_hit_full_count
         result._partial_breakeven = partial_breakeven_count
         result._sector_exit_tickers = sector_exit_tickers
+        result._funnel = funnel
 
         return result
 
@@ -784,8 +954,105 @@ def run_comparison(start_date="2022-01-01", end_date="2026-03-24"):
     return run_4way(start_date, end_date)
 
 
+def run_refined(start_date="2022-01-01", end_date="2026-03-24"):
+    """Compare Strategy C vs Refined strategy."""
+    print(f"\n{'#'*70}")
+    print(f"  Strategy C (previous best): sector rotation only")
+    print(f"{'#'*70}")
+    bt_c = Backtester(use_ml=True, use_hybrid=True, use_sector_rotation=True)
+    rc = bt_c.run(start_date, end_date)
+
+    print(f"\n{'#'*70}")
+    print(f"  REFINED: sector rotation + Nifty breaker + relaxed momentum + dynamic ML + tight stops")
+    print(f"{'#'*70}")
+    bt_r = Backtester(use_ml=True, use_hybrid=True, use_sector_rotation=True, use_refined=True)
+    rr = bt_r.run(start_date, end_date)
+
+    # Comparison table
+    w = 56
+    eq = "=" * w
+    ln = "-" * w
+    print(f"\n  +{eq}+")
+    print(f"  |{'STRATEGY C vs REFINED':^{w}}|")
+    print(f"  +{eq}+")
+    print(f"  | {'Metric':<24}{'Strategy C':>14}{'Refined':>14} |")
+    print(f"  +{ln}+")
+    for label, vc, vr in [
+        ("Total Return", f"{rc.total_return_pct:+.1f}%", f"{rr.total_return_pct:+.1f}%"),
+        ("Annualised", f"{rc.annualised_return_pct:+.1f}%", f"{rr.annualised_return_pct:+.1f}%"),
+        ("Sharpe Ratio", f"{rc.sharpe_ratio:.2f}", f"{rr.sharpe_ratio:.2f}"),
+        ("Max Drawdown", f"{rc.max_drawdown_pct:.1f}%", f"{rr.max_drawdown_pct:.1f}%"),
+        ("Total Trades", f"{rc.total_trades}", f"{rr.total_trades}"),
+        ("Win Rate", f"{rc.win_rate_pct:.1f}%", f"{rr.win_rate_pct:.1f}%"),
+        ("Avg Win", f"{rc.avg_win_pct:+.1f}%", f"{rr.avg_win_pct:+.1f}%"),
+        ("Avg Loss", f"{rc.avg_loss_pct:+.1f}%", f"{rr.avg_loss_pct:+.1f}%"),
+        ("Profit Factor", f"{rc.profit_factor:.2f}", f"{rr.profit_factor:.2f}"),
+        ("Avg Hold Days", f"{rc.avg_hold_days:.1f}", f"{rr.avg_hold_days:.1f}"),
+        ("Target Hits", f"{rc.target_hits}", f"{rr.target_hits}"),
+        ("Sector Exits", f"{rc.sector_exits}", f"{rr.sector_exits}"),
+    ]:
+        print(f"  | {label:<24}{vc:>14}{vr:>14} |")
+    print(f"  +{eq}+")
+
+    # Year-by-year for Refined
+    if rr.total_trades > 0 and len(rr.trade_log) > 0:
+        print(f"\n  +{eq}+")
+        print(f"  |{'REFINED STRATEGY -- YEAR BY YEAR':^{w}}|")
+        print(f"  +{eq}+")
+        print(f"  | {'Year':<6}{'Trades':>7}{'WR':>7}{'AvgRet':>9}{'TotalPnL':>13}{'CumPnL':>12} |")
+        print(f"  +{ln}+")
+
+        tl = rr.trade_log.copy()
+        tl["year"] = pd.to_datetime(tl["entry_date"]).dt.year
+        cum = 0
+        for year in sorted(tl["year"].unique()):
+            yt = tl[tl["year"] == year]
+            n = len(yt)
+            w_count = (yt["net_pnl"] > 0).sum()
+            wr = w_count / n * 100 if n > 0 else 0
+            ar = yt["return_pct"].mean()
+            tp = yt["net_pnl"].sum()
+            cum += tp
+            print(f"  | {year:<6}{n:>7}{wr:>6.1f}%{ar:>+8.2f}%{tp:>+12,.0f}{cum:>+11,.0f} |")
+        print(f"  +{eq}+")
+
+        # Signal funnel
+        f = getattr(rr, '_funnel', {})
+        if f:
+            print(f"\n  Signal Funnel Breakdown:")
+            print(f"    Total stock-days scanned:  {f.get('total_stockdays', 0):>10,}")
+            print(f"    After Nifty filter:        {f.get('after_nifty_filter', 0):>10,}")
+            print(f"    After momentum filter:     {f.get('after_momentum', 0):>10,}")
+            print(f"    After dip detection:        {f.get('after_dip', 0):>10,}")
+            print(f"    After ML filter:            {f.get('after_ml', 0):>10,}")
+            print(f"    Final entries:              {f.get('entered', 0):>10,}")
+            print(f"    Nifty correction blocked:   {f.get('nifty_blocked', 0):>10,} days")
+
+        # Monthly frequency
+        tl["month"] = pd.to_datetime(tl["entry_date"]).dt.to_period("M")
+        monthly = tl.groupby("month").size()
+        all_months = pd.period_range(tl["month"].min(), tl["month"].max(), freq="M")
+        zero_months = sum(1 for m in all_months if monthly.get(m, 0) == 0)
+        total_years = len(tl["year"].unique())
+        avg_per_year = rr.total_trades / max(total_years, 1)
+        print(f"\n  Trades per year: {avg_per_year:.0f} avg")
+        print(f"  Months with 0 trades: {zero_months}")
+
+    # Save
+    if len(rr.trade_log) > 0:
+        rr.trade_log.to_csv(RESULTS_DIR / "backtest_refined.csv", index=False)
+        print(f"\n  Trade log saved to {RESULTS_DIR / 'backtest_refined.csv'}")
+    eq_df = pd.DataFrame({"date": rr.equity_curve.index, "equity": rr.equity_curve.values})
+    eq_df.to_csv(RESULTS_DIR / "backtest_refined_equity.csv", index=False)
+    print(f"  Equity curve saved to {RESULTS_DIR / 'backtest_refined_equity.csv'}")
+
+    return {"C": rc, "Refined": rr}
+
+
 if __name__ == "__main__":
-    if "--4way" in sys.argv or "--compare" in sys.argv:
+    if "--refined" in sys.argv:
+        run_refined()
+    elif "--4way" in sys.argv or "--compare" in sys.argv:
         run_4way()
     else:
         bt = Backtester(use_ml=True, use_hybrid=True)
