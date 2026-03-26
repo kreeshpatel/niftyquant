@@ -100,27 +100,29 @@ export default function Layout({ children }) {
           {tabs.map(t => {
             const active = location.pathname === t.to
             return (
-              <NavLink key={t.to} to={t.to} ref={el => { if (active && el) updateIndicator(el) }} style={{
-                padding: '6px 14px', borderRadius: 'var(--r-sm)', textDecoration: 'none',
-                fontFamily: 'var(--sans)', fontSize: 12, fontWeight: 600, letterSpacing: 0.3,
-                color: active ? 'var(--text)' : 'var(--text-dim)',
-                background: active ? 'var(--bg-active)' : 'transparent',
-                borderBottom: '2px solid transparent',
-                transition: 'color 0.2s, background 0.2s',
-                flexShrink: 0,
-              }}
-                onMouseEnter={e => { if (!active) { e.target.style.color = 'var(--text-sub)'; e.target.style.background = 'var(--bg-hover)' }}}
-                onMouseLeave={e => { if (!active) { e.target.style.color = 'var(--text-dim)'; e.target.style.background = 'transparent' }}}
-              >
-                {t.label}
-                {t.badge && (
-                  <span style={{
-                    fontSize: 8, fontWeight: 700, padding: '1px 4px',
-                    borderRadius: 4, background: 'var(--purple-d)',
-                    color: 'var(--purple)', marginLeft: 4, letterSpacing: 0.5,
-                  }}>{t.badge}</span>
-                )}
-              </NavLink>
+              <span key={t.to} ref={el => { if (active && el) updateIndicator(el) }}>
+                <NavLink to={t.to} style={{
+                  padding: '6px 14px', borderRadius: 'var(--r-sm)', textDecoration: 'none',
+                  fontFamily: 'var(--sans)', fontSize: 12, fontWeight: 600, letterSpacing: 0.3,
+                  color: active ? 'var(--text)' : 'var(--text-dim)',
+                  background: active ? 'var(--bg-active)' : 'transparent',
+                  borderBottom: '2px solid transparent',
+                  transition: 'color 0.2s, background 0.2s',
+                  display: 'inline-flex', alignItems: 'center', flexShrink: 0,
+                }}
+                  onMouseEnter={e => { if (!active) { e.currentTarget.style.color = 'var(--text-sub)'; e.currentTarget.style.background = 'var(--bg-hover)' }}}
+                  onMouseLeave={e => { if (!active) { e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.background = 'transparent' }}}
+                >
+                  {t.label}
+                  {t.badge && (
+                    <span style={{
+                      fontSize: 8, fontWeight: 700, padding: '1px 4px',
+                      borderRadius: 4, background: 'var(--purple-d)',
+                      color: 'var(--purple)', marginLeft: 4, letterSpacing: 0.5,
+                    }}>{t.badge}</span>
+                  )}
+                </NavLink>
+              </span>
             )
           })}
           {/* Sliding active indicator */}

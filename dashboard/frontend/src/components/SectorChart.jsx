@@ -52,15 +52,22 @@ export default function SectorChart({ data = [] }) {
         <XAxis type="number" tick={{ fill: '#ffffff15', fontFamily: 'Fira Code', fontSize: 9 }} tickLine={false} axisLine={false} />
         <YAxis type="category" dataKey="sector" tick={{ fill: '#ffffff40', fontFamily: 'Fira Code', fontSize: 10 }} tickLine={false} axisLine={false} width={75} />
         <Tooltip content={<ChartTooltip />} cursor={{ fill: '#ffffff05' }} />
-        <Bar dataKey="trades" radius={[0, 4, 4, 0]} barSize={16} shape={<ColoredBar />} label={({ x, y, width, height, value, payload }) => (
-          <text
-            x={x + width + 6} y={y + height / 2}
-            fill={getBarColor(payload?.win_rate || 0)}
-            fontFamily="Fira Code" fontSize={9} dominantBaseline="central"
-          >
-            {payload?.win_rate?.toFixed(0)}% · {value}
-          </text>
-        )} />
+        <Bar dataKey="trades" radius={[0, 4, 4, 0]} barSize={16} label={({ x, y, width, height, value, index }) => {
+          const d = data[index]
+          return (
+            <text
+              x={x + width + 6} y={y + height / 2}
+              fill={getBarColor(d?.win_rate || 0)}
+              fontFamily="Fira Code" fontSize={9} dominantBaseline="central"
+            >
+              {d?.win_rate?.toFixed(0)}% · {value}
+            </text>
+          )
+        }}>
+          {data.map((d, i) => (
+            <Cell key={i} fill={getBarColor(d.win_rate || 0)} fillOpacity={0.8} />
+          ))}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   )
