@@ -19,6 +19,10 @@ def get_overview():
     stats = {"total_trades": 0, "win_rate": 0, "profit_factor": 0,
              "avg_win": 0, "avg_loss": 0, "avg_hold_days": 0, "sharpe_ratio": 0}
 
+    # ── Read locked production metrics ──────────────────────────────
+    production = fetch_github_json("results/production_strategy.json")
+    perf = production.get("performance", {}) if production else {}
+
     try:
         state = fetch_github_json("results/paper_portfolio.json")
         if state:
@@ -50,6 +54,7 @@ def get_overview():
     except Exception:
         pass
 
+    # ── Compute stats from trade log as fallback ────────────────────
     try:
         tl = fetch_github_csv("results/trade_log.csv")
         if tl is not None and not tl.empty and "return_pct" in tl.columns:
@@ -66,7 +71,25 @@ def get_overview():
     except Exception:
         pass
 
-    return {"portfolio": portfolio, "equity_curve": equity_curve, "metrics": stats}
+    # ── Override with locked production values where available ──────
+    if perf:
+        stats["win_rate"] = perf.get("win_rate_pct", stats["win_rate"])
+        stats["profit_factor"] = perf.get("profit_factor", stats["profit_factor"])
+        stats["sharpe_ratio"] = perf.get("sharpe", stats["sharpe_ratio"])
+        stats["total_trades"] = perf.get("total_trades", stats["total_trades"])
+        stats["avg_win"] = perf.get("avg_win_pct", stats["avg_win"])
+        stats["avg_loss"] = perf.get("avg_loss_pct", stats["avg_loss"])
+        portfolio["backtest_return_pct"] = perf.get("total_return_pct", 0)
+        portfolio["max_drawdown_pct"] = perf.get("max_drawdown_pct", 0)
+
+    strategy_version = production.get("version") if production else None
+
+    return {
+        "portfolio": portfolio,
+        "equity_curve": equity_curve,
+        "metrics": stats,
+        "strategy_version": strategy_version,
+    }
 
 
 @router.get("/overview/tearsheet", response_class=HTMLResponse)

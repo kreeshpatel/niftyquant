@@ -61,7 +61,7 @@ export default function Overview() {
         />
         <MetricHero
           label="Sharpe / Max Drawdown"
-          value={<><span style={{ color: 'var(--blue)' }}>{(m.sharpe_ratio || 0.53).toFixed(2)}</span><span style={{ color: 'var(--text-dim)', fontSize: 24 }}> | </span><span style={{ color: 'var(--red)' }}>{p.drawdown_pct || 0}%</span></>}
+          value={<><span style={{ color: 'var(--blue)' }}>{(m.sharpe_ratio || 0).toFixed(2)}</span><span style={{ color: 'var(--text-dim)', fontSize: 24 }}> | </span><span style={{ color: 'var(--red)' }}>{p.max_drawdown_pct || p.drawdown_pct || 0}%</span></>}
           sub={`annualised · peak ${formatLakh(p.peak_value || 0)}`}
           color="var(--blue)" glowColor="#60a5fa"
         />
