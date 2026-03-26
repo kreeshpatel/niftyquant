@@ -10,8 +10,9 @@ const mono = { fontFamily: 'var(--font-mono)' }
 const dim = { ...mono, fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'var(--text-dim)', marginBottom: 12 }
 
 function Stat({ label, value, color = 'var(--purple)', suffix = '', prefix = '', info }) {
-  const animated = useCountUp(typeof value === 'number' ? value : 0)
-  const display = typeof value === 'number' ? (Math.abs(value) >= 100 ? Math.round(animated) : animated.toFixed(1)) : value
+  const numVal = typeof value === 'number' ? value : 0
+  const animated = useCountUp(numVal)
+  const display = typeof value === 'string' ? value : (Math.abs(numVal) >= 100 ? Math.round(animated) : animated.toFixed(1))
   return (
     <div className="glass" style={{ padding: '20px 18px', flex: 1, minWidth: 140 }}>
       <div style={dim}>{label}{info && <InfoTooltip text={info} />}</div>
@@ -50,7 +51,7 @@ export default function Analytics() {
 
       {/* Section 1: Hero stats */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }} className="stagger-1">
-        <Stat label="Total P&L" value={d.total_pnl} color={d.total_pnl >= 0 ? 'var(--green)' : 'var(--red)'} prefix={d.total_pnl >= 0 ? '+' : ''} />
+        <Stat label="Total P&L" value={formatLakh(Math.abs(d.total_pnl))} color={d.total_pnl >= 0 ? 'var(--green)' : 'var(--red)'} prefix={d.total_pnl >= 0 ? '+' : '-'} />
         <Stat label="Win Rate" value={d.win_rate} color={wrColor(d.win_rate)} suffix="%" info="% of trades that close profitable. With 2:1 R:R you only need 34%+ to profit." />
         <Stat label="Profit Factor" value={d.profit_factor} color={pfColor(d.profit_factor)} info="Gross wins / gross losses. Above 1.0 = profitable. 1.5+ is strong." />
         <Stat label="Avg Win" value={d.avg_win} color="var(--green)" suffix="%" prefix="+" />
@@ -114,7 +115,7 @@ export default function Analytics() {
                   </div>
                 }} />
                 <Bar dataKey="trades" name="Trades" radius={[0, 4, 4, 0]} barSize={16}>
-                  {sectorData.map((s, i) => <Cell key={i} fill={s.win_rate > 45 ? '#34d399B3' : s.win_rate >= 35 ? '#fbbf24B3' : '#f87171B3'} />)}
+                  {sectorData.map((s, i) => <Cell key={i} fill={s.win_rate > 45 ? '#34d399' : s.win_rate >= 35 ? '#fbbf24' : '#f87171'} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -142,7 +143,7 @@ export default function Analytics() {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
         <div className="glass" style={{ padding: '14px 18px', flex: 1, minWidth: 140 }}>
           <div style={dim}>Current streak</div>
-          <div style={{ ...mono, fontSize: 20, fontWeight: 500, color: d.current_streak_type === 'win' ? 'var(--green)' : 'var(--red)' }}>{d.current_streak} {d.current_streak_type}s</div>
+          <div style={{ ...mono, fontSize: 20, fontWeight: 500, color: d.current_streak_type === 'win' ? 'var(--green)' : 'var(--red)' }}>{d.current_streak} {d.current_streak_type === 'loss' ? 'losses' : 'wins'}</div>
         </div>
         <div className="glass" style={{ padding: '14px 18px', flex: 1, minWidth: 140 }}>
           <div style={dim}>Best win streak</div>
