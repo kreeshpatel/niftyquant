@@ -195,6 +195,63 @@ function computeSectorPerformance() {
     })).sort((a, b) => b.trades - a.trades)
 }
 
+export const fetchBacktestResults = () => {
+  const trades = tradeData.map(t => ({
+    ...t, return_pct: parseFloat(t.return_pct) || 0, net_pnl: parseFloat(t.net_pnl) || 0,
+    hold_days: parseInt(t.hold_days) || 0, entry_date: t.entry_date || '', exit_date: t.exit_date || '',
+  }))
+
+  // Yearly breakdown
+  const yearMap = {}
+  trades.forEach(t => {
+    const y = (t.entry_date || '').slice(0, 4)
+    if (!y) return
+    if (!yearMap[y]) yearMap[y] = { trades: 0, wins: 0, totalPnl: 0, best: -Infinity, worst: Infinity, returns: [] }
+    yearMap[y].trades++
+    yearMap[y].returns.push(t.return_pct)
+    yearMap[y].totalPnl += t.net_pnl
+    if (t.return_pct > yearMap[y].best) yearMap[y].best = t.return_pct
+    if (t.return_pct < yearMap[y].worst) yearMap[y].worst = t.return_pct
+    if (t.return_pct > 0) yearMap[y].wins++
+  })
+  const yearly = Object.entries(yearMap).sort().map(([year, d]) => ({
+    year: parseInt(year), trades: d.trades,
+    win_rate: Math.round(d.wins / d.trades * 1000) / 10,
+    total_pnl: Math.round(d.totalPnl),
+    return_pct: Math.round(d.totalPnl / INITIAL_CAPITAL * 10000) / 100,
+    best_trade: '+' + d.best.toFixed(1) + '%',
+    worst_trade: d.worst.toFixed(1) + '%',
+  }))
+
+  // Best/worst trades
+  const sorted = [...trades].sort((a, b) => b.return_pct - a.return_pct)
+  const best5 = sorted.slice(0, 5).map(t => ({ ticker: t.ticker, return_pct: t.return_pct, net_pnl: Math.round(t.net_pnl), hold_days: t.hold_days, exit_reason: t.exit_reason, entry_date: t.entry_date }))
+  const worst5 = sorted.slice(-5).reverse().map(t => ({ ticker: t.ticker, return_pct: t.return_pct, net_pnl: Math.round(t.net_pnl), hold_days: t.hold_days, exit_reason: t.exit_reason, entry_date: t.entry_date }))
+
+  // Exit reasons
+  const exitMap = {}
+  trades.forEach(t => {
+    const r = t.exit_reason || 'unknown'
+    if (!exitMap[r]) exitMap[r] = { count: 0, totalRet: 0, wins: 0 }
+    exitMap[r].count++; exitMap[r].totalRet += t.return_pct
+    if (t.return_pct > 0) exitMap[r].wins++
+  })
+  const by_exit = Object.entries(exitMap).map(([reason, d]) => ({ reason, count: d.count, avg_return: Math.round(d.totalRet / d.count * 100) / 100, win_rate: Math.round(d.wins / d.count * 1000) / 10 }))
+
+  // Return distribution
+  const bins = [[-Infinity, -10], [-10, -5], [-5, 0], [0, 5], [5, 10], [10, 15], [15, Infinity]]
+  const labels = ['<-10%', '-10:-5%', '-5:0%', '0:5%', '5:10%', '10:15%', '15%+']
+  const return_bins = bins.map(([lo, hi], i) => ({ range: labels[i], count: trades.filter(t => t.return_pct > lo && t.return_pct <= hi).length }))
+
+  // Equity curve
+  let equity_curve = []
+  if (comparisonData.length > 0) {
+    equity_curve = comparisonData.map(r => ({ date: r.date || '', value: Math.round(parseFloat(r.rules_ml) || INITIAL_CAPITAL), nifty: Math.round(parseFloat(r.rules_only) || INITIAL_CAPITAL) }))
+  }
+
+  return Promise.resolve({ yearly, best5, worst5, by_exit, return_bins, equity_curve, total_trades: trades.length })
+}
+
 export const fetchFeatures = () => {
   const features = featureData.map(r => ({
     feature: r.feature,
