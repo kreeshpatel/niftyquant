@@ -50,7 +50,7 @@ function AuthedApp() {
       <Cursor />
       <ScrollProgress />
       <Layout>
-        <div key={location.pathname} style={{ animation: 'fadeUp 0.35s ease both' }}>
+        <div key={location.pathname} style={{ animation: 'pageEnter 0.35s ease both' }}>
           <Routes location={location}>
             <Route path="/" element={<Overview />} />
             <Route path="/screener" element={<Screener />} />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import StockSearch from './StockSearch'
 import Timestamp from './Timestamp'
@@ -60,6 +60,15 @@ export default function Layout({ children }) {
   const location = useLocation()
   const now = new Date().toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })
   const [scrolled, setScrolled] = useState(false)
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
+  const updateIndicator = useCallback((el) => {
+    if (el) {
+      const parent = el.parentElement
+      if (parent) {
+        setIndicatorStyle({ left: el.offsetLeft, width: el.offsetWidth })
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20)
@@ -87,17 +96,18 @@ export default function Layout({ children }) {
           animation: 'float 3s ease-in-out infinite',
         }}>NiftyQuant</div>
 
-        <div style={{ display: 'flex', gap: 2, overflowX: 'auto', maxWidth: '50vw' }} className="desktop-tabs">
+        <div style={{ display: 'flex', gap: 2, overflowX: 'auto', maxWidth: '50vw', position: 'relative' }} className="desktop-tabs">
           {tabs.map(t => {
             const active = location.pathname === t.to
             return (
-              <NavLink key={t.to} to={t.to} style={{
+              <NavLink key={t.to} to={t.to} ref={el => { if (active && el) updateIndicator(el) }} style={{
                 padding: '6px 14px', borderRadius: 'var(--r-sm)', textDecoration: 'none',
                 fontFamily: 'var(--sans)', fontSize: 12, fontWeight: 600, letterSpacing: 0.3,
                 color: active ? 'var(--text)' : 'var(--text-dim)',
                 background: active ? 'var(--bg-active)' : 'transparent',
-                borderBottom: active ? '2px solid var(--purple)' : '2px solid transparent',
-                transition: 'all 0.2s',
+                borderBottom: '2px solid transparent',
+                transition: 'color 0.2s, background 0.2s',
+                flexShrink: 0,
               }}
                 onMouseEnter={e => { if (!active) { e.target.style.color = 'var(--text-sub)'; e.target.style.background = 'var(--bg-hover)' }}}
                 onMouseLeave={e => { if (!active) { e.target.style.color = 'var(--text-dim)'; e.target.style.background = 'transparent' }}}
@@ -113,6 +123,13 @@ export default function Layout({ children }) {
               </NavLink>
             )
           })}
+          {/* Sliding active indicator */}
+          <div style={{
+            position: 'absolute', bottom: 0, height: 2,
+            background: 'var(--purple)', borderRadius: 1,
+            transition: 'left 0.3s cubic-bezier(0.16,1,0.3,1), width 0.3s cubic-bezier(0.16,1,0.3,1)',
+            left: indicatorStyle.left, width: indicatorStyle.width,
+          }} />
         </div>
 
         <StockSearch />

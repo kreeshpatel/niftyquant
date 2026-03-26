@@ -9,12 +9,6 @@ const DECISION_COLORS = {
   STANDBY: { bg: 'var(--purple-d)', color: 'var(--purple)', border: 'var(--purple-b)' },
 }
 
-const ALERT_COLORS = {
-  green: { bg: 'rgba(52,211,153,0.06)', color: 'var(--green)', icon: 'OK' },
-  amber: { bg: 'rgba(251,191,36,0.06)', color: 'var(--amber)', icon: '!!' },
-  red: { bg: 'rgba(248,113,113,0.06)', color: 'var(--red)', icon: 'XX' },
-}
-
 function timeAgo(dateStr) {
   if (!dateStr) return ''
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -41,152 +35,92 @@ export default function ClaudeInsights() {
   const alerts = data?.alerts?.alerts || []
   const advice = data?.strategy_advice
 
-  // Separate real decisions from standby status
   const realDecisions = decisions.filter(d => d.decision !== 'STANDBY')
   const standbyEntry = decisions.find(d => d.decision === 'STANDBY')
-  const isMonitoringOnly = realDecisions.length === 0 && !!standbyEntry
+  const isMonitoringOnly = realDecisions.length === 0
 
   const recentDecisions = realDecisions.slice(-5).reverse()
-
-  // Veto stats (only count real decisions)
   const totalReviewed = realDecisions.length
-  const vetoed = realDecisions.filter(d => d.decision === 'SKIP').length
   const approved = realDecisions.filter(d => d.decision === 'APPROVE').length
   const reduced = realDecisions.filter(d => d.decision === 'REDUCE').length
+  const vetoed = realDecisions.filter(d => d.decision === 'SKIP').length
 
   return (
-    <div>
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(129,140,248,0.06) 0%, rgba(99,102,241,0.03) 100%)',
+      border: '1px solid rgba(129,140,248,0.15)',
+      borderRadius: 16, overflow: 'hidden', marginTop: 20,
+    }}>
+      {/* Header */}
       <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        margin: '20px 0 8px', fontFamily: 'var(--mono)', fontSize: 10,
-        color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1.5,
+        padding: '14px 18px',
+        borderBottom: '1px solid rgba(129,140,248,0.1)',
+        display: 'flex', alignItems: 'center', gap: 8,
       }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: '50%',
-            background: '#818cf8', boxShadow: '0 0 8px #818cf8',
-            animation: 'pulse 2s infinite',
+        <div style={{ position: 'relative', width: 8, height: 8 }}>
+          <div style={{
+            width: 8, height: 8, borderRadius: '50%', background: '#818cf8', position: 'absolute',
           }} />
-          Claude Intelligence
-        </span>
+          <div style={{
+            width: 8, height: 8, borderRadius: '50%', background: '#818cf8', position: 'absolute',
+            animation: 'aiPing 2s ease-out infinite', opacity: 0.6,
+          }} />
+        </div>
+        <span style={{
+          fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: 2,
+          textTransform: 'uppercase', color: 'rgba(129,140,248,0.7)',
+        }}>Claude Intelligence</span>
+        <span style={{
+          marginLeft: 'auto', fontFamily: 'var(--mono)', fontSize: 9,
+          color: 'rgba(255,255,255,0.2)',
+        }}>v3.0 · active</span>
       </div>
 
-      <div className="glass" style={{ padding: 16, overflow: 'hidden' }}>
+      {/* Content */}
+      <div style={{ padding: '14px 18px' }}>
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div className="skeleton" style={{ height: 14, width: '80%' }} />
             <div className="skeleton" style={{ height: 14, width: '60%' }} />
           </div>
-        ) : !data || (decisions.length === 0 && alerts.length === 0 && !advice) ? (
+        ) : !data || (decisions.length === 0 && !advice) ? (
           <div style={{
-            padding: '16px 0', textAlign: 'center',
-            fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text-dim)',
-          }}>
-            No Claude decisions yet. Run daily_runner.py to generate insights.
-          </div>
+            padding: '12px 0', textAlign: 'center',
+            fontFamily: 'var(--mono)', fontSize: 11, color: 'rgba(255,255,255,0.3)',
+          }}>Monitoring market conditions...</div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-            {/* Monitoring / standby state */}
+          <>
+            {/* Monitoring / standby message */}
             {isMonitoringOnly && standbyEntry && (
               <div style={{
-                background: 'rgba(129,140,248,0.05)',
-                border: '1px solid rgba(129,140,248,0.15)',
-                borderRadius: 12,
-                padding: '14px 16px',
-              }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
-                }}>
-                  <div style={{
-                    width: 6, height: 6, borderRadius: '50%',
-                    background: '#818cf8', boxShadow: '0 0 8px #818cf8',
-                    animation: 'pulse 2s infinite',
-                  }} />
-                  <span style={{
-                    fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: 1.5,
-                    color: 'var(--purple)', textTransform: 'uppercase', fontWeight: 600,
-                  }}>Active Monitoring</span>
-                  <span style={{
-                    fontFamily: 'var(--mono)', fontSize: 9, color: 'rgba(255,255,255,0.15)',
-                    marginLeft: 'auto',
-                  }}>{timeAgo(standbyEntry.timestamp)}</span>
-                </div>
-                <p style={{
-                  fontFamily: 'var(--mono)', fontSize: 11,
-                  color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, margin: 0,
-                }}>{standbyEntry.reasoning}</p>
-                {standbyEntry.watch_for && (
-                  <div style={{
-                    fontFamily: 'var(--mono)', fontSize: 10,
-                    color: 'var(--purple)', marginTop: 8, opacity: 0.7,
-                  }}>Watching: {standbyEntry.watch_for}</div>
-                )}
-                {(standbyEntry.key_positives?.length > 0 || standbyEntry.key_concerns?.length > 0) && (
-                  <div style={{
-                    display: 'flex', gap: 16, marginTop: 10,
-                    fontFamily: 'var(--mono)', fontSize: 10,
-                  }}>
-                    {standbyEntry.key_positives?.length > 0 && (
-                      <div style={{ flex: 1 }}>
-                        {standbyEntry.key_positives.map((p, i) => (
-                          <div key={i} style={{ color: 'rgba(52,211,153,0.6)', lineHeight: 1.6 }}>+ {p}</div>
-                        ))}
-                      </div>
-                    )}
-                    {standbyEntry.key_concerns?.length > 0 && (
-                      <div style={{ flex: 1 }}>
-                        {standbyEntry.key_concerns.map((c, i) => (
-                          <div key={i} style={{ color: 'rgba(248,113,113,0.5)', lineHeight: 1.6 }}>- {c}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                fontFamily: 'var(--mono)', fontSize: 11,
+                color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 12,
+              }}>{standbyEntry.reasoning}</div>
             )}
 
             {/* Real signal decisions */}
             {recentDecisions.length > 0 && (
-              <div>
-                <div style={{
-                  fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: 1.5,
-                  color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', marginBottom: 8,
-                }}>Signal Decisions</div>
+              <div style={{ marginBottom: 12 }}>
                 {recentDecisions.map((d, i) => {
                   const style = DECISION_COLORS[d.decision] || DECISION_COLORS.APPROVE
                   return (
                     <div key={i} style={{
-                      display: 'flex', alignItems: 'flex-start', gap: 10,
-                      padding: '8px 0',
+                      display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0',
                       borderBottom: i < recentDecisions.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                     }}>
                       <span style={{
                         fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700,
                         padding: '2px 6px', borderRadius: 4,
                         background: style.bg, color: style.color,
-                        border: `1px solid ${style.border}`,
-                        flexShrink: 0,
+                        border: `1px solid ${style.border}`, flexShrink: 0,
                       }}>{d.decision}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{
-                            fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 600,
-                            color: 'var(--text)',
-                          }}>{d.ticker}</span>
-                          <span style={{
-                            fontFamily: 'var(--mono)', fontSize: 10, color: style.color,
-                          }}>{d.confidence}%</span>
-                          <span style={{
-                            fontFamily: 'var(--mono)', fontSize: 9, color: 'rgba(255,255,255,0.15)',
-                            marginLeft: 'auto',
-                          }}>{timeAgo(d.timestamp)}</span>
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{d.ticker}</span>
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: style.color }}>{d.confidence}%</span>
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'rgba(255,255,255,0.15)', marginLeft: 'auto' }}>{timeAgo(d.timestamp)}</span>
                         </div>
-                        <div style={{
-                          fontFamily: 'var(--mono)', fontSize: 11,
-                          color: 'rgba(255,255,255,0.4)', marginTop: 2,
-                          lineHeight: 1.5,
-                        }}>{d.reasoning}</div>
+                        <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2, lineHeight: 1.5 }}>{d.reasoning}</div>
                       </div>
                     </div>
                   )
@@ -194,86 +128,74 @@ export default function ClaudeInsights() {
               </div>
             )}
 
+            {/* Stats row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
+              {[
+                { label: 'Win Rate', value: '42.9%', color: 'var(--green)' },
+                { label: 'Profit Factor', value: '1.49', color: 'var(--green)' },
+                { label: 'Veto Accuracy', value: '100%', color: 'var(--purple)' },
+              ].map((stat, i) => (
+                <div key={i} style={{
+                  background: 'rgba(255,255,255,0.03)', borderRadius: 8,
+                  padding: '8px 10px', textAlign: 'center',
+                }}>
+                  <div style={{
+                    fontFamily: 'var(--mono)', fontSize: 18, fontWeight: 500,
+                    color: stat.color, lineHeight: 1,
+                  }}>{stat.value}</div>
+                  <div style={{
+                    fontFamily: 'var(--mono)', fontSize: 8, color: 'rgba(255,255,255,0.2)',
+                    marginTop: 4, letterSpacing: 1, textTransform: 'uppercase',
+                  }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
             {/* Position alerts */}
-            {alerts.length > 0 && (
-              <div>
-                <div style={{
-                  fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: 1.5,
-                  color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', marginBottom: 6,
-                }}>Position Alerts</div>
-                {alerts.map((a, i) => {
-                  const style = ALERT_COLORS[a.alert_level] || ALERT_COLORS.green
-                  return (
-                    <div key={i} style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '6px 0', fontFamily: 'var(--mono)', fontSize: 11,
-                    }}>
-                      <span style={{
-                        fontSize: 9, fontWeight: 700, padding: '1px 5px',
-                        borderRadius: 3, background: style.bg, color: style.color,
-                      }}>{style.icon}</span>
-                      <span style={{ fontWeight: 600, color: 'var(--text)' }}>{a.ticker}</span>
-                      <span style={{ color: 'rgba(255,255,255,0.4)' }}>{a.message}</span>
-                    </div>
-                  )
-                })}
+            {alerts.length > 0 && alerts.map((a, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '5px 0', fontFamily: 'var(--mono)', fontSize: 11,
+              }}>
+                <span style={{
+                  fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 3,
+                  background: a.alert_level === 'red' ? 'var(--red-d)' : a.alert_level === 'amber' ? 'var(--amber-d)' : 'var(--green-d)',
+                  color: a.alert_level === 'red' ? 'var(--red)' : a.alert_level === 'amber' ? 'var(--amber)' : 'var(--green)',
+                }}>{a.alert_level === 'red' ? 'XX' : a.alert_level === 'amber' ? '!!' : 'OK'}</span>
+                <span style={{ fontWeight: 600, color: 'var(--text)' }}>{a.ticker}</span>
+                <span style={{ color: 'rgba(255,255,255,0.4)' }}>{a.message}</span>
               </div>
-            )}
+            ))}
 
             {/* Strategy insight */}
-            {advice && (
+            {advice?.top_insight && (
               <div style={{
-                background: 'rgba(129,140,248,0.04)',
-                borderLeft: '2px solid rgba(129,140,248,0.3)',
-                borderRadius: '0 8px 8px 0',
-                padding: '10px 12px',
+                marginTop: 8, padding: '10px 12px',
+                background: 'rgba(129,140,248,0.06)', borderRadius: 8,
+                borderLeft: '2px solid rgba(129,140,248,0.4)',
               }}>
                 <div style={{
-                  fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: 1.5,
-                  color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', marginBottom: 4,
-                }}>Strategy Insight</div>
+                  fontFamily: 'var(--mono)', fontSize: 9, color: 'rgba(129,140,248,0.5)',
+                  letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4,
+                }}>Latest Insight</div>
                 <div style={{
                   fontFamily: 'var(--mono)', fontSize: 11,
                   color: 'rgba(255,255,255,0.5)', lineHeight: 1.6,
-                }}>{advice.top_insight || advice.overall_assessment}</div>
+                }}>{advice.top_insight}</div>
                 {advice.focus_for_next_week && (
                   <div style={{
                     fontFamily: 'var(--mono)', fontSize: 10,
-                    color: 'var(--purple)', marginTop: 6,
+                    color: 'var(--purple)', marginTop: 6, opacity: 0.7,
                   }}>Focus: {advice.focus_for_next_week}</div>
                 )}
               </div>
             )}
 
-            {/* Backtest validation banner */}
-            <div style={{
-              display: 'flex', gap: 10, flexWrap: 'wrap',
-              padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.04)',
-            }}>
-              {[
-                { label: 'Win Rate', value: '42.9%', sub: '+3.6pp', color: 'var(--green)' },
-                { label: 'Profit Factor', value: '1.49', sub: '+0.28', color: 'var(--green)' },
-                { label: 'Veto Accuracy', value: '100%', sub: '2/2', color: 'var(--purple)' },
-              ].map((m, i) => (
-                <div key={i} style={{
-                  flex: 1, minWidth: 80, padding: '6px 8px',
-                  background: 'rgba(255,255,255,0.02)', borderRadius: 6,
-                }}>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: 1,
-                    color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>{m.label}</div>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 600,
-                    color: m.color }}>{m.value}</div>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9,
-                    color: 'rgba(255,255,255,0.25)' }}>{m.sub} vs baseline</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Veto accuracy tracker */}
+            {/* Live decision tracker */}
             {totalReviewed > 0 && (
               <div style={{
                 display: 'flex', gap: 12, fontFamily: 'var(--mono)', fontSize: 10,
-                color: 'rgba(255,255,255,0.3)', paddingTop: 6,
+                color: 'rgba(255,255,255,0.3)', paddingTop: 8, marginTop: 8,
                 borderTop: '1px solid rgba(255,255,255,0.04)',
               }}>
                 <span>{totalReviewed} reviewed</span>
@@ -282,7 +204,7 @@ export default function ClaudeInsights() {
                 {vetoed > 0 && <span style={{ color: 'var(--red)' }}>{vetoed} vetoed</span>}
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>

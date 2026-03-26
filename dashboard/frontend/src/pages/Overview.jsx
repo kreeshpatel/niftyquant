@@ -133,26 +133,59 @@ export default function Overview() {
 }
 
 function RegimeVerdict({ regime = 'BEAR', confidence = 80 }) {
-  const colors = { BULL: 'var(--green)', BEAR: 'var(--red)', CHOPPY: 'var(--amber)' }
-  const bgs = { BULL: 'var(--green-d)', BEAR: 'var(--red-d)', CHOPPY: 'var(--amber-d)' }
-  const borders = { BULL: 'var(--green-b)', BEAR: 'var(--red-b)', CHOPPY: 'var(--amber-b)' }
-  const subs = { BULL: 'Signals active', BEAR: 'No new entries', CHOPPY: 'Cautious entries only' }
-  const glowAnim = regime === 'BEAR' ? 'bearGlow 3s infinite' : regime === 'BULL' ? 'bullGlow 3s infinite' : 'none'
-  const spaced = regime.split('').join(' ')
+  const isBear = regime === 'BEAR' || regime === 'BEAR_STRONG' || regime === 'BEAR_MILD'
+  const isBull = regime === 'BULL'
+  const color = isBear ? '#f87171' : isBull ? '#34d399' : '#fbbf24'
+  const bgColor = isBear ? 'rgba(248,113,113,0.06)' : isBull ? 'rgba(52,211,153,0.06)' : 'rgba(251,191,36,0.06)'
+  const glowAnim = isBear ? 'bearGlow 3s infinite' : isBull ? 'bullGlow 3s infinite' : 'none'
 
   return (
     <div style={{
-      background: bgs[regime] || 'var(--bg-card)',
-      border: `1px solid ${borders[regime] || 'var(--border)'}`,
-      borderRadius: 'var(--r-lg)', padding: 20, textAlign: 'center',
-      animation: glowAnim,
+      position: 'relative', borderRadius: 16, padding: 24,
+      background: bgColor, border: `1px solid ${color}25`,
+      overflow: 'hidden', textAlign: 'center', animation: glowAnim,
     }}>
+      {/* Animated background rings */}
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+        {[1, 2, 3].map(i => (
+          <div key={i} style={{
+            position: 'absolute', width: i * 80, height: i * 80, borderRadius: '50%',
+            border: `1px solid ${color}`, opacity: 0.06 / i,
+            animation: `regimePulse ${2 + i * 0.5}s ease-in-out infinite`,
+            animationDelay: `${i * 0.3}s`,
+          }} />
+        ))}
+      </div>
+
       <div style={{
-        fontFamily: 'var(--sans)', fontSize: 36, fontWeight: 800,
-        letterSpacing: 8, color: colors[regime] || 'var(--text)',
-      }}>{spaced}</div>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-dim)', marginTop: 6 }}>
-        {confidence}% confidence · {subs[regime] || ''}
+        fontFamily: 'var(--mono)', fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 800,
+        letterSpacing: 6, color, lineHeight: 1, marginBottom: 8,
+        position: 'relative', zIndex: 1, textShadow: `0 0 40px ${color}50`,
+      }}>{regime?.replace('_', ' ')}</div>
+
+      <div style={{
+        fontFamily: 'var(--mono)', fontSize: 11, color: `${color}80`,
+        letterSpacing: 1, marginBottom: 12, position: 'relative', zIndex: 1,
+      }}>{confidence}% confidence</div>
+
+      <div style={{
+        height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2,
+        overflow: 'hidden', position: 'relative', zIndex: 1,
+      }}>
+        <div style={{
+          height: '100%', width: `${confidence}%`,
+          background: `linear-gradient(90deg, ${color}60, ${color})`,
+          borderRadius: 2, transition: 'width 1s ease',
+        }} />
+      </div>
+
+      <div style={{
+        fontFamily: 'var(--mono)', fontSize: 10, color: 'rgba(255,255,255,0.25)',
+        marginTop: 10, letterSpacing: 0.5, position: 'relative', zIndex: 1,
+      }}>
+        {isBear && 'No new entries \u00B7 capital preserved'}
+        {isBull && 'Signals active \u00B7 full position size'}
+        {!isBear && !isBull && 'Selective entries \u00B7 reduced size'}
       </div>
     </div>
   )
