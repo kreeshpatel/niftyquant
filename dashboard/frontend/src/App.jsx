@@ -3,8 +3,9 @@ import { Routes, Route } from 'react-router-dom'
 import PasswordGate from './auth/PasswordGate'
 import Layout from './components/Layout'
 import Overview from './pages/Overview'
-import Positions from './pages/Positions'
+import Screener from './pages/Screener'
 import Signals from './pages/Signals'
+import Analytics from './pages/Analytics'
 import Backtest from './pages/Backtest'
 import TradeLog from './pages/TradeLog'
 
@@ -17,8 +18,9 @@ export default function App() {
     <Layout>
       <Routes>
         <Route path="/" element={<Overview />} />
-        <Route path="/positions" element={<Positions />} />
+        <Route path="/screener" element={<Screener />} />
         <Route path="/signals" element={<Signals />} />
+        <Route path="/analytics" element={<Analytics />} />
         <Route path="/backtest" element={<Backtest />} />
         <Route path="/trades" element={<TradeLog />} />
       </Routes>

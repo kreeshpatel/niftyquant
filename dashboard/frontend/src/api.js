@@ -280,6 +280,136 @@ export const fetchStockDetail = async (ticker) => {
   }
 }
 
+// ── Screener ─────────────────────────────────────
+export const fetchScreener = () => {
+  const rows = tickerList.map(t => {
+    const d = stockData[t.ticker]
+    if (!d) return null
+    const mom = (Math.min(d.adx, 100) / 100) * 0.3 + (d.posIn52w || 0) * 0.3 + (d.rsi / 100) * 0.2
+    const signal = d.hybridSignal === 1 ? 'BUY' : d.inMomentum === 1 ? 'WATCHLIST' : 'NEUTRAL'
+    return {
+      ticker: t.ticker, name: t.name, sector: t.sector,
+      close: d.close, return_1d: d.dayChange, return_5d: 0,
+      adx: d.adx, rsi: d.rsi, macd_histogram: d.macdHist,
+      bb_pct: d.bbPct, volume_ratio: d.volumeRatio,
+      ema_9_above_21: d.ema9Above21, ema_21_above_50: d.inMomentum,
+      position_in_52w: d.posIn52w, atr_pct: d.atrPct,
+      momentum_score: Math.round(mom * 1000) / 1000,
+      hybrid_signal: d.hybridSignal, in_momentum: d.inMomentum,
+      dip_count: d.dipCount, signal,
+    }
+  }).filter(Boolean)
+
+  const order = { BUY: 0, WATCHLIST: 1, NEUTRAL: 2 }
+  rows.sort((a, b) => (order[a.signal] - order[b.signal]) || (b.momentum_score - a.momentum_score))
+  return Promise.resolve(rows)
+}
+
+// ── Analytics ────────────────────────────────────
+export const fetchAnalytics = () => {
+  const trades = tradeData.map(t => ({
+    ...t,
+    return_pct: parseFloat(t.return_pct) || 0,
+    net_pnl: parseFloat(t.net_pnl) || 0,
+    hold_days: parseInt(t.hold_days) || 0,
+  }))
+  if (!trades.length) return Promise.resolve(null)
+
+  const returns = trades.map(t => t.return_pct)
+  const pnls = trades.map(t => t.net_pnl)
+  const wins = trades.filter(t => t.net_pnl > 0)
+  const losses = trades.filter(t => t.net_pnl <= 0)
+  const grossWin = wins.reduce((s, t) => s + t.net_pnl, 0)
+  const grossLoss = Math.abs(losses.reduce((s, t) => s + t.net_pnl, 0))
+
+  // By sector
+  const sectorMap = {}
+  trades.forEach(t => {
+    const s = getSector(t.ticker)
+    if (!sectorMap[s]) sectorMap[s] = { trades: 0, wins: 0, totalRet: 0, totalPnl: 0, best: -Infinity }
+    sectorMap[s].trades++
+    sectorMap[s].totalRet += t.return_pct
+    sectorMap[s].totalPnl += t.net_pnl
+    if (t.return_pct > sectorMap[s].best) sectorMap[s].best = t.return_pct
+    if (t.net_pnl > 0) sectorMap[s].wins++
+  })
+  const bySector = Object.entries(sectorMap).map(([sector, d]) => ({
+    sector, trades: d.trades, wins: d.wins,
+    win_rate: Math.round(d.wins / d.trades * 1000) / 10,
+    avg_return: Math.round(d.totalRet / d.trades * 100) / 100,
+    total_pnl: Math.round(d.totalPnl),
+  })).sort((a, b) => b.avg_return - a.avg_return)
+
+  // By exit reason
+  const exitMap = {}
+  trades.forEach(t => {
+    const r = t.exit_reason || 'unknown'
+    if (!exitMap[r]) exitMap[r] = { count: 0, totalRet: 0, wins: 0 }
+    exitMap[r].count++
+    exitMap[r].totalRet += t.return_pct
+    if (t.return_pct > 0) exitMap[r].wins++
+  })
+  const byExit = Object.entries(exitMap).map(([reason, d]) => ({
+    reason, count: d.count,
+    avg_return: Math.round(d.totalRet / d.count * 100) / 100,
+    win_rate: Math.round(d.wins / d.count * 1000) / 10,
+  }))
+
+  // Return distribution
+  const bins = [[-Infinity, -10], [-10, -5], [-5, 0], [0, 5], [5, 10], [10, 15], [15, Infinity]]
+  const labels = ['<-10%', '-10:-5%', '-5:0%', '0:5%', '5:10%', '10:15%', '15%+']
+  const returnBins = bins.map(([lo, hi], i) => ({
+    range: labels[i], count: returns.filter(r => r > lo && r <= hi).length,
+  }))
+
+  // Rolling metrics
+  const rollingPnl = []
+  let cum = 0
+  trades.forEach((t, i) => {
+    cum += t.net_pnl
+    const win20 = trades.slice(Math.max(0, i - 19), i + 1)
+    const wr = win20.filter(x => x.net_pnl > 0).length / win20.length * 100
+    rollingPnl.push({ idx: i + 1, cumulative_pnl: Math.round(cum), winrate_20: Math.round(wr * 10) / 10 })
+  })
+
+  // Streaks
+  let curStreak = 0, curType = '', maxWin = 0, maxLoss = 0
+  trades.forEach(t => {
+    const isWin = t.net_pnl > 0
+    if ((isWin && curType === 'win') || (!isWin && curType === 'loss')) {
+      curStreak++
+    } else {
+      curStreak = 1
+      curType = isWin ? 'win' : 'loss'
+    }
+    if (curType === 'win' && curStreak > maxWin) maxWin = curStreak
+    if (curType === 'loss' && curStreak > maxLoss) maxLoss = curStreak
+  })
+
+  // Best/worst trades
+  const sorted = [...trades].sort((a, b) => b.return_pct - a.return_pct)
+  const best5 = sorted.slice(0, 5).map(t => ({ ticker: t.ticker, return_pct: t.return_pct, net_pnl: Math.round(t.net_pnl), hold_days: t.hold_days, exit_reason: t.exit_reason }))
+  const worst5 = sorted.slice(-5).reverse().map(t => ({ ticker: t.ticker, return_pct: t.return_pct, net_pnl: Math.round(t.net_pnl), hold_days: t.hold_days, exit_reason: t.exit_reason }))
+
+  return Promise.resolve({
+    total_trades: trades.length,
+    winning_trades: wins.length,
+    losing_trades: losses.length,
+    win_rate: Math.round(wins.length / trades.length * 1000) / 10,
+    profit_factor: grossLoss > 0 ? Math.round(grossWin / grossLoss * 100) / 100 : 0,
+    avg_win: wins.length ? Math.round(wins.reduce((s, t) => s + t.return_pct, 0) / wins.length * 100) / 100 : 0,
+    avg_loss: losses.length ? Math.round(losses.reduce((s, t) => s + t.return_pct, 0) / losses.length * 100) / 100 : 0,
+    avg_hold_days: Math.round(trades.reduce((s, t) => s + t.hold_days, 0) / trades.length * 10) / 10,
+    total_pnl: Math.round(pnls.reduce((a, b) => a + b, 0)),
+    best_trade: Math.round(Math.max(...returns) * 100) / 100,
+    worst_trade: Math.round(Math.min(...returns) * 100) / 100,
+    by_sector: bySector, by_exit: byExit, return_bins: returnBins,
+    rolling: rollingPnl, best5, worst5,
+    longest_win_streak: maxWin, longest_loss_streak: maxLoss,
+    current_streak: curStreak, current_streak_type: curType,
+  })
+}
+
 export const runBacktest = () => Promise.reject(new Error('Backtest requires a running backend server'))
 export const getBacktestResult = () => Promise.resolve({ status: 'error', error: 'Backend not available' })
 export const getBacktestHistory = () => Promise.resolve([])
