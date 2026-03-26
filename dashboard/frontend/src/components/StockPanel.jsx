@@ -115,21 +115,22 @@ export default function StockPanel({ ticker, onClose }) {
             {/* Header gradient bg */}
             <div style={{ position: 'absolute', inset: 0, height: 280, background: headerGrad, pointerEvents: 'none', borderRadius: '20px 20px 0 0' }} />
 
-            {/* Header content */}
-            <div style={{ position: 'relative', padding: '24px 26px 0', display: 'flex', justifyContent: 'space-between', ...stg(0) }}>
-              <div>
-                <div style={{ ...m, fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)', padding: '3px 10px', borderRadius: 20, display: 'inline-block', marginBottom: 10 }}>{d.sector}</div>
-                <div style={{ ...s, fontSize: 56, fontWeight: 800, letterSpacing: -2.5, color: '#fff', lineHeight: 1 }}>{d.ticker}</div>
-                <div style={{ ...s, fontSize: 13, fontWeight: 400, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{d.name}</div>
+            {/* Header content — stacked layout for long ticker names */}
+            <div style={{ position: 'relative', padding: '24px 26px 0', ...stg(0) }}>
+              {/* Top row: sector + close */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <div style={{ ...m, fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)', padding: '3px 10px', borderRadius: 20 }}>{d.sector}</div>
               </div>
-              <div style={{ textAlign: 'right', alignSelf: 'flex-start', paddingTop: 24 }}>
-                <div className="tabular" style={{ ...m, fontSize: 42, fontWeight: 400, color: '#fff', letterSpacing: -2, lineHeight: 1 }}>{'\u20B9'}{d.close?.toLocaleString('en-IN')}</div>
-                <div style={{ marginTop: 6 }}>
-                  <span style={{ ...m, fontSize: 13, fontWeight: 500, color: d.dayChange >= 0 ? '#34d399' : '#f87171', background: d.dayChange >= 0 ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)', padding: '4px 10px', borderRadius: 20 }}>
-                    {d.dayChange >= 0 ? '\u2191' : '\u2193'} {d.dayChange >= 0 ? '+' : ''}{d.dayChange}% today
-                  </span>
-                </div>
+              {/* Ticker name — clamp for long names */}
+              <div style={{ ...s, fontSize: 'clamp(28px, 7vw, 52px)', fontWeight: 800, letterSpacing: -2, color: '#fff', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 6 }}>{d.ticker}</div>
+              {/* Price + change + company name */}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 4 }}>
+                <span className="tabular" style={{ ...m, fontSize: 28, fontWeight: 400, color: '#fff', letterSpacing: -1 }}>{'\u20B9'}{d.close?.toLocaleString('en-IN')}</span>
+                <span style={{ ...m, fontSize: 13, fontWeight: 500, color: d.dayChange >= 0 ? '#34d399' : '#f87171', background: d.dayChange >= 0 ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)', padding: '4px 10px', borderRadius: 20 }}>
+                  {d.dayChange >= 0 ? '\u2191' : '\u2193'} {d.dayChange >= 0 ? '+' : ''}{d.dayChange}% today
+                </span>
               </div>
+              <div style={{ ...s, fontSize: 13, fontWeight: 400, color: 'rgba(255,255,255,0.3)' }}>{d.name}</div>
             </div>
 
             {/* Chart — bleeds into header */}
@@ -235,7 +236,13 @@ export default function StockPanel({ ticker, onClose }) {
                 {[0, 1, 2].map(i => <div key={i} className="skeleton" style={{ height: 64, borderRadius: 10 }} />)}
               </div>
             ) : news.length === 0 ? (
-              <div style={{ ...m, fontSize: 12, color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: '24px 0' }}>No recent news found</div>
+              <div style={{ padding: '32px 0', textAlign: 'center' }}>
+                <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.15 }}>No news</div>
+                <div style={{ ...m, fontSize: 12, color: 'rgba(255,255,255,0.25)', lineHeight: 1.6 }}>
+                  No recent news for {d.ticker}<br />
+                  <span style={{ fontSize: 10 }}>Try <a href={`https://finance.yahoo.com/quote/${ticker}.NS/news`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--purple)', textDecoration: 'none' }}>Yahoo Finance {'\u2197'}</a></span>
+                </div>
+              </div>
             ) : news.map((n, i) => (
               <a key={i} href={n.link} target="_blank" rel="noopener noreferrer" style={{
                 display: 'block', padding: '14px 12px', textDecoration: 'none', borderRadius: 10,
