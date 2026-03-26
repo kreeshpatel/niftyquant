@@ -1,10 +1,53 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 const ACCESS_HASH = import.meta.env.VITE_ACCESS_HASH
 
 async function hashPassword(pw) {
   const encoded = new TextEncoder().encode(pw)
   const buffer = await crypto.subtle.digest('SHA-256', encoded)
   return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+function ParticleCanvas() {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    let animId
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
+    resize()
+    window.addEventListener('resize', resize)
+
+    const particles = Array.from({ length: 60 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: Math.random() * 1.5 + 0.5,
+      speedX: (Math.random() - 0.5) * 0.3,
+      speedY: (Math.random() - 0.5) * 0.3,
+      opacity: Math.random() * 0.4 + 0.1,
+    }))
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      particles.forEach(p => {
+        p.x += p.speedX
+        p.y += p.speedY
+        if (p.x < 0) p.x = canvas.width
+        if (p.x > canvas.width) p.x = 0
+        if (p.y < 0) p.y = canvas.height
+        if (p.y > canvas.height) p.y = 0
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(129,140,248,${p.opacity})`
+        ctx.fill()
+      })
+      animId = requestAnimationFrame(animate)
+    }
+    animId = requestAnimationFrame(animate)
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize) }
+  }, [])
+
+  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }} />
 }
 
 export default function PasswordGate({ onAuth }) {
@@ -34,7 +77,20 @@ export default function PasswordGate({ onAuth }) {
       position: 'fixed', inset: 0, background: 'var(--bg-base)',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
     }}>
-      <div style={{ animation: 'scaleIn 0.5s ease both' }}>
+      {/* Particle background */}
+      <ParticleCanvas />
+
+      {/* Grid overlay */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        backgroundImage: 'linear-gradient(rgba(129,140,248,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(129,140,248,0.04) 1px, transparent 1px)',
+        backgroundSize: '50px 50px',
+        maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%)',
+        WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%)',
+      }} />
+
+      {/* Form content */}
+      <div style={{ position: 'relative', zIndex: 1, animation: 'scaleIn 0.5s ease both' }}>
         {/* Logo */}
         <div style={{
           fontSize: 40, fontWeight: 800, letterSpacing: -2, marginBottom: 8, textAlign: 'center',

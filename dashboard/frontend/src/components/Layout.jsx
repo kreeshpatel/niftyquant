@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import StockSearch from './StockSearch'
 import Timestamp from './Timestamp'
@@ -56,6 +56,13 @@ function DataFreshness() {
 export default function Layout({ children }) {
   const location = useLocation()
   const now = new Date().toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handler, { passive: true })
+    return () => window.removeEventListener('scroll', handler)
+  }, [])
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -63,9 +70,11 @@ export default function Layout({ children }) {
       <nav style={{
         height: 54, display: 'flex', alignItems: 'center', padding: '0 24px',
         borderBottom: '1px solid var(--border)',
-        background: 'rgba(8,8,16,0.85)',
+        background: scrolled ? 'rgba(8,8,16,0.95)' : 'rgba(8,8,16,0.7)',
+        boxShadow: scrolled ? '0 1px 0 rgba(255,255,255,0.06)' : 'none',
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
         position: 'sticky', top: 0, zIndex: 100,
+        transition: 'background 0.3s, box-shadow 0.3s',
       }} className="anim-fade-in">
         <div style={{
           fontSize: 22, fontWeight: 800, letterSpacing: -1, marginRight: 32,

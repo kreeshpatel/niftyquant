@@ -3,7 +3,7 @@ import React from 'react'
 export default function MetricHero({ label, value, sub, color = 'var(--purple)', glowColor = '#818cf8' }) {
   return (
     <div style={{
-      padding: '26px 28px 22px', borderRight: '1px solid var(--border)',
+      padding: '32px 32px 28px', borderRight: '1px solid var(--border)',
       position: 'relative', overflow: 'hidden', flex: 1, minWidth: 0,
       transition: 'background 0.3s',
     }}

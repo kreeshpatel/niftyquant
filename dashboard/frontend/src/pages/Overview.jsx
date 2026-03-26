@@ -7,25 +7,24 @@ import EngineStatus from '../components/EngineStatus'
 import RegimeCard from '../components/RegimeCard'
 import MonthlyHeatmap from '../components/MonthlyHeatmap'
 import SectorChart from '../components/SectorChart'
+import TopLoader from '../components/TopLoader'
 
-function useAnimatedNumber(target, duration = 1200) {
-  const [display, setDisplay] = useState(0)
+function useCountUp(target, duration = 1200) {
+  const [value, setValue] = useState(0)
   const ref = useRef(null)
   useEffect(() => {
-    if (target === 0) { setDisplay(0); return }
+    if (target == null || target === 0) { setValue(target || 0); return }
     const start = performance.now()
-    const from = 0
     function tick(now) {
-      const elapsed = now - start
-      const progress = Math.min(elapsed / duration, 1)
+      const progress = Math.min((now - start) / duration, 1)
       const eased = 1 - Math.pow(1 - progress, 3)
-      setDisplay(Math.round(from + (target - from) * eased))
+      setValue(eased * target)
       if (progress < 1) ref.current = requestAnimationFrame(tick)
     }
     ref.current = requestAnimationFrame(tick)
     return () => { if (ref.current) cancelAnimationFrame(ref.current) }
   }, [target, duration])
-  return display
+  return value
 }
 
 export default function Overview() {
@@ -38,15 +37,23 @@ export default function Overview() {
   const markers = data?.tradeMarkers || []
   const monthly = data?.monthlyReturns || []
   const sectors = data?.sectorPerf || []
-  const backtestRet = p.backtest_return_pct ?? p.total_return_pct ?? 0
-  const ret = backtestRet
+  const ret = p.backtest_return_pct ?? p.total_return_pct ?? 0
+  const lastEquity = curve.length > 0 ? curve[curve.length - 1].value : (p.total_value || 1000000)
+
+  // Animated hero numbers
+  const animVal = useCountUp(lastEquity, 1200)
+  const animPF = useCountUp(m.profit_factor || 0, 1000)
+  const animWR = useCountUp(m.win_rate || 0, 1000)
+  const animSharpe = useCountUp(m.sharpe_ratio || 0, 900)
+  const animDD = useCountUp(Math.abs(p.max_drawdown_pct || p.drawdown_pct || 0), 900)
+  const animRet = useCountUp(Math.abs(ret), 1000)
+
   const wins = Math.round((m.win_rate || 0) / 100 * (m.total_trades || 0))
   const losses = (m.total_trades || 0) - wins
-  const lastEquity = curve.length > 0 ? curve[curve.length - 1].value : (p.total_value || 1000000)
-  const animatedValue = useAnimatedNumber(lastEquity)
 
   return (
     <div>
+      <TopLoader loading={!data} />
       {/* Hero metrics */}
       <div style={{
         display: 'flex', border: '1px solid var(--border)', background: 'var(--bg-card)',
@@ -55,19 +62,19 @@ export default function Overview() {
       }} className="anim-fade-up stagger-1 mobile-stack">
         <MetricHero
           label="Portfolio Value"
-          value={formatLakh(animatedValue || 1000000)}
-          sub={<span style={{ color: ret >= 0 ? 'var(--green)' : 'var(--red)' }}>{ret >= 0 ? '+' : ''}{ret.toFixed(1)}% backtest return</span>}
+          value={formatLakh(Math.round(animVal) || 1000000)}
+          sub={<span style={{ color: ret >= 0 ? 'var(--green)' : 'var(--red)' }}>{ret >= 0 ? '+' : ''}{animRet.toFixed(1)}% backtest return</span>}
           color="var(--purple)" glowColor="#818cf8"
         />
         <MetricHero
           label="Profit Factor / Win Rate"
-          value={<><span style={{ color: 'var(--green)' }}>{(m.profit_factor || 0).toFixed(2)}</span><span style={{ color: 'var(--text-dim)', fontSize: 24 }}> | </span><span>{m.win_rate || 0}%</span></>}
+          value={<><span style={{ color: 'var(--green)' }}>{animPF.toFixed(2)}</span><span style={{ color: 'var(--text-dim)', fontSize: 24 }}> | </span><span>{animWR.toFixed(1)}%</span></>}
           sub={`${wins}W · ${losses}L · ${m.total_trades || 0} trades`}
           color="var(--text)" glowColor="#34d399"
         />
         <MetricHero
           label="Sharpe / Max Drawdown"
-          value={<><span style={{ color: 'var(--blue)' }}>{(m.sharpe_ratio || 0).toFixed(2)}</span><span style={{ color: 'var(--text-dim)', fontSize: 24 }}> | </span><span style={{ color: 'var(--red)' }}>{p.max_drawdown_pct || p.drawdown_pct || 0}%</span></>}
+          value={<><span style={{ color: 'var(--blue)' }}>{animSharpe.toFixed(2)}</span><span style={{ color: 'var(--text-dim)', fontSize: 24 }}> | </span><span style={{ color: 'var(--red)' }}>-{animDD.toFixed(1)}%</span></>}
           sub={`annualised · peak ${formatLakh(p.peak_value || 0)}`}
           color="var(--blue)" glowColor="#60a5fa"
         />

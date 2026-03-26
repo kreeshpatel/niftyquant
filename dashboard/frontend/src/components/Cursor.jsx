@@ -5,12 +5,14 @@ export default function Cursor() {
   const [ringPos, setRingPos] = useState({ x: -100, y: -100 })
   const [hovering, setHovering] = useState(false)
   const [visible, setVisible] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
   const ringRef = useRef({ x: -100, y: -100 })
   const rafRef = useRef(null)
 
   useEffect(() => {
     // Only show on desktop with fine pointer
-    if (window.matchMedia('(pointer: fine)').matches === false) return
+    if (window.matchMedia('(pointer: coarse)').matches) return
+    setIsDesktop(true)
 
     const onMove = (e) => {
       setPos({ x: e.clientX, y: e.clientY })
@@ -23,7 +25,6 @@ export default function Cursor() {
     document.addEventListener('mouseleave', onLeave)
     document.addEventListener('mouseenter', onEnter)
 
-    // Check hovering on interactive elements
     const onOver = (e) => {
       const t = e.target.closest('button, a, [role="button"], input, select, [data-clickable], tr[style*="cursor"]')
       setHovering(!!t)
@@ -38,8 +39,9 @@ export default function Cursor() {
     }
   }, [])
 
-  // Smooth ring follow
+  // Smooth ring follow — only run when visible
   useEffect(() => {
+    if (!visible || !isDesktop) return
     const animate = () => {
       ringRef.current.x += (pos.x - ringRef.current.x) * 0.15
       ringRef.current.y += (pos.y - ringRef.current.y) * 0.15
@@ -48,9 +50,9 @@ export default function Cursor() {
     }
     rafRef.current = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [pos])
+  }, [pos, visible, isDesktop])
 
-  if (!visible) return null
+  if (!visible || !isDesktop) return null
 
   const ringSize = hovering ? 36 : 24
 
@@ -61,14 +63,13 @@ export default function Cursor() {
         left: pos.x - 3, top: pos.y - 3,
         width: 6, height: 6, borderRadius: '50%',
         background: 'var(--purple)', opacity: 0.8,
-        transition: 'opacity 0.15s',
       }} />
       <div style={{
         position: 'fixed', pointerEvents: 'none', zIndex: 99998,
         left: ringPos.x - ringSize / 2, top: ringPos.y - ringSize / 2,
         width: ringSize, height: ringSize, borderRadius: '50%',
         border: '1px solid rgba(129,140,248,0.25)',
-        transition: 'width 0.2s ease, height 0.2s ease, left 0.05s, top 0.05s',
+        transition: 'width 0.2s ease, height 0.2s ease',
         opacity: 0.6,
       }} />
     </>
