@@ -61,11 +61,14 @@ export default function Layout({ children }) {
   const now = new Date().toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })
   const [scrolled, setScrolled] = useState(false)
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
+  const indicatorRef = useRef({ left: 0, width: 0 })
   const updateIndicator = useCallback((el) => {
     if (el) {
-      const parent = el.parentElement
-      if (parent) {
-        setIndicatorStyle({ left: el.offsetLeft, width: el.offsetWidth })
+      const left = el.offsetLeft
+      const width = el.offsetWidth
+      if (left !== indicatorRef.current.left || width !== indicatorRef.current.width) {
+        indicatorRef.current = { left, width }
+        setIndicatorStyle({ left, width })
       }
     }
   }, [])
