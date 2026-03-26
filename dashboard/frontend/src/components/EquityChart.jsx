@@ -80,6 +80,7 @@ function TradeMarkerDot({ cx, cy, payload, markers }) {
 export default function EquityChart({ data = [], markers = [], height = 220 }) {
   const [range, setRange] = useState('ALL')
   const [fade, setFade] = useState(false)
+  const [showTrades, setShowTrades] = useState(false)
 
   const filtered = useMemo(() => {
     const r = ranges.find(r => r.label === range)
@@ -92,11 +93,28 @@ export default function EquityChart({ data = [], markers = [], height = 220 }) {
     setTimeout(() => { setRange(label); setFade(false) }, 150)
   }
 
-  const hasMarkers = markers && markers.length > 0
+  // Only show significant markers on ALL view when toggled on
+  const filteredMarkers = (showTrades && range === 'ALL' && markers.length > 0)
+    ? markers.filter(m => {
+        const r = Math.abs(m.return_pct || 0)
+        if (m.type === 'entry') return r > 5
+        if (m.is_win) return m.return_pct > 8
+        return m.return_pct < -4
+      })
+    : []
+  const hasMarkers = filteredMarkers.length > 0
 
   return (
     <div>
       <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
+        <button onClick={() => setShowTrades(s => !s)} style={{
+          padding: '4px 12px', borderRadius: 'var(--radius-sm)',
+          fontFamily: 'var(--font-mono)', fontSize: 10, cursor: 'pointer',
+          background: showTrades ? 'var(--green-bg)' : 'transparent',
+          color: showTrades ? 'var(--green)' : 'var(--text-dim)',
+          border: `1px solid ${showTrades ? 'var(--green-border)' : 'transparent'}`,
+          transition: 'all 0.15s', marginRight: 8,
+        }}>{showTrades ? 'Trades on' : 'Show trades'}</button>
         {ranges.map(r => (
           <button key={r.label} onClick={() => switchRange(r.label)} style={{
             padding: '4px 12px', borderRadius: 'var(--radius-sm)',
@@ -128,7 +146,7 @@ export default function EquityChart({ data = [], markers = [], height = 220 }) {
             )}
             <Line
               type="monotone" dataKey="value" stroke="#a78bfa" strokeWidth={2}
-              dot={hasMarkers ? <TradeMarkerDot markers={markers} /> : false}
+              dot={hasMarkers ? <TradeMarkerDot markers={filteredMarkers} /> : false}
               activeDot={{ r: 5, fill: '#a78bfa', stroke: '#0a0a0b', strokeWidth: 2 }}
             />
           </ComposedChart>

@@ -4,20 +4,24 @@ import { useCountUp } from '../hooks/useCountUp'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid, PieChart, Pie } from 'recharts'
 import MonthlyHeatmap from '../components/MonthlyHeatmap'
 import Skeleton from '../components/Skeleton'
+import InfoTooltip from '../components/InfoTooltip'
 
 const mono = { fontFamily: 'var(--font-mono)' }
 const dim = { ...mono, fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'var(--text-dim)', marginBottom: 12 }
 
-function Stat({ label, value, color = 'var(--purple)', suffix = '' }) {
+function Stat({ label, value, color = 'var(--purple)', suffix = '', prefix = '', info }) {
   const animated = useCountUp(typeof value === 'number' ? value : 0)
   const display = typeof value === 'number' ? (Math.abs(value) >= 100 ? Math.round(animated) : animated.toFixed(1)) : value
   return (
     <div className="glass" style={{ padding: '20px 18px', flex: 1, minWidth: 140 }}>
-      <div style={dim}>{label}</div>
-      <div style={{ ...mono, fontSize: 28, fontWeight: 500, color }}>{display}{suffix}</div>
+      <div style={dim}>{label}{info && <InfoTooltip text={info} />}</div>
+      <div className="tabular" style={{ ...mono, fontSize: 28, fontWeight: 500, color, fontVariantNumeric: 'tabular-nums' }}>{prefix}{display}{suffix}</div>
     </div>
   )
 }
+
+function wrColor(v) { return v > 45 ? 'var(--green)' : v >= 35 ? 'var(--amber)' : 'var(--red)' }
+function pfColor(v) { return v > 1.3 ? 'var(--green)' : v >= 1.0 ? 'var(--amber)' : 'var(--red)' }
 
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
@@ -46,10 +50,10 @@ export default function Analytics() {
 
       {/* Section 1: Hero stats */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }} className="stagger-1">
-        <Stat label="Total P&L" value={d.total_pnl} color={d.total_pnl >= 0 ? 'var(--green)' : 'var(--red)'} />
-        <Stat label="Win Rate" value={d.win_rate} color="var(--green)" suffix="%" />
-        <Stat label="Profit Factor" value={d.profit_factor} color="var(--purple)" />
-        <Stat label="Avg Win" value={d.avg_win} color="var(--green)" suffix="%" />
+        <Stat label="Total P&L" value={d.total_pnl} color={d.total_pnl >= 0 ? 'var(--green)' : 'var(--red)'} prefix={d.total_pnl >= 0 ? '+' : ''} />
+        <Stat label="Win Rate" value={d.win_rate} color={wrColor(d.win_rate)} suffix="%" info="% of trades that close profitable. With 2:1 R:R you only need 34%+ to profit." />
+        <Stat label="Profit Factor" value={d.profit_factor} color={pfColor(d.profit_factor)} info="Gross wins / gross losses. Above 1.0 = profitable. 1.5+ is strong." />
+        <Stat label="Avg Win" value={d.avg_win} color="var(--green)" suffix="%" prefix="+" />
         <Stat label="Avg Loss" value={d.avg_loss} color="var(--red)" suffix="%" />
         <Stat label="Avg Hold" value={d.avg_hold_days} color="var(--text-primary)" suffix="d" />
       </div>
@@ -92,19 +96,31 @@ export default function Analytics() {
       </div>
 
       {/* Section 3: Sector performance */}
-      <div className="glass stagger-3" style={{ padding: 20, marginBottom: 24 }}>
-        <div style={dim}>Performance by sector</div>
-        <ResponsiveContainer width="100%" height={Math.max(d.by_sector.length * 32, 120)}>
-          <BarChart data={d.by_sector} layout="vertical" margin={{ top: 0, right: 12, bottom: 0, left: 0 }}>
-            <XAxis type="number" tick={{ fill: '#ffffff15', ...mono, fontSize: 9 }} tickLine={false} axisLine={false} />
-            <YAxis type="category" dataKey="sector" tick={{ fill: '#ffffff40', ...mono, fontSize: 10 }} tickLine={false} axisLine={false} width={80} />
-            <Tooltip content={<ChartTooltip />} />
-            <Bar dataKey="trades" name="Trades" radius={[0, 4, 4, 0]} barSize={14}>
-              {d.by_sector.map((s, i) => <Cell key={i} fill={s.win_rate > 40 ? '#a78bfaB3' : s.win_rate < 30 ? '#f87171B3' : '#fbbf24B3'} />)}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {(() => {
+        const sectorData = d.by_sector.filter(s => s.sector !== 'Others').sort((a, b) => b.total_pnl - a.total_pnl).slice(0, 8)
+        return (
+          <div className="glass stagger-3" style={{ padding: 20, marginBottom: 24 }}>
+            <div style={dim}>Performance by sector (top 8, excl. Others)</div>
+            <ResponsiveContainer width="100%" height={Math.max(sectorData.length * 36, 120)}>
+              <BarChart data={sectorData} layout="vertical" margin={{ top: 0, right: 12, bottom: 0, left: 0 }}>
+                <XAxis type="number" tick={{ fill: '#ffffff15', ...mono, fontSize: 9 }} tickLine={false} axisLine={false} />
+                <YAxis type="category" dataKey="sector" tick={{ fill: '#ffffff40', ...mono, fontSize: 10 }} tickLine={false} axisLine={false} width={90} />
+                <Tooltip content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null
+                  const s = payload[0]?.payload
+                  return <div style={{ background: '#111113', border: '1px solid var(--border)', borderRadius: 6, padding: '8px 12px', ...mono, fontSize: 11 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{s?.sector}</div>
+                    <div>{s?.trades} trades · {s?.win_rate}% WR · {s?.avg_return >= 0 ? '+' : ''}{s?.avg_return}% avg</div>
+                  </div>
+                }} />
+                <Bar dataKey="trades" name="Trades" radius={[0, 4, 4, 0]} barSize={16}>
+                  {sectorData.map((s, i) => <Cell key={i} fill={s.win_rate > 45 ? '#34d399B3' : s.win_rate >= 35 ? '#fbbf24B3' : '#f87171B3'} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )
+      })()}
 
       {/* Section 4: Rolling performance */}
       <div className="glass stagger-4" style={{ padding: 20, marginBottom: 24 }}>

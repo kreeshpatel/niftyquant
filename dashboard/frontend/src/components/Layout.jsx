@@ -35,10 +35,16 @@ function RegimePill({ regime = 'BEAR' }) {
 }
 
 function DataFreshness() {
-  const hour = new Date().getHours()
-  const isMarketHours = hour >= 9 && hour <= 16
-  const color = isMarketHours ? '#34d399' : '#fbbf24'
-  const label = isMarketHours ? 'Data live' : 'After hours'
+  const now = new Date()
+  const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }))
+  const hr = ist.getHours(), min = ist.getMinutes(), day = ist.getDay()
+  const t = hr * 60 + min
+  const isWeekday = day >= 1 && day <= 5
+  let color, label
+  if (!isWeekday) { color = 'var(--text-dim)'; label = 'Weekend' }
+  else if (t >= 555 && t <= 930) { color = '#34d399'; label = 'Market open' }
+  else if (t >= 540 && t < 555) { color = '#fbbf24'; label = 'Pre-market' }
+  else { color = 'var(--text-dim)'; label = 'After hours' }
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-mono)', fontSize: 10, color }} className="desktop-only">
       <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
