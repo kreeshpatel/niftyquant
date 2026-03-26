@@ -14,9 +14,12 @@ export default function RegimeCard({ label, value, max = 100, color }) {
   const pct = Math.min((value / max) * 100, 100)
   return (
     <div style={{
-      borderRadius: 'var(--radius-md)', padding: '14px 16px',
+      borderRadius: 'var(--r-md)', padding: '14px 16px',
       background: 'var(--bg-card)', border: '1px solid var(--border)',
-    }}>
+      transition: 'border-color 0.25s, transform 0.2s, box-shadow 0.25s',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)' }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}>
       <div style={{
         fontFamily: 'var(--text-mono)', fontSize: 9, textTransform: 'uppercase',
         letterSpacing: 1.5, color: 'var(--text-dim)', marginBottom: 8,

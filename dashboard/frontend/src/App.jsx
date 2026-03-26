@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import PasswordGate from './auth/PasswordGate'
 import Layout from './components/Layout'
 import ShortcutsModal from './components/ShortcutsModal'
+import Cursor from './components/Cursor'
+import ScrollProgress from './components/ScrollProgress'
 import Overview from './pages/Overview'
 import Screener from './pages/Screener'
 import Signals from './pages/Signals'
@@ -13,12 +15,12 @@ import TradeLog from './pages/TradeLog'
 function AuthedApp() {
   const [showShortcuts, setShowShortcuts] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     let gPressed = false
     let gTimeout = null
     const handler = (e) => {
-      // Don't fire when typing in inputs
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return
 
       if (e.key === '?') { setShowShortcuts(s => !s); return }
@@ -42,17 +44,23 @@ function AuthedApp() {
   }, [navigate])
 
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Overview />} />
-        <Route path="/screener" element={<Screener />} />
-        <Route path="/signals" element={<Signals />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/backtest" element={<Backtest />} />
-        <Route path="/trades" element={<TradeLog />} />
-      </Routes>
+    <>
+      <Cursor />
+      <ScrollProgress />
+      <Layout>
+        <div key={location.pathname} style={{ animation: 'fadeUp 0.35s ease both' }}>
+          <Routes location={location}>
+            <Route path="/" element={<Overview />} />
+            <Route path="/screener" element={<Screener />} />
+            <Route path="/signals" element={<Signals />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/backtest" element={<Backtest />} />
+            <Route path="/trades" element={<TradeLog />} />
+          </Routes>
+        </div>
+      </Layout>
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
-    </Layout>
+    </>
   )
 }
 

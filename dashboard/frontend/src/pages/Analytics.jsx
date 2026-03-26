@@ -133,7 +133,7 @@ export default function Analytics() {
             <YAxis yAxisId="pnl" tick={{ fill: '#ffffff15', ...mono, fontSize: 9 }} tickLine={false} axisLine={false} width={50} tickFormatter={v => `${(v/1000).toFixed(0)}K`} />
             <YAxis yAxisId="wr" orientation="right" tick={{ fill: '#ffffff15', ...mono, fontSize: 9 }} tickLine={false} axisLine={false} width={40} tickFormatter={v => `${v}%`} />
             <Tooltip content={<ChartTooltip />} />
-            <Line yAxisId="pnl" dataKey="cumulative_pnl" name="Cum P&L" stroke="#a78bfa" strokeWidth={2} dot={false} />
+            <Line yAxisId="pnl" dataKey="cumulative_pnl" name="Cum P&L" stroke="#818cf8" strokeWidth={2} dot={false} />
             <Line yAxisId="wr" dataKey="winrate_20" name="Win Rate 20" stroke="#34d399" strokeWidth={1} strokeDasharray="4 4" dot={false} />
           </LineChart>
         </ResponsiveContainer>

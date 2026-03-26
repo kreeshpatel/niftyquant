@@ -77,14 +77,15 @@ export default function StockPanel({ ticker, onClose }) {
   return (
     <>
       <div onClick={onClose} style={{
-        position: 'fixed', inset: 0, background: '#00000070', backdropFilter: 'blur(4px)', zIndex: 9998,
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+        zIndex: 9998, animation: 'fadeIn 0.2s ease both',
       }} />
       <div style={{
         position: 'fixed', top: '10%', left: '50%',
         width: 'min(780px, 90vw)', maxHeight: '80vh', overflowY: 'auto',
         background: '#111114', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)',
         boxShadow: '0 40px 120px #00000080', zIndex: 9999,
-        animation: 'panelIn 200ms ease-out',
+        animation: 'panelIn 220ms cubic-bezier(0.16,1,0.3,1)',
       }}>
         {loading ? (
           <div style={{ padding: 60, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-dim)' }}>Loading...</div>
@@ -180,8 +181,8 @@ export default function StockPanel({ ticker, onClose }) {
                     <ComposedChart data={sparkData} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
                       <defs>
                         <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.1} />
-                          <stop offset="100%" stopColor="#a78bfa" stopOpacity={0} />
+                          <stop offset="0%" stopColor="#818cf8" stopOpacity={0.1} />
+                          <stop offset="100%" stopColor="#818cf8" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <XAxis dataKey="date" hide />
@@ -195,7 +196,7 @@ export default function StockPanel({ ticker, onClose }) {
                         </div>
                       }} />
                       <Area type="monotone" dataKey="close" stroke="none" fill="url(#sparkGrad)" />
-                      <Line type="monotone" dataKey="close" stroke="#a78bfa" strokeWidth={1.5} dot={false} />
+                      <Line type="monotone" dataKey="close" stroke="#818cf8" strokeWidth={1.5} dot={false} />
                     </ComposedChart>
                   </ResponsiveContainer>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: ret30 >= 0 ? 'var(--green)' : 'var(--red)', marginTop: 4 }}>

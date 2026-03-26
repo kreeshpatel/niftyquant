@@ -71,17 +71,20 @@ export default function Screener() {
               <tr key={r.ticker} onClick={() => setSelected(r.ticker)} style={{
                 cursor: 'pointer', transition: 'background 0.1s',
                 borderLeft: r.signal === 'BUY' ? '2px solid var(--green)' : r.signal === 'WATCHLIST' ? '2px solid var(--amber)' : '2px solid transparent',
+                background: r.signal === 'BUY' ? 'rgba(52,211,153,0.03)' : 'transparent',
+                animation: `fadeUp 0.4s ease both`,
+                animationDelay: `${Math.min(i * 20, 400)}ms`,
               }}
-                onMouseEnter={e => e.currentTarget.style.background = '#ffffff04'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                onMouseEnter={e => e.currentTarget.style.background = r.signal === 'BUY' ? 'rgba(52,211,153,0.06)' : 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background = r.signal === 'BUY' ? 'rgba(52,211,153,0.03)' : 'transparent'}>
                 <td style={td}><div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 600, color: 'var(--purple)' }}>{r.ticker}</div><div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 1 }}>{r.name}</div></td>
                 <td style={td}><SignalBadge signal={r.signal} dips={r.dip_count} /></td>
                 <td style={{ ...td, fontSize: 10, color: 'var(--text-dim)' }}>{r.sector}</td>
                 <td style={{ ...td, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>{r.close?.toLocaleString('en-IN')}</td>
                 <td style={{ ...td, textAlign: 'right', fontFamily: 'var(--font-mono)', color: r.return_1d >= 0 ? 'var(--green)' : 'var(--red)' }}>{r.return_1d >= 0 ? '+' : ''}{r.return_1d}%</td>
-                <td style={{ ...td, textAlign: 'right', fontFamily: 'var(--font-mono)' }}><span style={{ marginRight: 4 }}>{r.adx?.toFixed(0)}</span><span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: r.adx > 30 ? 'var(--green)' : r.adx > 20 ? 'var(--amber)' : 'var(--red)' }} /></td>
+                <td style={{ ...td, textAlign: 'right', fontFamily: 'var(--font-mono)' }}><span style={{ marginRight: 4 }}>{r.adx?.toFixed(0)}</span><span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: r.adx > 30 ? 'var(--green)' : r.adx > 20 ? 'var(--amber)' : 'var(--red)', boxShadow: r.adx > 30 ? '0 0 6px var(--green)' : r.adx > 20 ? '0 0 6px var(--amber)' : '0 0 6px var(--red)' }} /></td>
                 <td style={{ ...td, textAlign: 'right', fontFamily: 'var(--font-mono)', color: r.rsi > 70 ? 'var(--red)' : r.rsi > 50 ? 'var(--green)' : r.rsi > 30 ? 'var(--amber)' : 'var(--blue)' }}>{r.rsi?.toFixed(0)}</td>
-                <td style={td}><div style={{ width: 60, height: 4, background: '#ffffff08', borderRadius: 2 }}><div style={{ height: '100%', width: `${(r.momentum_score || 0) * 100}%`, background: 'var(--purple)', borderRadius: 2 }} /></div></td>
+                <td style={td}><div style={{ width: 60, height: 4, background: '#ffffff08', borderRadius: 2 }}><div style={{ height: '100%', width: `${(r.momentum_score || 0) * 100}%`, background: 'linear-gradient(90deg, var(--purple), var(--blue))', borderRadius: 2, transition: 'width 0.5s ease' }} /></div></td>
                 <td style={{ ...td, textAlign: 'right', fontFamily: 'var(--font-mono)', color: r.volume_ratio > 2 ? 'var(--green)' : r.volume_ratio > 1 ? 'var(--amber)' : 'var(--text-dim)' }}>{r.volume_ratio?.toFixed(1)}x</td>
                 <td style={{ ...td, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--purple)' }}>View &rarr;</td>
               </tr>

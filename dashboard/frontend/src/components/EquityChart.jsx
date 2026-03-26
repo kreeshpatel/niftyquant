@@ -16,7 +16,7 @@ function CustomCursor({ points, viewBox }) {
     <g>
       <line x1={x} y1={viewBox?.y || 0} x2={x} y2={(viewBox?.y || 0) + (viewBox?.height || 300)} stroke="rgba(255,255,255,0.15)" strokeWidth={1} strokeDasharray="4 3" />
       <line x1={viewBox?.x || 0} y1={y} x2={(viewBox?.x || 0) + (viewBox?.width || 600)} y2={y} stroke="rgba(255,255,255,0.08)" strokeWidth={1} strokeDasharray="4 3" />
-      <circle cx={x} cy={y} r={4} fill="#a78bfa" stroke="#0a0a0b" strokeWidth={2} />
+      <circle cx={x} cy={y} r={4} fill="#818cf8" stroke="#080810" strokeWidth={2} />
     </g>
   )
 }
@@ -36,7 +36,7 @@ function ChartTooltip({ active, payload, label }) {
     }}>
       <div style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 6, fontSize: 10 }}>{fmtDate}</div>
       {strategy != null && (
-        <div className="tabular" style={{ display: 'flex', justifyContent: 'space-between', gap: 16, color: '#a78bfa', marginBottom: 3 }}>
+        <div className="tabular" style={{ display: 'flex', justifyContent: 'space-between', gap: 16, color: '#818cf8', marginBottom: 3 }}>
           <span>Strategy</span><span style={{ fontWeight: 500 }}>{formatLakh(strategy)}</span>
         </div>
       )}
@@ -132,8 +132,8 @@ export default function EquityChart({ data = [], markers = [], height = 220 }) {
           <ComposedChart data={filtered} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
             <defs>
               <linearGradient id="purpleGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.15} />
-                <stop offset="100%" stopColor="#a78bfa" stopOpacity={0} />
+                <stop offset="0%" stopColor="#818cf8" stopOpacity={0.15} />
+                <stop offset="100%" stopColor="#818cf8" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid horizontal stroke="#ffffff06" vertical={false} />
@@ -145,9 +145,9 @@ export default function EquityChart({ data = [], markers = [], height = 220 }) {
               <Line type="monotone" dataKey="nifty" stroke="#ffffff15" strokeWidth={1} strokeDasharray="4 4" dot={false} />
             )}
             <Line
-              type="monotone" dataKey="value" stroke="#a78bfa" strokeWidth={2}
+              type="monotone" dataKey="value" stroke="#818cf8" strokeWidth={2}
               dot={hasMarkers ? <TradeMarkerDot markers={filteredMarkers} /> : false}
-              activeDot={{ r: 5, fill: '#a78bfa', stroke: '#0a0a0b', strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: '#818cf8', stroke: '#080810', strokeWidth: 2 }}
             />
           </ComposedChart>
         </ResponsiveContainer>

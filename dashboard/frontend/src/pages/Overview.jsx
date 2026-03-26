@@ -48,18 +48,22 @@ export default function Overview() {
   return (
     <div>
       {/* Hero metrics */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', overflow: 'hidden' }} className="fade-up fade-up-1 mobile-stack">
+      <div style={{
+        display: 'flex', border: '1px solid var(--border)', background: 'var(--bg-card)',
+        borderRadius: 'var(--r-xl)', overflow: 'hidden',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+      }} className="anim-fade-up stagger-1 mobile-stack">
         <MetricHero
           label="Portfolio Value"
           value={formatLakh(animatedValue || 1000000)}
           sub={<span style={{ color: ret >= 0 ? 'var(--green)' : 'var(--red)' }}>{ret >= 0 ? '+' : ''}{ret.toFixed(1)}% backtest return</span>}
-          color="var(--purple)" glowColor="#a78bfa"
+          color="var(--purple)" glowColor="#818cf8"
         />
         <MetricHero
           label="Profit Factor / Win Rate"
           value={<><span style={{ color: 'var(--green)' }}>{(m.profit_factor || 0).toFixed(2)}</span><span style={{ color: 'var(--text-dim)', fontSize: 24 }}> | </span><span>{m.win_rate || 0}%</span></>}
           sub={`${wins}W · ${losses}L · ${m.total_trades || 0} trades`}
-          color="var(--text-primary)" glowColor="#34d399"
+          color="var(--text)" glowColor="#34d399"
         />
         <MetricHero
           label="Sharpe / Max Drawdown"
@@ -70,28 +74,27 @@ export default function Overview() {
       </div>
 
       {/* Main grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2.2fr 1fr', gap: 20, marginTop: 20 }} className="fade-up fade-up-4 mobile-full">
+      <div style={{ display: 'grid', gridTemplateColumns: '2.2fr 1fr', gap: 20, marginTop: 20 }} className="anim-fade-up stagger-4 mobile-full">
         {/* Left column */}
         <div>
           <SectionHeader title="Equity curve" action="vs Nifty 50 (dashed)" />
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 20 }}>
+          <div className="glass lift" style={{ padding: 20 }}>
             {curve.length > 0 ? <EquityChart data={curve} markers={markers} height={220} /> : <EmptyState text="No backtest data" />}
           </div>
 
           <SectionHeader title="Monthly returns" />
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px 16px 12px' }}>
+          <div className="glass lift" style={{ padding: '16px 16px 12px' }}>
             <MonthlyHeatmap data={monthly} />
           </div>
 
           <SectionHeader title="Performance by sector" />
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px 12px' }}>
+          <div className="glass lift" style={{ padding: '16px 12px' }}>
             {sectors.length > 0 ? <SectorChart data={sectors} /> : <EmptyState text="No trade data" />}
           </div>
         </div>
 
         {/* Right column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Regime verdict — placed first so it's visible */}
           <RegimeVerdict regime="BEAR" confidence={80} />
 
           <SectionHeader title="Market regime" />
@@ -115,22 +118,24 @@ export default function Overview() {
 
 function RegimeVerdict({ regime = 'BEAR', confidence = 80 }) {
   const colors = { BULL: 'var(--green)', BEAR: 'var(--red)', CHOPPY: 'var(--amber)' }
-  const bgs = { BULL: 'var(--green-bg)', BEAR: 'var(--red-bg)', CHOPPY: 'var(--amber-bg)' }
-  const borders = { BULL: 'var(--green-border)', BEAR: 'var(--red-border)', CHOPPY: 'var(--amber-border)' }
+  const bgs = { BULL: 'var(--green-d)', BEAR: 'var(--red-d)', CHOPPY: 'var(--amber-d)' }
+  const borders = { BULL: 'var(--green-b)', BEAR: 'var(--red-b)', CHOPPY: 'var(--amber-b)' }
   const subs = { BULL: 'Signals active', BEAR: 'No new entries', CHOPPY: 'Cautious entries only' }
+  const glowAnim = regime === 'BEAR' ? 'bearGlow 3s infinite' : regime === 'BULL' ? 'bullGlow 3s infinite' : 'none'
   const spaced = regime.split('').join(' ')
 
   return (
     <div style={{
       background: bgs[regime] || 'var(--bg-card)',
       border: `1px solid ${borders[regime] || 'var(--border)'}`,
-      borderRadius: 'var(--radius-lg)', padding: 20, textAlign: 'center',
+      borderRadius: 'var(--r-lg)', padding: 20, textAlign: 'center',
+      animation: glowAnim,
     }}>
       <div style={{
-        fontFamily: 'var(--text-display)', fontSize: 36, fontWeight: 800,
-        letterSpacing: 8, color: colors[regime] || 'var(--text-primary)',
+        fontFamily: 'var(--sans)', fontSize: 36, fontWeight: 800,
+        letterSpacing: 8, color: colors[regime] || 'var(--text)',
       }}>{spaced}</div>
-      <div style={{ fontFamily: 'var(--text-mono)', fontSize: 11, color: 'var(--text-dim)', marginTop: 6 }}>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-dim)', marginTop: 6 }}>
         {confidence}% confidence · {subs[regime] || ''}
       </div>
     </div>
@@ -141,7 +146,7 @@ function SectionHeader({ title, action }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      margin: '20px 0 8px', fontFamily: 'var(--text-mono)', fontSize: 10,
+      margin: '20px 0 8px', fontFamily: 'var(--mono)', fontSize: 10,
       color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1.5,
     }}>
       <span>{title}</span>
@@ -152,9 +157,8 @@ function SectionHeader({ title, action }) {
 
 function EmptyState({ text }) {
   return (
-    <div style={{
-      background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
-      padding: 40, textAlign: 'center', fontFamily: 'var(--text-mono)', fontSize: 13, color: 'var(--text-dim)',
+    <div className="glass" style={{
+      padding: 40, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text-dim)',
     }}>{text}</div>
   )
 }

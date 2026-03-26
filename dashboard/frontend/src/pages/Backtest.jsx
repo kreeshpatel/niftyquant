@@ -52,16 +52,22 @@ export default function Backtest() {
           </div>
           <input type="range" min="0.50" max="0.70" step="0.01" value={params.buy_threshold}
             onChange={e => setParams({ ...params, buy_threshold: +e.target.value })}
-            style={{ width: '100%', accentColor: '#a78bfa' }} />
+            style={{ width: '100%', accentColor: '#818cf8' }} />
         </div>
 
         <button style={{
           width: '100%', height: 44,
-          background: 'linear-gradient(135deg, #a78bfa, #6366f1)',
-          border: 'none', borderRadius: 'var(--radius-md)',
-          fontFamily: 'var(--text-display)', fontSize: 13, fontWeight: 700,
+          background: 'linear-gradient(135deg, #818cf8, #6366f1)',
+          border: 'none', borderRadius: 'var(--r-md)',
+          fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 700,
           color: 'white', letterSpacing: 1, cursor: 'pointer',
-        }}>RUN BACKTEST</button>
+          transition: 'all 0.2s',
+        }}
+          onMouseEnter={e => { e.target.style.filter = 'brightness(1.1)'; e.target.style.transform = 'scale(1.02)' }}
+          onMouseLeave={e => { e.target.style.filter = 'none'; e.target.style.transform = 'none' }}
+          onMouseDown={e => e.target.style.transform = 'scale(0.98)'}
+          onMouseUp={e => e.target.style.transform = 'scale(1.02)'}
+        >RUN BACKTEST</button>
       </div>
 
       <div>

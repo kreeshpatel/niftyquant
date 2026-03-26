@@ -18,15 +18,15 @@ function NavIcon({ d, size = 18, color }) {
 
 function RegimePill({ regime = 'BEAR' }) {
   const colors = { BULL: 'var(--green)', BEAR: 'var(--red)', CHOPPY: 'var(--amber)' }
-  const bgs = { BULL: '#34d39915', BEAR: '#f8717115', CHOPPY: '#fbbf2415' }
-  const borders = { BULL: '#34d39930', BEAR: '#f8717130', CHOPPY: '#fbbf2430' }
+  const bgs = { BULL: 'var(--green-d)', BEAR: 'var(--red-d)', CHOPPY: 'var(--amber-d)' }
+  const borders = { BULL: 'var(--green-b)', BEAR: 'var(--red-b)', CHOPPY: 'var(--amber-b)' }
   const c = colors[regime] || 'var(--text-dim)'
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px',
       borderRadius: 20, background: bgs[regime] || 'transparent',
       border: `1px solid ${borders[regime] || 'var(--border)'}`,
-      fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 500, color: c, letterSpacing: 1,
+      fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 500, color: c, letterSpacing: 1,
     }}>
       <span style={{ width: 7, height: 7, borderRadius: '50%', background: c, animation: regime !== 'BULL' ? 'pulse 2s infinite' : 'none' }} />
       {regime}
@@ -42,11 +42,11 @@ function DataFreshness() {
   const isWeekday = day >= 1 && day <= 5
   let color, label
   if (!isWeekday) { color = 'var(--text-dim)'; label = 'Weekend' }
-  else if (t >= 555 && t <= 930) { color = '#34d399'; label = 'Market open' }
-  else if (t >= 540 && t < 555) { color = '#fbbf24'; label = 'Pre-market' }
+  else if (t >= 555 && t <= 930) { color = 'var(--green)'; label = 'Market open' }
+  else if (t >= 540 && t < 555) { color = 'var(--amber)'; label = 'Pre-market' }
   else { color = 'var(--text-dim)'; label = 'After hours' }
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-mono)', fontSize: 10, color }} className="desktop-only">
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'var(--mono)', fontSize: 10, color }} className="desktop-only">
       <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
       {label}
     </div>
@@ -61,15 +61,18 @@ export default function Layout({ children }) {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Top nav */}
       <nav style={{
-        height: 56, display: 'flex', alignItems: 'center', padding: '0 24px',
-        borderBottom: '1px solid var(--border)', background: 'var(--bg-base)',
-        position: 'sticky', top: 0, zIndex: 50,
-      }} className="fade-up">
+        height: 54, display: 'flex', alignItems: 'center', padding: '0 24px',
+        borderBottom: '1px solid var(--border)',
+        background: 'rgba(8,8,16,0.85)',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        position: 'sticky', top: 0, zIndex: 100,
+      }} className="anim-fade-in">
         <div style={{
-          fontSize: 20, fontWeight: 800, letterSpacing: -1, marginRight: 32,
-          background: 'linear-gradient(135deg, #a78bfa, #60a5fa)',
+          fontSize: 22, fontWeight: 800, letterSpacing: -1, marginRight: 32,
+          background: 'linear-gradient(135deg, #818cf8 0%, #34d399 100%)',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          fontFamily: 'var(--font-display)',
+          fontFamily: 'var(--sans)',
+          animation: 'float 3s ease-in-out infinite',
         }}>NiftyQuant</div>
 
         <div style={{ display: 'flex', gap: 2 }} className="desktop-tabs">
@@ -77,12 +80,16 @@ export default function Layout({ children }) {
             const active = location.pathname === t.to
             return (
               <NavLink key={t.to} to={t.to} style={{
-                padding: '6px 12px', borderRadius: 'var(--radius-sm)', textDecoration: 'none',
-                fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 600, letterSpacing: 0.3,
-                color: active ? 'var(--text-primary)' : 'var(--text-dim)',
+                padding: '6px 14px', borderRadius: 'var(--r-sm)', textDecoration: 'none',
+                fontFamily: 'var(--sans)', fontSize: 12, fontWeight: 600, letterSpacing: 0.3,
+                color: active ? 'var(--text)' : 'var(--text-dim)',
                 background: active ? 'var(--bg-active)' : 'transparent',
-                transition: 'color 0.15s, background 0.15s',
-              }}>{t.label}</NavLink>
+                borderBottom: active ? '2px solid var(--purple)' : '2px solid transparent',
+                transition: 'all 0.2s',
+              }}
+                onMouseEnter={e => { if (!active) { e.target.style.color = 'var(--text-sub)'; e.target.style.background = 'var(--bg-hover)' }}}
+                onMouseLeave={e => { if (!active) { e.target.style.color = 'var(--text-dim)'; e.target.style.background = 'transparent' }}}
+              >{t.label}</NavLink>
             )
           })}
         </div>
@@ -92,7 +99,7 @@ export default function Layout({ children }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <DataFreshness />
           <RegimePill regime="BEAR" />
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-dim)' }} className="desktop-only">
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-dim)' }} className="desktop-only">
             <Timestamp value={new Date().toISOString()} prefix="Updated " />
           </span>
         </div>
@@ -102,7 +109,8 @@ export default function Layout({ children }) {
       <div style={{
         height: 28, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 24px', borderBottom: '1px solid var(--border)',
-        fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-dim)', letterSpacing: 0.5,
+        background: 'rgba(8,8,16,0.9)',
+        fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-ghost)', letterSpacing: 0.5,
       }} className="desktop-only">
         <span>NiftyQuant · Production Strategy v3.0 · Backtest: +43.2% · Sharpe 0.67 · -24.1% DD</span>
         <span>0 positions · 100% cash · updated {now}</span>
@@ -116,10 +124,10 @@ export default function Layout({ children }) {
       {/* Mobile bottom nav */}
       <div className="mobile-only" style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
-        height: 56, background: '#111114', borderTop: '1px solid var(--border)',
+        height: 56, background: 'rgba(8,8,16,0.9)', borderTop: '1px solid var(--border)',
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-around',
-        zIndex: 50, paddingBottom: 'env(safe-area-inset-bottom)',
+        zIndex: 100, paddingBottom: 'env(safe-area-inset-bottom)',
       }}>
         {tabs.slice(0, 5).map(t => {
           const active = location.pathname === t.to
@@ -129,7 +137,7 @@ export default function Layout({ children }) {
               textDecoration: 'none', padding: '4px 8px',
             }}>
               <NavIcon d={t.icon} size={20} color={active ? 'var(--purple)' : 'var(--text-dim)'} />
-              {active && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: 'var(--purple)', letterSpacing: 0.5 }}>{t.label}</span>}
+              {active && <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--purple)', letterSpacing: 0.5 }}>{t.label}</span>}
             </NavLink>
           )
         })}

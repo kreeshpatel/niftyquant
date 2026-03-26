@@ -30,7 +30,7 @@ export default function SectorChart({ data = [] }) {
         <Tooltip content={<ChartTooltip />} cursor={{ fill: '#ffffff05' }} />
         <Bar dataKey="trades" radius={[0, 4, 4, 0]} barSize={14}>
           {data.map((d, i) => (
-            <Cell key={i} fill={d.win_rate > 40 ? '#a78bfaB3' : d.win_rate < 30 ? '#f87171B3' : '#fbbf24B3'} />
+            <Cell key={i} fill={d.win_rate > 40 ? '#818cf8B3' : d.win_rate < 30 ? '#f87171B3' : '#fbbf24B3'} />
           ))}
         </Bar>
       </BarChart>
