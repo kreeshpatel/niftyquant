@@ -2,6 +2,17 @@ import { portfolioData, tradeData, featureData, walkForwardData } from './data/l
 
 const INITIAL_CAPITAL = 1_000_000
 
+export function formatLakh(v) {
+  if (v >= 10000000) return `${(v / 10000000).toFixed(2)}cr`
+  if (v >= 100000) return `${(v / 100000).toFixed(2)}L`
+  return v.toLocaleString('en-IN')
+}
+
+export function formatPct(v) {
+  const sign = v >= 0 ? '+' : ''
+  return `${sign}${v.toFixed(1)}%`
+}
+
 export const fetchOverview = () => {
   const portfolio = {
     total_value: INITIAL_CAPITAL, cash: 0, invested: 0,
@@ -49,7 +60,7 @@ export const fetchOverview = () => {
   return Promise.resolve({ portfolio, equity_curve, metrics })
 }
 
-export const fetchPositions = () => {
+export const fetchFeatures = () => {
   const features = featureData.map(r => ({
     feature: r.feature,
     importance: Math.round(parseFloat(r.importance) * 10000) / 10000,
@@ -57,7 +68,7 @@ export const fetchPositions = () => {
   return Promise.resolve(features)
 }
 
-export const fetchSignals = () => {
+export const fetchWalkForward = () => {
   const folds = walkForwardData.map(r => ({
     fold: parseInt(r.fold) || 0,
     test_start: r.test_start || '',
@@ -69,7 +80,7 @@ export const fetchSignals = () => {
     win_rate: parseFloat(r.win_rate) || 0,
     avg_return: parseFloat(r.avg_return) || 0,
   }))
-  return Promise.resolve({ folds, message: 'Walk-forward analysis results' })
+  return Promise.resolve({ folds })
 }
 
 export const fetchTradeStats = () => {
@@ -85,7 +96,7 @@ export const fetchTradeStats = () => {
   const wins = returns.filter(r => r > 0)
   const losses = returns.filter(r => r <= 0)
 
-  const stats = {
+  return Promise.resolve({
     total_trades: trades.length,
     win_rate: Math.round(wins.length / trades.length * 1000) / 10,
     avg_win: wins.length > 0 ? Math.round(wins.reduce((a, b) => a + b, 0) / wins.length * 100) / 100 : 0,
@@ -93,16 +104,7 @@ export const fetchTradeStats = () => {
     best_trade: Math.round(Math.max(...returns) * 100) / 100,
     worst_trade: Math.round(Math.min(...returns) * 100) / 100,
     avg_hold_days: Math.round(trades.reduce((s, t) => s + t.hold_days, 0) / trades.length * 10) / 10,
-  }
-
-  const byExitReason = {}
-  trades.forEach(t => {
-    const reason = t.exit_reason || 'unknown'
-    byExitReason[reason] = (byExitReason[reason] || 0) + 1
   })
-  stats.by_exit_reason = byExitReason
-
-  return Promise.resolve(stats)
 }
 
 export const fetchTrades = (p = {}) => {
@@ -137,18 +139,14 @@ export const fetchTrades = (p = {}) => {
   return Promise.resolve({ trades: pageTrades, total, page, pages })
 }
 
-// CSV export: generate blob URL on demand
-let _exportURL = null
 export const getExportURL = () => {
-  if (!_exportURL) {
-    const blob = new Blob([tradeData.length ? Object.keys(tradeData[0]).join(',') + '\n' + tradeData.map(r => Object.values(r).join(',')).join('\n') : ''], { type: 'text/csv' })
-    _exportURL = URL.createObjectURL(blob)
-  }
-  return _exportURL
+  const blob = new Blob(
+    [tradeData.length ? Object.keys(tradeData[0]).join(',') + '\n' + tradeData.map(r => Object.values(r).join(',')).join('\n') : ''],
+    { type: 'text/csv' }
+  )
+  return URL.createObjectURL(blob)
 }
-export const EXPORT_URL = '#'
 
-// Stubs for Backtest.jsx (requires backend)
 export const runBacktest = () => Promise.reject(new Error('Backtest requires a running backend server'))
 export const getBacktestResult = () => Promise.resolve({ status: 'error', error: 'Backend not available' })
 export const getBacktestHistory = () => Promise.resolve([])

@@ -1,0 +1,104 @@
+:root {
+  --bg-base: #0a0a0b;
+  --bg-card: #ffffff05;
+  --bg-card-hover: #ffffff08;
+  --bg-active: #ffffff0f;
+  --border: #ffffff0a;
+  --border-hover: #ffffff18;
+  --text-primary: #e8e8ec;
+  --text-secondary: #ffffff50;
+  --text-dim: #ffffff25;
+  --text-mono: 'Fira Code', monospace;
+  --text-display: 'Syne', sans-serif;
+  --green: #34d399;
+  --green-bg: #34d39912;
+  --green-border: #34d39925;
+  --red: #f87171;
+  --red-bg: #f8717112;
+  --red-border: #f8717125;
+  --purple: #a78bfa;
+  --purple-bg: #a78bfa12;
+  --purple-border: #a78bfa25;
+  --amber: #fbbf24;
+  --amber-bg: #fbbf2412;
+  --amber-border: #fbbf2425;
+  --blue: #60a5fa;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background: var(--bg-base);
+  font-family: 'Syne', sans-serif;
+  color: var(--text-primary);
+  margin: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -200px;
+  left: -200px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, #6366f118 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -100px;
+  right: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #10b98112 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root { position: relative; z-index: 1; }
+
+input, select, button { font-family: var(--text-mono); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+.fade-up { animation: fadeUp 0.4s ease-out both; }
+.fade-up-1 { animation-delay: 80ms; }
+.fade-up-2 { animation-delay: 120ms; }
+.fade-up-3 { animation-delay: 160ms; }
+.fade-up-4 { animation-delay: 200ms; }
+.fade-up-5 { animation-delay: 240ms; }
+.shake { animation: shake 0.3s ease-in-out; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ffffff12; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #ffffff20; }
+
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-stack { flex-direction: column !important; }
+  .mobile-full { grid-template-columns: 1fr !important; }
+}

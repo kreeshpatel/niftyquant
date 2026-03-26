@@ -1,35 +1,6 @@
 import React, { useState } from 'react'
 const ACCESS_HASH = import.meta.env.VITE_ACCESS_HASH
 
-const styles = {
-  wrapper: {
-    position: 'fixed', inset: 0, background: '#0a0a0a',
-    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-    fontFamily: "'JetBrains Mono', monospace",
-  },
-  logo: {
-    fontSize: 28, fontWeight: 700, color: '#f59e0b', letterSpacing: 6, marginBottom: 8,
-  },
-  sub: {
-    fontSize: 11, color: '#444', letterSpacing: 3, marginBottom: 40, textTransform: 'uppercase',
-  },
-  input: {
-    width: 280, padding: '10px 14px', background: '#111', border: '1px solid #333',
-    color: '#c8c8b4', fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
-    textAlign: 'center', outline: 'none', letterSpacing: 2,
-  },
-  btn: {
-    width: 280, padding: '10px 0', marginTop: 12, background: 'transparent',
-    border: '1px solid #333', color: '#666', fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  error: {
-    color: '#ef4444', fontSize: 11, letterSpacing: 2, marginTop: 16,
-    textTransform: 'uppercase',
-  },
-}
-
 async function hashPassword(pw) {
   const encoded = new TextEncoder().encode(pw)
   const buffer = await crypto.subtle.digest('SHA-256', encoded)
@@ -56,24 +27,47 @@ export default function PasswordGate({ onAuth }) {
   }
 
   return (
-    <div style={styles.wrapper}>
-      <style>{`
-        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
-        .shake { animation: shake 0.3s ease-in-out; }
-        .gate-btn:hover { border-color: #f59e0b !important; color: #f59e0b !important; }
-        .gate-input:focus { border-color: #f59e0b !important; }
-      `}</style>
-      <div style={styles.logo}>NIFTYQUANT</div>
-      <div style={styles.sub}>Algorithmic Trading System</div>
-      <form onSubmit={handleSubmit} className={shake ? 'shake' : ''}>
+    <div style={{
+      position: 'fixed', inset: 0, background: 'var(--bg-base)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <div style={{
+        fontSize: 36, fontWeight: 800, letterSpacing: -2, marginBottom: 8,
+        background: 'linear-gradient(135deg, #a78bfa, #60a5fa)',
+        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+        fontFamily: 'var(--text-display)',
+      }}>NiftyQuant</div>
+      <div style={{
+        fontFamily: 'var(--text-mono)', fontSize: 11, color: 'var(--text-dim)',
+        letterSpacing: 3, textTransform: 'uppercase', marginBottom: 48,
+      }}>Adaptive Trading Engine</div>
+      <form onSubmit={handleSubmit} className={shake ? 'shake' : ''} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <input
-          className="gate-input"
-          type="password" value={pw} onChange={e => { setPw(e.target.value); setError(false) }}
-          placeholder="ENTER ACCESS CODE" style={styles.input} autoFocus
+          type="password" value={pw}
+          onChange={e => { setPw(e.target.value); setError(false) }}
+          placeholder="enter access code" autoFocus
+          style={{
+            width: 320, height: 48, padding: '0 16px',
+            background: '#ffffff08', border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-md)',
+            fontFamily: 'var(--text-mono)', fontSize: 14, textAlign: 'center',
+            color: 'var(--text-primary)', letterSpacing: 4, outline: 'none',
+          }}
+          onFocus={e => e.target.style.borderColor = 'var(--purple-border)'}
+          onBlur={e => e.target.style.borderColor = 'var(--border)'}
         />
-        <button className="gate-btn" type="submit" style={styles.btn}>AUTHENTICATE</button>
+        <button type="submit" style={{
+          width: 320, height: 48, marginTop: 12,
+          background: 'linear-gradient(135deg, #a78bfa, #6366f1)',
+          border: 'none', borderRadius: 'var(--radius-md)',
+          fontFamily: 'var(--text-display)', fontSize: 13, fontWeight: 700,
+          color: 'white', letterSpacing: 1, cursor: 'pointer',
+        }}>AUTHENTICATE</button>
       </form>
-      {error && <div style={styles.error}>ACCESS DENIED</div>}
+      {error && <div style={{
+        fontFamily: 'var(--text-mono)', fontSize: 11, color: 'var(--red)',
+        letterSpacing: 3, marginTop: 16,
+      }}>ACCESS DENIED</div>}
     </div>
   )
 }
