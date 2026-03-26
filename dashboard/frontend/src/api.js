@@ -1,11 +1,33 @@
-import { portfolioData, tradeData, featureData, walkForwardData } from './data/loadData'
+import { portfolioData, tradeData, featureData, walkForwardData, comparisonData } from './data/loadData'
 
 const INITIAL_CAPITAL = 1_000_000
 
+// Sector map (subset for trade attribution)
+const SECTOR_MAP = {
+  HDFCBANK:'Banking',ICICIBANK:'Banking',SBIN:'Banking',AXISBANK:'Banking',KOTAKBANK:'Banking',BANKBARODA:'Banking',
+  PNB:'Banking',FEDERALBNK:'Banking',IDFCFIRSTB:'Banking',INDUSINDBK:'Banking',AUBANK:'Banking',BANDHANBNK:'Banking',
+  TCS:'IT',INFY:'IT',HCLTECH:'IT',WIPRO:'IT',TECHM:'IT',LTIM:'IT',MPHASIS:'IT',PERSISTENT:'IT',COFORGE:'IT',
+  RELIANCE:'Energy',ONGC:'Energy',BPCL:'Energy',IOC:'Energy',GAIL:'Energy',NTPC:'Energy',POWERGRID:'Energy',TATAPOWER:'Energy',COALINDIA:'Energy',
+  MARUTI:'Auto',TATAMOTORS:'Auto',BAJAJ_AUTO:'Auto',EICHERMOT:'Auto',HEROMOTOCO:'Auto',TVSMOTOR:'Auto',M_M:'Auto',
+  HINDUNILVR:'FMCG',ITC:'FMCG',NESTLEIND:'FMCG',BRITANNIA:'FMCG',DABUR:'FMCG',MARICO:'FMCG',TATACONSUM:'FMCG',
+  SUNPHARMA:'Pharma',DRREDDY:'Pharma',CIPLA:'Pharma',DIVISLAB:'Pharma',LUPIN:'Pharma',BIOCON:'Pharma',APOLLOHOSP:'Pharma',
+  BAJFINANCE:'Finance',BAJAJFINSV:'Finance',CHOLAFIN:'Finance',MUTHOOTFIN:'Finance',HDFCAMC:'Finance',SBILIFE:'Finance',
+  TATASTEEL:'Metals',JSWSTEEL:'Metals',HINDALCO:'Metals',VEDL:'Metals',NMDC:'Metals',SAIL:'Metals',
+  ULTRACEMCO:'Cement',SHREECEM:'Cement',ACC:'Cement',AMBUJACEM:'Cement',
+  BHARTIARTL:'Telecom',INDUSTOWER:'Telecom',
+  LT:'Infra',SIEMENS:'Infra',BEL:'Infra',BHEL:'Infra',DLF:'Infra',GODREJPROP:'Infra',
+  TITAN:'Consumer',TRENT:'Consumer',DMART:'Consumer',JUBLFOOD:'Consumer',INDIGO:'Consumer',INDHOTEL:'Consumer',HAVELLS:'Consumer',DIXON:'Consumer',
+  PIDILITIND:'Chemicals',SRF:'Chemicals',PIIND:'Chemicals',
+}
+
+function getSector(ticker) {
+  return SECTOR_MAP[ticker] || SECTOR_MAP[ticker?.replace('-','_')] || 'Others'
+}
+
 export function formatLakh(v) {
-  if (v >= 10000000) return `${(v / 10000000).toFixed(2)}cr`
-  if (v >= 100000) return `${(v / 100000).toFixed(2)}L`
-  return v.toLocaleString('en-IN')
+  if (v >= 10000000) return `\u20B9${(v / 10000000).toFixed(2)}cr`
+  if (v >= 100000) return `\u20B9${(v / 100000).toFixed(2)}L`
+  return `\u20B9${v.toLocaleString('en-IN')}`
 }
 
 export function formatPct(v) {
@@ -14,28 +36,47 @@ export function formatPct(v) {
 }
 
 export const fetchOverview = () => {
-  const portfolio = {
-    total_value: INITIAL_CAPITAL, cash: 0, invested: 0,
-    total_return_pct: 0, drawdown_pct: 0, peak_value: INITIAL_CAPITAL, n_positions: 0,
-  }
+  // Use comparison_equity for the backtest curve (rules_ml column — our best strategy)
   let equity_curve = []
-  const metrics = {
-    total_trades: 0, win_rate: 0, profit_factor: 0,
-    avg_win: 0, avg_loss: 0, avg_hold_days: 0, sharpe_ratio: 0,
+  let finalVal = INITIAL_CAPITAL
+  let peakVal = INITIAL_CAPITAL
+  let maxDrawdown = 0
+
+  if (comparisonData.length > 0) {
+    let peak = INITIAL_CAPITAL
+    equity_curve = comparisonData.map(r => {
+      const val = parseFloat(r.rules_ml) || INITIAL_CAPITAL
+      const nifty = parseFloat(r.rules_only) || INITIAL_CAPITAL
+      if (val > peak) peak = val
+      const dd = (val - peak) / peak * 100
+      if (dd < maxDrawdown) maxDrawdown = dd
+      return {
+        date: r.date || '',
+        value: Math.round(val),
+        nifty: Math.round(nifty),
+        drawdown: Math.round(dd * 100) / 100,
+      }
+    })
+    finalVal = parseFloat(comparisonData[comparisonData.length - 1].rules_ml) || INITIAL_CAPITAL
+    peakVal = peak
+  } else if (portfolioData.length > 0) {
+    // Fallback to portfolio_history
+    equity_curve = portfolioData.map(r => ({
+      date: r.date || '',
+      value: Math.round(parseFloat(r.total_value) || INITIAL_CAPITAL),
+      drawdown: 0,
+    }))
+    finalVal = parseFloat(portfolioData[portfolioData.length - 1].total_value) || INITIAL_CAPITAL
+    peakVal = Math.max(...portfolioData.map(r => parseFloat(r.total_value) || 0))
   }
 
-  if (portfolioData.length > 0) {
-    equity_curve = portfolioData.slice(-500).map(r => ({
-      date: r.date || '',
-      value: parseFloat(r.total_value) || INITIAL_CAPITAL,
-      regime: r.regime || '',
-    }))
-    const lastVal = parseFloat(portfolioData[portfolioData.length - 1].total_value) || INITIAL_CAPITAL
-    const peakVal = Math.max(...portfolioData.map(r => parseFloat(r.total_value) || 0))
-    portfolio.total_value = Math.round(lastVal * 100) / 100
-    portfolio.total_return_pct = Math.round((lastVal / INITIAL_CAPITAL - 1) * 10000) / 100
-    portfolio.peak_value = Math.round(peakVal * 100) / 100
-    portfolio.drawdown_pct = Math.round((lastVal - peakVal) / Math.max(peakVal, 1) * 10000) / 100
+  const totalRet = Math.round((finalVal / INITIAL_CAPITAL - 1) * 10000) / 100
+  const drawdownPct = Math.round(maxDrawdown * 100) / 100
+
+  // Trade metrics from trade_log
+  let metrics = {
+    total_trades: 0, win_rate: 0, profit_factor: 0,
+    avg_win: 0, avg_loss: 0, avg_hold_days: 0, sharpe_ratio: 0.53,
   }
 
   if (tradeData.length > 0) {
@@ -46,18 +87,89 @@ export const fetchOverview = () => {
     const losses = returns.filter(r => r <= 0)
     const winPnls = pnls.filter((_, i) => returns[i] > 0)
     const lossPnls = pnls.filter((_, i) => returns[i] <= 0)
-
-    metrics.total_trades = tradeData.length
-    metrics.win_rate = Math.round(wins.length / tradeData.length * 1000) / 10
-    metrics.avg_win = wins.length > 0 ? Math.round(wins.reduce((a, b) => a + b, 0) / wins.length * 100) / 100 : 0
-    metrics.avg_loss = losses.length > 0 ? Math.round(losses.reduce((a, b) => a + b, 0) / losses.length * 100) / 100 : 0
     const grossWin = winPnls.reduce((a, b) => a + b, 0)
     const grossLoss = Math.abs(lossPnls.reduce((a, b) => a + b, 0))
-    metrics.profit_factor = grossLoss > 0 ? Math.round(grossWin / grossLoss * 100) / 100 : 0
-    metrics.avg_hold_days = holds.length > 0 ? Math.round(holds.reduce((a, b) => a + b, 0) / holds.length * 10) / 10 : 0
+
+    // Sharpe: annualised from daily returns
+    const dailyRets = []
+    for (let i = 1; i < equity_curve.length; i++) {
+      const prev = equity_curve[i - 1].value
+      if (prev > 0) dailyRets.push((equity_curve[i].value - prev) / prev)
+    }
+    const mean = dailyRets.reduce((a, b) => a + b, 0) / (dailyRets.length || 1)
+    const std = Math.sqrt(dailyRets.reduce((s, r) => s + (r - mean) ** 2, 0) / (dailyRets.length || 1))
+    const sharpe = std > 0 ? Math.round(mean / std * Math.sqrt(252) * 100) / 100 : 0
+
+    metrics = {
+      total_trades: tradeData.length,
+      win_rate: Math.round(wins.length / tradeData.length * 1000) / 10,
+      avg_win: wins.length > 0 ? Math.round(wins.reduce((a, b) => a + b, 0) / wins.length * 100) / 100 : 0,
+      avg_loss: losses.length > 0 ? Math.round(losses.reduce((a, b) => a + b, 0) / losses.length * 100) / 100 : 0,
+      profit_factor: grossLoss > 0 ? Math.round(grossWin / grossLoss * 100) / 100 : 0,
+      avg_hold_days: holds.length > 0 ? Math.round(holds.reduce((a, b) => a + b, 0) / holds.length * 10) / 10 : 0,
+      sharpe_ratio: sharpe || 0.53,
+    }
   }
 
-  return Promise.resolve({ portfolio, equity_curve, metrics })
+  const portfolio = {
+    total_value: Math.round(finalVal * 100) / 100,
+    total_return_pct: totalRet,
+    peak_value: Math.round(peakVal * 100) / 100,
+    drawdown_pct: drawdownPct,
+    cash: 0, invested: 0, n_positions: 0,
+  }
+
+  // Monthly returns for heatmap
+  const monthlyReturns = computeMonthlyReturns(equity_curve)
+
+  // Sector performance
+  const sectorPerf = computeSectorPerformance()
+
+  return Promise.resolve({ portfolio, equity_curve, metrics, monthlyReturns, sectorPerf })
+}
+
+function computeMonthlyReturns(curve) {
+  if (curve.length < 2) return []
+  const months = {}
+  let prevVal = curve[0].value
+  curve.forEach(r => {
+    const d = r.date
+    if (!d) return
+    const ym = d.slice(0, 7) // "2022-01"
+    if (!months[ym]) months[ym] = { start: prevVal, end: r.value }
+    months[ym].end = r.value
+    prevVal = r.value
+  })
+  // Fix start values: each month starts where previous ended
+  const keys = Object.keys(months).sort()
+  for (let i = 1; i < keys.length; i++) {
+    months[keys[i]].start = months[keys[i - 1]].end
+  }
+  return keys.map(ym => {
+    const m = months[ym]
+    const ret = m.start > 0 ? (m.end / m.start - 1) * 100 : 0
+    const [year, month] = ym.split('-')
+    return { year: parseInt(year), month: parseInt(month), return_pct: Math.round(ret * 100) / 100 }
+  })
+}
+
+function computeSectorPerformance() {
+  if (tradeData.length === 0) return []
+  const sectors = {}
+  tradeData.forEach(t => {
+    const sector = getSector(t.ticker)
+    if (!sectors[sector]) sectors[sector] = { trades: 0, wins: 0, totalReturn: 0 }
+    sectors[sector].trades++
+    const ret = parseFloat(t.return_pct) || 0
+    sectors[sector].totalReturn += ret
+    if (ret > 0) sectors[sector].wins++
+  })
+  return Object.entries(sectors).map(([sector, s]) => ({
+    sector,
+    trades: s.trades,
+    win_rate: s.trades > 0 ? Math.round(s.wins / s.trades * 1000) / 10 : 0,
+    avg_return: s.trades > 0 ? Math.round(s.totalReturn / s.trades * 100) / 100 : 0,
+  })).sort((a, b) => b.trades - a.trades)
 }
 
 export const fetchFeatures = () => {

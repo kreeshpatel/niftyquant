@@ -2,6 +2,7 @@ import portfolioHistory from '../../results/portfolio_history.csv?raw'
 import tradeLog from '../../results/trade_log.csv?raw'
 import featureImportance from '../../results/feature_importance.csv?raw'
 import walkForward from '../../results/walk_forward.csv?raw'
+import comparisonEquity from '../../results/comparison_equity.csv?raw'
 
 function parseCSV(raw) {
   const lines = raw.trim().split('\n')
@@ -16,3 +17,4 @@ export const portfolioData = parseCSV(portfolioHistory)
 export const tradeData = parseCSV(tradeLog)
 export const featureData = parseCSV(featureImportance)
 export const walkForwardData = parseCSV(walkForward)
+export const comparisonData = parseCSV(comparisonEquity)
