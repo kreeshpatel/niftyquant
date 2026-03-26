@@ -103,7 +103,13 @@ export default function StockPanel({ ticker, onClose }) {
                 }}>{d.sector}</span>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div onClick={onClose} style={{ cursor: 'pointer', fontSize: 20, color: 'var(--text-dim)', marginBottom: 8 }}>&times;</div>
+                <div onClick={onClose} style={{
+                  cursor: 'pointer', fontSize: 20, color: 'var(--text-dim)', width: 32, height: 32,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: 'var(--radius-sm)', background: '#ffffff08', border: '1px solid var(--border)',
+                  marginBottom: 8, transition: 'background 0.15s',
+                }} onMouseEnter={e => e.currentTarget.style.background = '#ffffff15'}
+                   onMouseLeave={e => e.currentTarget.style.background = '#ffffff08'}>&times;</div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 28, fontWeight: 500 }}>{d.close?.toLocaleString('en-IN')}</div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: d.dayChange >= 0 ? 'var(--green)' : 'var(--red)' }}>
                   {d.dayChange >= 0 ? '+' : ''}{d.dayChange}% today

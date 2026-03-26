@@ -268,53 +268,15 @@ export const searchTickers = (query) => {
     .slice(0, 8)
 }
 
-// Vite glob import: loads all feature CSVs as raw strings on demand
-const featureModules = import.meta.glob('../../data/features/*.NS.csv', { query: '?raw', import: 'default' })
+import stockData from './data/stockData.json'
 
 export const fetchStockDetail = async (ticker) => {
-  try {
-    const key = `../../data/features/${ticker}.NS.csv`
-    const loader = featureModules[key]
-    if (!loader) return null
-    const raw = await loader()
-    const lines = raw.trim().split('\n')
-    const headers = lines[0].split(',')
-    const parseRow = (line) => {
-      const vals = line.split(',')
-      return Object.fromEntries(headers.map((h, i) => [h.trim(), vals[i]?.trim()]))
-    }
-    const allRows = lines.slice(1).map(parseRow)
-    const last30 = allRows.slice(-30)
-    const latest = allRows[allRows.length - 1]
-    const prev = allRows.length > 1 ? allRows[allRows.length - 2] : latest
-    const info = tickerList.find(t => t.ticker === ticker) || { ticker, name: ticker, sector: 'Others' }
-    const close = parseFloat(latest.Close) || 0
-    const prevClose = parseFloat(prev.Close) || 0
-    const dayChange = prevClose > 0 ? ((close - prevClose) / prevClose * 100) : 0
-
-    return {
-      ...info, close, dayChange: Math.round(dayChange * 100) / 100,
-      rsi: parseFloat(latest.rsi_14) || 0,
-      adx: parseFloat(latest.adx_14) || 0,
-      bbPct: parseFloat(latest.bb_pct) || 0,
-      macdHist: parseFloat(latest.macd_histogram) || 0,
-      ema9Above21: parseInt(latest.ema_9_above_21) || 0,
-      volumeRatio: parseFloat(latest.volume_ratio) || 0,
-      atrPct: parseFloat(latest.atr_pct) || 0,
-      obvAboveEma: parseInt(latest.obv_above_ema) || 0,
-      posIn52w: parseFloat(latest.position_in_52w) || 0,
-      high52w: parseFloat(latest.high_52w) || 0,
-      low52w: parseFloat(latest.low_52w) || 0,
-      hybridSignal: parseInt(latest.hybrid_signal) || 0,
-      inMomentum: parseInt(latest.in_momentum_regime) || 0,
-      dipCount: parseInt(latest.dip_count) || 0,
-      dipConviction: parseInt(latest.dip_conviction) || 0,
-      atr14: parseFloat(latest.atr_14) || 0,
-      date: latest.Date || '',
-      sparkline: last30.map(r => ({ date: r.Date, close: parseFloat(r.Close) || 0 })),
-    }
-  } catch (e) {
-    return null
+  const d = stockData[ticker]
+  if (!d) return null
+  const info = tickerList.find(t => t.ticker === ticker) || { ticker, name: ticker, sector: 'Others' }
+  return {
+    ...info, ...d,
+    sparkline: (d.sparkline || []).map(([date, close]) => ({ date, close })),
   }
 }
 
