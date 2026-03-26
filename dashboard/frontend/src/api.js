@@ -1,29 +1,8 @@
 import { portfolioData, tradeData, featureData, walkForwardData, comparisonData } from './data/loadData'
 import tickerList from './data/tickers.json'
+import { getSector } from './data/sectorMap'
 
 const INITIAL_CAPITAL = 1_000_000
-
-// Sector map (subset for trade attribution)
-const SECTOR_MAP = {
-  HDFCBANK:'Banking',ICICIBANK:'Banking',SBIN:'Banking',AXISBANK:'Banking',KOTAKBANK:'Banking',BANKBARODA:'Banking',
-  PNB:'Banking',FEDERALBNK:'Banking',IDFCFIRSTB:'Banking',INDUSINDBK:'Banking',AUBANK:'Banking',BANDHANBNK:'Banking',
-  TCS:'IT',INFY:'IT',HCLTECH:'IT',WIPRO:'IT',TECHM:'IT',LTIM:'IT',MPHASIS:'IT',PERSISTENT:'IT',COFORGE:'IT',
-  RELIANCE:'Energy',ONGC:'Energy',BPCL:'Energy',IOC:'Energy',GAIL:'Energy',NTPC:'Energy',POWERGRID:'Energy',TATAPOWER:'Energy',COALINDIA:'Energy',
-  MARUTI:'Auto',TATAMOTORS:'Auto',BAJAJ_AUTO:'Auto',EICHERMOT:'Auto',HEROMOTOCO:'Auto',TVSMOTOR:'Auto',M_M:'Auto',
-  HINDUNILVR:'FMCG',ITC:'FMCG',NESTLEIND:'FMCG',BRITANNIA:'FMCG',DABUR:'FMCG',MARICO:'FMCG',TATACONSUM:'FMCG',
-  SUNPHARMA:'Pharma',DRREDDY:'Pharma',CIPLA:'Pharma',DIVISLAB:'Pharma',LUPIN:'Pharma',BIOCON:'Pharma',APOLLOHOSP:'Pharma',
-  BAJFINANCE:'Finance',BAJAJFINSV:'Finance',CHOLAFIN:'Finance',MUTHOOTFIN:'Finance',HDFCAMC:'Finance',SBILIFE:'Finance',
-  TATASTEEL:'Metals',JSWSTEEL:'Metals',HINDALCO:'Metals',VEDL:'Metals',NMDC:'Metals',SAIL:'Metals',
-  ULTRACEMCO:'Cement',SHREECEM:'Cement',ACC:'Cement',AMBUJACEM:'Cement',
-  BHARTIARTL:'Telecom',INDUSTOWER:'Telecom',
-  LT:'Infra',SIEMENS:'Infra',BEL:'Infra',BHEL:'Infra',DLF:'Infra',GODREJPROP:'Infra',
-  TITAN:'Consumer',TRENT:'Consumer',DMART:'Consumer',JUBLFOOD:'Consumer',INDIGO:'Consumer',INDHOTEL:'Consumer',HAVELLS:'Consumer',DIXON:'Consumer',
-  PIDILITIND:'Chemicals',SRF:'Chemicals',PIIND:'Chemicals',
-}
-
-function getSector(ticker) {
-  return SECTOR_MAP[ticker] || SECTOR_MAP[ticker?.replace('-','_')] || 'Others'
-}
 
 export function formatLakh(v) {
   if (v >= 10000000) return `\u20B9${(v / 10000000).toFixed(2)}cr`
@@ -186,7 +165,6 @@ function computeSectorPerformance() {
     if (ret > 0) sectors[sector].wins++
   })
   return Object.entries(sectors)
-    .filter(([sector]) => sector !== 'Others')
     .map(([sector, s]) => ({
       sector,
       trades: s.trades,
@@ -345,6 +323,7 @@ export const searchTickers = (query) => {
   return tickerList
     .filter(t => t.ticker.toLowerCase().includes(q) || t.name.toLowerCase().includes(q))
     .slice(0, 8)
+    .map(t => ({ ...t, sector: getSector(t.ticker) }))
 }
 
 import stockData from './data/stockData.json'
@@ -352,9 +331,10 @@ import stockData from './data/stockData.json'
 export const fetchStockDetail = async (ticker) => {
   const d = stockData[ticker]
   if (!d) return null
-  const info = tickerList.find(t => t.ticker === ticker) || { ticker, name: ticker, sector: 'Others' }
+  const info = tickerList.find(t => t.ticker === ticker) || { ticker, name: ticker, sector: 'Industrials' }
   return {
     ...info, ...d,
+    sector: getSector(ticker),
     sparkline: (d.sparkline || []).map(([date, close]) => ({ date, close })),
   }
 }
@@ -367,7 +347,7 @@ export const fetchScreener = () => {
     const mom = (Math.min(d.adx, 100) / 100) * 0.3 + (d.posIn52w || 0) * 0.3 + (d.rsi / 100) * 0.2
     const signal = d.hybridSignal === 1 ? 'BUY' : d.inMomentum === 1 ? 'WATCHLIST' : 'NEUTRAL'
     return {
-      ticker: t.ticker, name: t.name, sector: t.sector,
+      ticker: t.ticker, name: t.name, sector: getSector(t.ticker),
       close: d.close, return_1d: d.dayChange, return_5d: 0,
       adx: d.adx, rsi: d.rsi, macd_histogram: d.macdHist,
       bb_pct: d.bbPct, volume_ratio: d.volumeRatio,

@@ -3,7 +3,7 @@ import { fetchScreener } from '../api'
 import StockPanel from '../components/StockPanel'
 import Skeleton from '../components/Skeleton'
 
-const SECTORS = ['ALL', 'Banking', 'IT', 'Energy', 'Auto', 'FMCG', 'Pharma', 'Finance', 'Metals', 'Cement', 'Telecom', 'Infrastructure', 'Consumer', 'Chemicals', 'Realty', 'Others']
+const SECTORS = ['ALL', 'Banking', 'Finance', 'IT', 'Energy', 'Infrastructure', 'Pharma', 'Auto', 'Metals', 'Consumer', 'FMCG', 'Chemicals', 'Cement', 'Industrials', 'Telecom', 'Realty']
 const SIGNALS = ['ALL', 'BUY', 'WATCHLIST', 'NEUTRAL']
 const SORT_OPTIONS = [
   { key: 'momentum_score', label: 'Momentum' },

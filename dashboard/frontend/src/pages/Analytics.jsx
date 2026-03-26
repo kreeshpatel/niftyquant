@@ -98,10 +98,10 @@ export default function Analytics() {
 
       {/* Section 3: Sector performance */}
       {(() => {
-        const sectorData = d.by_sector.filter(s => s.sector !== 'Others').sort((a, b) => b.total_pnl - a.total_pnl).slice(0, 8)
+        const sectorData = d.by_sector.sort((a, b) => b.total_pnl - a.total_pnl).slice(0, 10)
         return (
           <div className="glass stagger-3" style={{ padding: 20, marginBottom: 24 }}>
-            <div style={dim}>Performance by sector (top 8, excl. Others)</div>
+            <div style={dim}>Performance by sector (top 10)</div>
             <ResponsiveContainer width="100%" height={Math.max(sectorData.length * 36, 120)}>
               <BarChart data={sectorData} layout="vertical" margin={{ top: 0, right: 12, bottom: 0, left: 0 }}>
                 <XAxis type="number" tick={{ fill: '#ffffff15', ...mono, fontSize: 9 }} tickLine={false} axisLine={false} />
