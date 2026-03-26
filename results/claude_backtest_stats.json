@@ -1,0 +1,30 @@
+{
+  "total_trades_tested": 270,
+  "date_range": "2023-01-01 to 2026-03-24",
+  "original_strategy": {
+    "win_rate": 39.3,
+    "profit_factor": 1.21,
+    "total_return_sum": 172.9,
+    "trade_count": 270
+  },
+  "claude_filtered": {
+    "win_rate": 42.9,
+    "profit_factor": 1.49,
+    "approved_count": 63,
+    "skipped_count": 2,
+    "reduced_count": 205,
+    "approval_rate": 23.3,
+    "simulated_total_return": 142.7
+  },
+  "veto_analysis": {
+    "veto_accuracy": 100.0,
+    "avg_skipped_return": -4.6,
+    "total_loss_avoided": 9.3
+  },
+  "overall_accuracy": 10.7,
+  "improvement": {
+    "win_rate_delta": 3.6,
+    "pf_delta": 0.28,
+    "return_delta": -30.2
+  }
+}

@@ -4,8 +4,12 @@ Claude AI Intelligence Layer for NiftyQuant.
 """
 
 import json
+import os
 from datetime import datetime
 from pathlib import Path
+
+from dotenv import load_dotenv
+load_dotenv()
 
 import anthropic
 
@@ -74,10 +78,13 @@ PORTFOLIO STATE:
   Today's P&L: ₹{portfolio_state.get('today_pnl', 0):.0f}
   Current drawdown: {portfolio_state.get('current_drawdown', 0):.1f}%
 
-STRATEGY PERFORMANCE (last 30 trades):
-  Win rate: {portfolio_state.get('recent_win_rate', 0):.1f}%
-  Profit factor: {portfolio_state.get('recent_pf', 0):.2f}
+STRATEGY PERFORMANCE:
+  Baseline win rate: 39.8% (production average over 362 trades)
+  Baseline profit factor: 1.19
+  Recent win rate (last 20 trades): {portfolio_state.get('recent_win_rate', 0):.1f}%
   {signal.get('sector', 'Unknown')} sector win rate: {portfolio_state.get('sector_wr', {}).get(signal.get('sector', ''), 'unknown')}
+
+  Note: Win rate naturally varies 30-50% across periods. A single low window does NOT indicate strategy failure. Judge the SIGNAL quality, not recent portfolio stats.
 """
     if memory_context:
         prompt += f"\nACCUMULATED MEMORY:\n{memory_context}\n"
@@ -94,13 +101,36 @@ Analyse this signal and respond in this EXACT JSON format (no other text):
   "watch_for": "what to monitor if approved"
 }
 
-Rules for decision:
-- APPROVE: signal looks good, enter at normal/increased size
-- REDUCE: signal has merit but some concerns, enter at 0.5-0.75x size
-- SKIP: concerns outweigh positives, do not enter
-- Be specific about numbers in reasoning
-- Consider sector performance history
-- Consider current regime and portfolio heat"""
+DECISION CRITERIA (in priority order):
+
+  Weight technical signals MOST (60%):
+    RSI position, ADX strength, volume confirmation, dip conviction, BB position
+
+  Weight ML score SECOND (25%):
+    Score >= 0.52 in BULL = valid signal
+    Score >= 0.56 in CHOPPY = valid signal
+    Higher score = more confidence
+
+  Weight market regime THIRD (10%):
+    BULL: approve freely
+    CHOPPY: approve with slight caution
+    BEAR: only approve exceptional setups
+
+  Weight portfolio state LEAST (5%):
+    Only block if portfolio heat > 20% or current drawdown > 15%
+    Do NOT over-react to short win rate windows
+
+  APPROVE if: technicals + ML both look good
+  REDUCE if: one concern but signal is valid
+  SKIP only if: multiple RED flags simultaneously (e.g. RSI overbought AND weak volume AND bear regime AND ML < 0.50)
+
+  Target approval rate: 65-75% of signals.
+  A good signal with one concern = REDUCE, not SKIP.
+
+CALIBRATION CHECK before responding:
+  - Veto only clear losers, not uncertain ones
+  - When uncertain: REDUCE size, not SKIP
+  - The ML model already filters weak signals. Your job is catching ADDITIONAL red flags the model misses, not re-filtering everything."""
 
     try:
         message = client.messages.create(
@@ -129,10 +159,15 @@ Rules for decision:
         }
 
         log_path = RESULTS_DIR / "claude_decisions.json"
-        if log_path.exists():
-            with open(log_path) as f:
-                log = json.load(f)
-        else:
+        try:
+            if log_path.exists():
+                with open(log_path) as f:
+                    log = json.load(f)
+                if not isinstance(log, list):
+                    log = []
+            else:
+                log = []
+        except (json.JSONDecodeError, ValueError):
             log = []
         log.append(log_entry)
         log = log[-500:]
