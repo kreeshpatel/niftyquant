@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react'
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
 const DECISION_COLORS = {
-  APPROVE: { bg: 'var(--green-d)', color: 'var(--green)', border: 'var(--green-b)', icon: '+' },
-  REDUCE: { bg: 'var(--amber-d)', color: 'var(--amber)', border: 'var(--amber-b)', icon: '~' },
-  SKIP: { bg: 'var(--red-d)', color: 'var(--red)', border: 'var(--red-b)', icon: 'x' },
+  APPROVE: { bg: 'var(--green-d)', color: 'var(--green)', border: 'var(--green-b)' },
+  REDUCE: { bg: 'var(--amber-d)', color: 'var(--amber)', border: 'var(--amber-b)' },
+  SKIP: { bg: 'var(--red-d)', color: 'var(--red)', border: 'var(--red-b)' },
+  STANDBY: { bg: 'var(--purple-d)', color: 'var(--purple)', border: 'var(--purple-b)' },
 }
 
 const ALERT_COLORS = {
@@ -39,13 +40,19 @@ export default function ClaudeInsights() {
   const decisions = data?.decisions || []
   const alerts = data?.alerts?.alerts || []
   const advice = data?.strategy_advice
-  const recentDecisions = decisions.slice(-5).reverse()
 
-  // Compute veto stats
-  const totalReviewed = decisions.length
-  const vetoed = decisions.filter(d => d.decision === 'SKIP').length
-  const approved = decisions.filter(d => d.decision === 'APPROVE').length
-  const reduced = decisions.filter(d => d.decision === 'REDUCE').length
+  // Separate real decisions from standby status
+  const realDecisions = decisions.filter(d => d.decision !== 'STANDBY')
+  const standbyEntry = decisions.find(d => d.decision === 'STANDBY')
+  const isMonitoringOnly = realDecisions.length === 0 && !!standbyEntry
+
+  const recentDecisions = realDecisions.slice(-5).reverse()
+
+  // Veto stats (only count real decisions)
+  const totalReviewed = realDecisions.length
+  const vetoed = realDecisions.filter(d => d.decision === 'SKIP').length
+  const approved = realDecisions.filter(d => d.decision === 'APPROVE').length
+  const reduced = realDecisions.filter(d => d.decision === 'REDUCE').length
 
   return (
     <div>
@@ -80,7 +87,66 @@ export default function ClaudeInsights() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-            {/* Recent signal decisions */}
+            {/* Monitoring / standby state */}
+            {isMonitoringOnly && standbyEntry && (
+              <div style={{
+                background: 'rgba(129,140,248,0.05)',
+                border: '1px solid rgba(129,140,248,0.15)',
+                borderRadius: 12,
+                padding: '14px 16px',
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
+                }}>
+                  <div style={{
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: '#818cf8', boxShadow: '0 0 8px #818cf8',
+                    animation: 'pulse 2s infinite',
+                  }} />
+                  <span style={{
+                    fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: 1.5,
+                    color: 'var(--purple)', textTransform: 'uppercase', fontWeight: 600,
+                  }}>Active Monitoring</span>
+                  <span style={{
+                    fontFamily: 'var(--mono)', fontSize: 9, color: 'rgba(255,255,255,0.15)',
+                    marginLeft: 'auto',
+                  }}>{timeAgo(standbyEntry.timestamp)}</span>
+                </div>
+                <p style={{
+                  fontFamily: 'var(--mono)', fontSize: 11,
+                  color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, margin: 0,
+                }}>{standbyEntry.reasoning}</p>
+                {standbyEntry.watch_for && (
+                  <div style={{
+                    fontFamily: 'var(--mono)', fontSize: 10,
+                    color: 'var(--purple)', marginTop: 8, opacity: 0.7,
+                  }}>Watching: {standbyEntry.watch_for}</div>
+                )}
+                {(standbyEntry.key_positives?.length > 0 || standbyEntry.key_concerns?.length > 0) && (
+                  <div style={{
+                    display: 'flex', gap: 16, marginTop: 10,
+                    fontFamily: 'var(--mono)', fontSize: 10,
+                  }}>
+                    {standbyEntry.key_positives?.length > 0 && (
+                      <div style={{ flex: 1 }}>
+                        {standbyEntry.key_positives.map((p, i) => (
+                          <div key={i} style={{ color: 'rgba(52,211,153,0.6)', lineHeight: 1.6 }}>+ {p}</div>
+                        ))}
+                      </div>
+                    )}
+                    {standbyEntry.key_concerns?.length > 0 && (
+                      <div style={{ flex: 1 }}>
+                        {standbyEntry.key_concerns.map((c, i) => (
+                          <div key={i} style={{ color: 'rgba(248,113,113,0.5)', lineHeight: 1.6 }}>- {c}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Real signal decisions */}
             {recentDecisions.length > 0 && (
               <div>
                 <div style={{

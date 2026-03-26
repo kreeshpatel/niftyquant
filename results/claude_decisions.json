@@ -1,0 +1,21 @@
+[
+  {
+    "timestamp": "2026-03-26T14:16:14.209430",
+    "ticker": "ENGINE",
+    "signal_type": "status",
+    "ml_score": 0,
+    "decision": "STANDBY",
+    "confidence": 80,
+    "size_multiplier": 1.0,
+    "reasoning": "Market in BEAR regime (breadth 9.1%%). Engine holding 100%% cash. Claude monitoring for regime change -- watching for breadth > 35%% and Nifty RSI > 50.",
+    "key_concerns": [
+      "Breadth at 9.1%% -- extreme bear",
+      "Only 9 of 100 stocks in uptrend"
+    ],
+    "key_positives": [
+      "VIX low at 15 -- not panic selling",
+      "Engine correctly preserving capital"
+    ],
+    "watch_for": "Breadth rising above 35%% signals regime shift"
+  }
+]
