@@ -19,6 +19,17 @@ from config import (
     NSE_HOLIDAYS, ensure_dirs, get_sector,
 )
 
+# Claude AI integration (graceful if unavailable)
+try:
+    from claude_analyst import (
+        analyse_signal, monitor_positions,
+        review_closed_trade, weekly_strategy_review,
+    )
+    from claude_memory import update_memory
+    CLAUDE_AVAILABLE = True
+except ImportError:
+    CLAUDE_AVAILABLE = False
+
 ensure_dirs()
 
 
@@ -195,6 +206,93 @@ def run_daily():
     print(f"\n  Saved {len(all_signals)} signals -> {signals_path}")
     print(f"    HYBRID_DIP: {len(hybrid_signals_json)} | MOMENTUM_CROSSOVER: {len(ml_signals_json)}")
 
+    # Step 7b — Claude AI signal analysis
+    if CLAUDE_AVAILABLE and all_signals:
+        print("\n  Step 7b: Claude AI signal analysis...")
+        regime_data = {
+            "regime": regime,
+            "breadth": regime_result.breadth_ratio * 100,
+            "nifty_rsi": regime_result.rsi_signal,
+            "vix": regime_result.vix_level,
+            "nifty_adx": 0,
+        }
+        portfolio_state = {
+            "open_positions": summary["open_positions"],
+            "deployed_pct": (1 - summary["cash"] / summary["total_value"]) * 100 if summary["total_value"] > 0 else 0,
+            "cash": summary["cash"],
+            "today_pnl": 0,
+            "current_drawdown": summary["drawdown_pct"],
+            "recent_win_rate": 39.8,
+            "recent_pf": 1.19,
+            "sector_wr": {},
+        }
+        for sig_json in all_signals:
+            sig_for_claude = {
+                "ticker": sig_json["ticker"],
+                "sector": get_sector(sig_json["ticker"]),
+                "entry_price": sig_json.get("entry", 0),
+                "stop_price": sig_json.get("stop", 0),
+                "target_price": sig_json.get("target", 0),
+                "rr_ratio": sig_json.get("rr", 0),
+                "ml_score": sig_json.get("ml_score", 0),
+                "hold_days": sig_json.get("hold_days", 10),
+                "risk_amount": 0,
+            }
+            features_for_claude = {}  # features already consumed by ML
+            try:
+                analysis = analyse_signal(
+                    signal=sig_for_claude,
+                    features=features_for_claude,
+                    portfolio_state=portfolio_state,
+                    regime=regime_data,
+                )
+                decision = analysis.get("decision", "APPROVE")
+                conf = analysis.get("confidence", 50)
+                icon = {"APPROVE": "+", "REDUCE": "~", "SKIP": "x"}.get(decision, "?")
+                print(f"    [{icon}] {sig_json['ticker']}: {decision} ({conf}% confidence)")
+                print(f"        {analysis.get('reasoning', '')[:100]}")
+                sig_json["claude_decision"] = decision
+                sig_json["claude_confidence"] = conf
+                sig_json["claude_reasoning"] = analysis.get("reasoning", "")
+                sig_json["claude_size_mult"] = analysis.get("size_multiplier", 1.0)
+            except Exception as e:
+                print(f"    [?] {sig_json['ticker']}: Claude unavailable ({e})")
+
+        # Re-save signals with Claude annotations
+        with open(signals_path, "w") as f:
+            _json.dump(all_signals, f, indent=2)
+
+    # Step 7c — Claude position monitoring
+    if CLAUDE_AVAILABLE and summary.get("positions"):
+        print("\n  Step 7c: Claude position monitoring...")
+        open_pos_list = []
+        for ticker, pos in summary["positions"].items():
+            hold = (datetime.now() - datetime.fromisoformat(pos["entry_date"])).days
+            open_pos_list.append({
+                "ticker": ticker,
+                "sector": get_sector(ticker),
+                "entry_price": pos["entry_price"],
+                "current_price": pos["current_price"],
+                "stop_price": pos.get("atr_stop", 0),
+                "target_price": 0,
+                "entry_date": pos["entry_date"],
+                "days_held": hold,
+                "current_pnl_pct": pos.get("unrealised_pnl_pct", 0),
+                "buffer_to_stop_pct": ((pos["current_price"] - pos.get("atr_stop", 0)) / pos["current_price"] * 100) if pos["current_price"] > 0 else 0,
+            })
+        regime_data = {
+            "regime": regime,
+            "breadth": regime_result.breadth_ratio * 100,
+        }
+        try:
+            alerts = monitor_positions(open_pos_list, regime_data, {})
+            for alert in alerts:
+                level = alert.get("alert_level", "green")
+                icon = {"green": "[OK]", "amber": "[!!]", "red": "[XX]"}.get(level, "[??]")
+                print(f"    {icon} {alert.get('ticker', '?')}: {alert.get('message', '')}")
+        except Exception as e:
+            print(f"    Claude monitoring unavailable: {e}")
+
     # Step 8 — Scan exits
     print("\n  Step 8: Scanning for exits...")
     exits = pt.scan_exits()
@@ -205,6 +303,33 @@ def run_daily():
             print(f"    EXIT {trade['ticker']}: {trade['exit_reason']} | "
                   f"P&L: {trade['return_pct']:+.1f}% | Held: {trade['hold_days']}d")
             n_exits += 1
+
+    # Step 8b — Claude trade reviews for exits
+    if CLAUDE_AVAILABLE and n_exits > 0:
+        print("\n  Step 8b: Claude reviewing closed trades...")
+        for ex in exits:
+            trade_data = pt.exit_position(ex["ticker"], ex["reason"], ex.get("exit_price"))
+            if trade_data is None:
+                continue
+            trade_for_review = {
+                "ticker": ex["ticker"],
+                "sector": get_sector(ex["ticker"]),
+                "entry_price": trade_data.get("entry_price", 0),
+                "exit_price": trade_data.get("exit_price", 0),
+                "entry_date": trade_data.get("entry_date", ""),
+                "exit_date": trade_data.get("exit_date", ""),
+                "exit_reason": trade_data.get("exit_reason", "unknown"),
+                "hold_days": trade_data.get("hold_days", 0),
+                "return_pct": trade_data.get("return_pct", 0),
+                "net_pnl": trade_data.get("net_pnl", 0),
+            }
+            try:
+                review = review_closed_trade(trade_for_review, {}, {})
+                update_memory(trade_for_review, review)
+                tag = review.get("pattern_tag", "")
+                print(f"    {ex['ticker']}: {review.get('lesson', '')[:80]} [{tag}]")
+            except Exception as e:
+                print(f"    {ex['ticker']}: Review failed ({e})")
 
     # Step 9 — Update prices
     pt.update_prices()
@@ -268,6 +393,40 @@ def run_daily():
     print(f"    Next optimizer: {status.get('next_optimization_in', 'N/A')}")
     print(f"    Blocked sectors: IT, FMCG, Auto")
     print(f"    Priority sectors: Infra, Energy, Metals, Consumer")
+
+    # Step 13 — Weekly Claude strategy review (Mondays)
+    if CLAUDE_AVAILABLE and today.weekday() == 0:
+        print("\n  Step 13: Running weekly Claude strategy review...")
+        try:
+            trades_csv = RESULTS_DIR / "paper_trades.csv"
+            if trades_csv.exists():
+                trades_df = pd.read_csv(trades_csv)
+                recent = trades_df.tail(30).to_dict("records")
+            else:
+                recent = []
+
+            decisions_path = RESULTS_DIR / "claude_decisions.json"
+            if decisions_path.exists():
+                with open(decisions_path) as f:
+                    decisions = _json.load(f)
+            else:
+                decisions = []
+
+            prod_path = RESULTS_DIR / "production_strategy.json"
+            if prod_path.exists():
+                with open(prod_path) as f:
+                    prod = _json.load(f)
+                params_for_review = prod.get("parameters", {})
+            else:
+                params_for_review = {}
+
+            weekly_strategy_review(
+                recent_trades=recent,
+                claude_decisions=decisions[-50:],
+                current_params=params_for_review,
+            )
+        except Exception as e:
+            print(f"    Weekly review failed: {e}")
 
     print(f"\n  Daily run complete.\n")
 

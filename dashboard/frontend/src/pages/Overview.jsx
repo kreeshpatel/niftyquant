@@ -10,6 +10,7 @@ import SectorChart from '../components/SectorChart'
 import TopLoader from '../components/TopLoader'
 import AICommentary from '../components/AICommentary'
 import EconomicCalendar from '../components/EconomicCalendar'
+import ClaudeInsights from '../components/ClaudeInsights'
 
 function useCountUp(target, duration = 1200) {
   const [value, setValue] = useState(0)
@@ -120,6 +121,8 @@ export default function Overview() {
           <EngineStatus />
 
           <EconomicCalendar />
+
+          <ClaudeInsights />
 
           <SectionHeader title="Signals" action={<Link to="/signals" style={{ color: 'var(--purple)', textDecoration: 'none', fontSize: 11 }}>View all &rarr;</Link>} />
           <EmptyState text="No signals today · BEAR regime blocks entries" />
