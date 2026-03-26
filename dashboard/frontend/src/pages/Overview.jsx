@@ -38,10 +38,12 @@ export default function Overview() {
   const markers = data?.tradeMarkers || []
   const monthly = data?.monthlyReturns || []
   const sectors = data?.sectorPerf || []
-  const ret = p.total_return_pct || 0
+  const backtestRet = p.backtest_return_pct ?? p.total_return_pct ?? 0
+  const ret = backtestRet
   const wins = Math.round((m.win_rate || 0) / 100 * (m.total_trades || 0))
   const losses = (m.total_trades || 0) - wins
-  const animatedValue = useAnimatedNumber(p.total_value || 0)
+  const lastEquity = curve.length > 0 ? curve[curve.length - 1].value : (p.total_value || 1000000)
+  const animatedValue = useAnimatedNumber(lastEquity)
 
   return (
     <div>
@@ -50,7 +52,7 @@ export default function Overview() {
         <MetricHero
           label="Portfolio Value"
           value={formatLakh(animatedValue || 1000000)}
-          sub={<span style={{ color: ret >= 0 ? 'var(--green)' : 'var(--red)' }}>{ret >= 0 ? '+' : ''}{ret.toFixed(1)}% since inception</span>}
+          sub={<span style={{ color: ret >= 0 ? 'var(--green)' : 'var(--red)' }}>{ret >= 0 ? '+' : ''}{ret.toFixed(1)}% backtest return</span>}
           color="var(--purple)" glowColor="#a78bfa"
         />
         <MetricHero
