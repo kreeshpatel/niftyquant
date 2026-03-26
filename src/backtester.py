@@ -26,8 +26,7 @@ from config import (
     MIN_HOLD_DAYS, BLOCKED_SECTORS, PRIORITY_SECTORS, WEAK_MONTHS,
     HEALTH_SCORE_FULL, HEALTH_SCORE_CAUTION, HEALTH_SCORE_WARNING,
     MAX_PORTFOLIO_HEAT, TRAILING_ACTIVATION,
-    BEAR_STRONG_BREADTH, BEAR_MILD_BREADTH, BEAR_MILD_SIZE_MULT,
-    BEAR_MILD_MAX_POS, BEAR_MILD_ML_THRESH,
+    REGIME_TIERS, DEFENSIVE_SECTORS,
 )
 
 ensure_dirs()
@@ -253,36 +252,39 @@ class Backtester:
                 self._nifty_correction_cache[date] = False
 
     def _precompute_regimes(self):
-        """Precompute market regime for all dates using vectorized breadth."""
+        """Precompute 5-tier market regime for all dates using vectorized breadth."""
         self._regime_cache = {}
         self._breadth_cache = {}
-        # Build a single breadth series: fraction of stocks bullish per date
+        self._regime_tier_cache = {}
         bullish_counts = pd.Series(dtype=float)
         total_counts = pd.Series(dtype=float)
-        rsi_sums = pd.Series(dtype=float)
         for df in self.stock_data.values():
             is_bull = ((df.get("ema_21_above_50", pd.Series(dtype=float)) == 1) &
                        (df.get("rsi_14", pd.Series(dtype=float)) > 50)).astype(int)
             bullish_counts = bullish_counts.add(is_bull, fill_value=0)
             total_counts = total_counts.add(pd.Series(1, index=df.index), fill_value=0)
-            rsi_sums = rsi_sums.add(df.get("rsi_14", pd.Series(dtype=float)).fillna(50), fill_value=0)
         ratio = bullish_counts / total_counts.replace(0, np.nan)
-        avg_rsi = rsi_sums / total_counts.replace(0, np.nan)
+
+        # Sorted tiers by breadth_min descending for matching
+        tier_order = ['FULL_BULL', 'MILD_BULL', 'CHOPPY', 'MILD_BEAR', 'DEEP_BEAR']
         for date in ratio.index:
             r = ratio.get(date, 0)
             breadth_pct = (r * 100) if not pd.isna(r) else 0
-            market_rsi = avg_rsi.get(date, 50) if not pd.isna(avg_rsi.get(date, 50)) else 50
             self._breadth_cache[date] = breadth_pct
-            if pd.isna(r):
-                self._regime_cache[date] = "CHOPPY"
-            elif breadth_pct > 55:
+
+            matched = 'DEEP_BEAR'
+            for tier_name in tier_order:
+                if breadth_pct >= REGIME_TIERS[tier_name]['breadth_min']:
+                    matched = tier_name
+                    break
+            self._regime_tier_cache[date] = matched
+            # Map to simple regime for backward compat
+            if matched in ('FULL_BULL', 'MILD_BULL'):
                 self._regime_cache[date] = "BULL"
-            elif breadth_pct >= BEAR_MILD_BREADTH:
+            elif matched == 'CHOPPY':
                 self._regime_cache[date] = "CHOPPY"
-            elif breadth_pct >= BEAR_STRONG_BREADTH or market_rsi >= 35:
-                self._regime_cache[date] = "BEAR_MILD"
             else:
-                self._regime_cache[date] = "BEAR_STRONG"
+                self._regime_cache[date] = matched  # MILD_BEAR or DEEP_BEAR
 
     def _get_regime(self, date):
         return self._regime_cache.get(date, "CHOPPY")
@@ -635,12 +637,11 @@ class Backtester:
             else:
                 current_regime = "BULL"
 
-            # ── Tiered bear regime (freq improvement) ────
-            is_bear_mild = current_regime == "BEAR_MILD"
-            is_bear_strong = current_regime == "BEAR_STRONG"
-            bear_max_pos = BEAR_MILD_MAX_POS if is_bear_mild else MAX_POSITIONS
-            if is_bear_strong:
-                nifty_blocked = True  # full block
+            # ── 5-tier regime config ──────────────────────
+            tier_name = self._regime_tier_cache.get(date, 'CHOPPY') if hasattr(self, '_regime_tier_cache') else 'FULL_BULL'
+            tier = REGIME_TIERS.get(tier_name, REGIME_TIERS['FULL_BULL'])
+            is_bear_mild = tier_name == 'MILD_BEAR'
+            is_deep_bear = tier_name == 'DEEP_BEAR'
 
             # ── Health score sizing (bear shield, regime-aware) ──
             health_mult = 1.0
@@ -674,7 +675,7 @@ class Backtester:
                         funnel["health_blocked"] += 1
 
             # ── Check entries ────────────────────────────
-            effective_max_pos = bear_max_pos if is_bear_mild else MAX_POSITIONS
+            effective_max_pos = tier['max_pos']
             if len(positions) < effective_max_pos and not nifty_blocked:
                 for ticker, df in self.stock_data.items():
                     if ticker in positions:
@@ -688,17 +689,23 @@ class Backtester:
                     if self.use_sector_rotation and get_sector(ticker) in bottom3_sectors:
                         continue
 
-                    # Fix 2: Block losing sectors
+                    # Sector filtering: blocked sectors + tier-based restrictions
                     if self.use_optimised_v2:
                         ticker_sector = get_sector(ticker)
                         if ticker_sector in BLOCKED_SECTORS:
                             funnel["sector_blocked"] += 1
                             continue
+                        # Tier sector restrictions
+                        tier_sectors = tier.get('sectors', 'ALL')
+                        if tier_sectors == 'PRIORITY' and ticker_sector not in PRIORITY_SECTORS and ticker_sector != 'Banking':
+                            continue
+                        if tier_sectors == 'DEFENSIVE' and ticker_sector not in DEFENSIVE_SECTORS:
+                            continue
 
                     funnel["after_nifty_filter"] += 1
 
                     if self.use_hybrid:
-                        if is_bear_mild:
+                        if is_bear_mild or is_deep_bear:
                             if not self._check_bear_entry(row):
                                 continue
                         elif self.use_refined:
@@ -734,17 +741,9 @@ class Backtester:
                                 continue
                             ml_score = float(self.ml_model.model.predict_proba(row_df.values)[:, 1][0])
 
-                        # Dynamic ML threshold (refined)
+                        # Dynamic ML threshold (tier-based)
                         if self.use_refined:
-                            threshold = BUY_THRESHOLD
-                            if current_regime == "BULL":
-                                threshold = 0.50
-                            elif current_regime == "CHOPPY":
-                                threshold = 0.54
-                            elif current_regime == "BEAR_MILD":
-                                threshold = BEAR_MILD_ML_THRESH
-                            elif current_regime == "CORRECTION":
-                                threshold = 0.58
+                            threshold = tier['ml_threshold']
                             if row.get("dip_conviction", 0) >= 2:
                                 threshold -= 0.02
                             # Fix 5: Stricter in weak months
@@ -759,7 +758,7 @@ class Backtester:
 
                     funnel["after_ml"] += 1
 
-                    if len(positions) >= effective_max_pos:
+                    if len(positions) >= tier['max_pos']:
                         break
 
                     next_dates = dates[dates > date]
@@ -837,10 +836,10 @@ class Backtester:
                             funnel["overfit_flagged"] += 1
                         # Bear shield: health score sizing
                         size_mult *= health_mult
-                        # Bear mild: smaller positions
-                        if is_bear_mild:
-                            size_mult *= BEAR_MILD_SIZE_MULT
-                            funnel["bear_mild_entries"] = funnel.get("bear_mild_entries", 0) + 1
+                        # Tier-based sizing
+                        size_mult *= tier['size_mult']
+                        if is_bear_mild or is_deep_bear:
+                            funnel["bear_entries"] = funnel.get("bear_entries", 0) + 1
                         shares = max(1, round(shares * size_mult))
                         pos_size = shares * entry_price * (1 + BROKERAGE_PCT)
                         if pos_size > cash or cash < 5000:
@@ -1557,7 +1556,15 @@ def run_freq(start_date="2022-01-01", end_date="2026-03-24"):
     # Regime breakdown
     f = getattr(rf, '_funnel', {})
     if f:
-        print(f"\n  Bear Mild Entries: {f.get('bear_mild_entries', 0)}")
+        print(f"\n  Bear-tier entries (MILD+DEEP): {f.get('bear_entries', 0)}")
+
+    # Tier distribution
+    if hasattr(bt_f, '_regime_tier_cache'):
+        from collections import Counter
+        tier_counts = Counter(bt_f._regime_tier_cache.values())
+        print(f"\n  Regime Tier Distribution:")
+        for t in ['FULL_BULL', 'MILD_BULL', 'CHOPPY', 'MILD_BEAR', 'DEEP_BEAR']:
+            print(f"    {t:<12} {tier_counts.get(t, 0):>5} days")
 
     # Save
     if len(rf.trade_log) > 0:

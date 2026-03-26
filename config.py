@@ -34,12 +34,16 @@ BLOCKED_SECTORS = ['IT', 'FMCG', 'Auto']
 PRIORITY_SECTORS = ['Infrastructure', 'Energy', 'Metals', 'Consumer']
 WEAK_MONTHS = [7]  # July: 25.5% WR historically
 
-# ── Tiered bear regime ─────────────────────────────────
-BEAR_STRONG_BREADTH = 20
-BEAR_MILD_BREADTH = 35
-BEAR_MILD_SIZE_MULT = 0.6
-BEAR_MILD_MAX_POS = 10
-BEAR_MILD_ML_THRESH = 0.58
+# ── 5-tier regime system ───────────────────────────────
+# Breadth thresholds (% of stocks above EMA50 with RSI>50)
+REGIME_TIERS = {
+    'FULL_BULL':  {'breadth_min': 50, 'max_pos': 20, 'ml_threshold': 0.50, 'size_mult': 1.0, 'sectors': 'ALL'},
+    'MILD_BULL':  {'breadth_min': 40, 'max_pos': 15, 'ml_threshold': 0.52, 'size_mult': 1.0, 'sectors': 'ALL'},
+    'CHOPPY':     {'breadth_min': 30, 'max_pos': 12, 'ml_threshold': 0.54, 'size_mult': 0.75, 'sectors': 'PRIORITY'},
+    'MILD_BEAR':  {'breadth_min': 15, 'max_pos': 8,  'ml_threshold': 0.56, 'size_mult': 0.50, 'sectors': 'PRIORITY'},
+    'DEEP_BEAR':  {'breadth_min': 0,  'max_pos': 5,  'ml_threshold': 0.58, 'size_mult': 0.25, 'sectors': 'DEFENSIVE'},
+}
+DEFENSIVE_SECTORS = ['Pharma', 'Consumer', 'Energy', 'Infrastructure', 'Chemicals']
 
 # ── Bear protection (market health) ────────────────────
 HEALTH_SCORE_FULL = 45
