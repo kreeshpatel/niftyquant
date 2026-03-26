@@ -31,8 +31,8 @@ def _is_trading_day(dt: datetime) -> bool:
 def run_daily():
     today = datetime.now()
     print(f"\n{'='*55}")
-    print(f"  NiftyQuant · Production Strategy v2.0")
-    print(f"  Backtest: +36.6% · Sharpe 0.45 · 128/yr")
+    print(f"  NiftyQuant · Production Strategy v3.0")
+    print(f"  Backtest: +43.2% · Sharpe 0.67 · -24.1% DD")
     print(f"  {today.strftime('%Y-%m-%d %H:%M')}")
     print(f"{'='*55}")
 

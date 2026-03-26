@@ -1,39 +1,16 @@
 {
-  "strategy_name": "Optimised v2",
-  "version": "2.0",
-  "locked_date": "2026-03-24",
+  "strategy_name": "5-Tier Regime",
+  "version": "3.0",
+  "locked_date": "2026-03-26",
   "performance": {
-    "total_return_pct": 36.6,
-    "annualised_pct": 7.5,
-    "sharpe": 0.45,
-    "max_drawdown_pct": -35.7,
-    "win_rate_pct": 36.7,
-    "profit_factor": 1.07,
-    "avg_win_pct": 9.8,
-    "avg_loss_pct": -4.7,
-    "total_trades": 641,
-    "trades_per_year": 128
-  },
-  "bull_year_performance": {
-    "2022": "+Rs 1.90L (+19%)",
-    "2023": "+Rs 4.44L (+44%)",
-    "2024": "+Rs 1.41L (+14%)"
-  },
-  "parameters": {
-    "adx_threshold": 22,
-    "momentum_conditions": 4,
-    "rsi_dip_level": 45,
-    "bb_dip_level": 0.10,
-    "atr_stop_mult": 1.5,
-    "atr_target_mult": 3.0,
-    "ml_threshold_bull": 0.50,
-    "ml_threshold_choppy": 0.54,
-    "min_hold_days": 8,
-    "blocked_sectors": ["IT", "FMCG", "Auto"],
-    "priority_sectors": ["Infrastructure", "Energy", "Metals", "Consumer"],
-    "use_sector_rotation": true,
-    "use_partial_profits": false,
-    "use_trailing_stop": false,
-    "risk_per_trade": 0.015
+    "total_return_pct": 43.2,
+    "sharpe": 0.67,
+    "max_drawdown_pct": -24.1,
+    "win_rate_pct": 39.8,
+    "profit_factor": 1.19,
+    "avg_win_pct": 9.5,
+    "avg_loss_pct": -5.0,
+    "total_trades": 362,
+    "trades_per_month": 7.5
   }
 }

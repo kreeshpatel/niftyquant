@@ -104,7 +104,7 @@ export default function Layout({ children }) {
         padding: '0 24px', borderBottom: '1px solid var(--border)',
         fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-dim)', letterSpacing: 0.5,
       }} className="desktop-only">
-        <span>NiftyQuant · Engine v1 · model base_v2 · AUC 0.595</span>
+        <span>NiftyQuant · Production Strategy v3.0 · Backtest: +43.2% · Sharpe 0.67 · -24.1% DD</span>
         <span>0 positions · 100% cash · updated {now}</span>
       </div>
 
