@@ -111,11 +111,11 @@ class ClaudeBacktester:
 
     def build_portfolio_state_at_date(self, date: str, past_trades: pd.DataFrame) -> dict:
         """Estimate portfolio state at a past date."""
-        if past_trades.empty:
+        if past_trades.empty or len(past_trades) < 5:
             return {
-                'open_positions': 0, 'deployed_pct': 0, 'cash': 1000000,
-                'today_pnl': 0, 'current_drawdown': 0,
-                'recent_win_rate': 40.0, 'recent_pf': 1.19, 'sector_wr': {},
+                'open_positions': 2, 'deployed_pct': 15.0, 'cash': 850000,
+                'today_pnl': 0, 'current_drawdown': -3.0,
+                'recent_win_rate': 39.8, 'recent_pf': 1.19, 'sector_wr': {},
             }
 
         recent = past_trades.tail(20)
