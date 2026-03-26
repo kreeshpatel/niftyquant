@@ -1,6 +1,7 @@
 import React from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import StockSearch from './StockSearch'
+import Timestamp from './Timestamp'
 
 const tabs = [
   { to: '/', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4' },
@@ -30,6 +31,19 @@ function RegimePill({ regime = 'BEAR' }) {
       <span style={{ width: 7, height: 7, borderRadius: '50%', background: c, animation: regime !== 'BULL' ? 'pulse 2s infinite' : 'none' }} />
       {regime}
     </span>
+  )
+}
+
+function DataFreshness() {
+  const hour = new Date().getHours()
+  const isMarketHours = hour >= 9 && hour <= 16
+  const color = isMarketHours ? '#34d399' : '#fbbf24'
+  const label = isMarketHours ? 'Data live' : 'After hours'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-mono)', fontSize: 10, color }} className="desktop-only">
+      <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
+      {label}
+    </div>
   )
 }
 
@@ -70,8 +84,11 @@ export default function Layout({ children }) {
         <StockSearch />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <DataFreshness />
           <RegimePill regime="BEAR" />
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-dim)' }} className="desktop-only">{now}</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-dim)' }} className="desktop-only">
+            <Timestamp value={new Date().toISOString()} prefix="Updated " />
+          </span>
         </div>
       </nav>
 

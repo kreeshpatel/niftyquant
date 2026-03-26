@@ -126,7 +126,17 @@ export const fetchOverview = () => {
   // Sector performance
   const sectorPerf = computeSectorPerformance()
 
-  return Promise.resolve({ portfolio, equity_curve, metrics, monthlyReturns, sectorPerf })
+  // Trade markers for equity chart
+  const tradeMarkers = tradeData.slice(0, 200).flatMap(t => {
+    const ret = parseFloat(t.return_pct) || 0
+    const isWin = ret > 0
+    return [
+      { date: t.entry_date, type: 'entry', ticker: t.ticker, return_pct: ret, is_win: isWin },
+      { date: t.exit_date, type: 'exit', ticker: t.ticker, return_pct: ret, is_win: isWin },
+    ]
+  })
+
+  return Promise.resolve({ portfolio, equity_curve, metrics, monthlyReturns, sectorPerf, tradeMarkers })
 }
 
 function computeMonthlyReturns(curve) {

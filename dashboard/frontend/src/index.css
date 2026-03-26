@@ -88,6 +88,29 @@ input, select, button { font-family: var(--text-mono); }
 .stagger-3 { animation-delay: 180ms; }
 .stagger-4 { animation-delay: 240ms; }
 
+/* Tabular figures — equal-width numbers */
+.tabular, [style*="font-mono"], .font-mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* Number flash on update */
+@keyframes flash-gain {
+  0% { color: inherit; background: transparent; }
+  30% { color: #34d399; background: rgba(52,211,153,0.12); border-radius: 4px; }
+  100% { color: inherit; background: transparent; }
+}
+@keyframes flash-loss {
+  0% { color: inherit; background: transparent; }
+  30% { color: #f87171; background: rgba(248,113,113,0.12); border-radius: 4px; }
+  100% { color: inherit; background: transparent; }
+}
+.flash-gain { animation: flash-gain 600ms ease-out; }
+.flash-loss { animation: flash-loss 600ms ease-out; }
+
+/* Danger pulse for stop distance */
+@keyframes danger-pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #ffffff12; border-radius: 3px; }

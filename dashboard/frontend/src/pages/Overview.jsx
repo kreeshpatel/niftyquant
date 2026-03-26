@@ -35,6 +35,7 @@ export default function Overview() {
   const p = data?.portfolio || {}
   const m = data?.metrics || {}
   const curve = data?.equity_curve || []
+  const markers = data?.tradeMarkers || []
   const monthly = data?.monthlyReturns || []
   const sectors = data?.sectorPerf || []
   const ret = p.total_return_pct || 0
@@ -72,7 +73,7 @@ export default function Overview() {
         <div>
           <SectionHeader title="Equity curve" action="vs Nifty 50 (dashed)" />
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 20 }}>
-            {curve.length > 0 ? <EquityChart data={curve} height={220} /> : <EmptyState text="No backtest data" />}
+            {curve.length > 0 ? <EquityChart data={curve} markers={markers} height={220} /> : <EmptyState text="No backtest data" />}
           </div>
 
           <SectionHeader title="Monthly returns" />

@@ -21,8 +21,8 @@ export default function RegimeCard({ label, value, max = 100, color }) {
         fontFamily: 'var(--text-mono)', fontSize: 9, textTransform: 'uppercase',
         letterSpacing: 1.5, color: 'var(--text-dim)', marginBottom: 8,
       }}>{label}</div>
-      <div style={{
-        fontFamily: 'var(--text-mono)', fontSize: 20, fontWeight: 500, color: resolvedColor, marginBottom: 8,
+      <div className="tabular" style={{
+        fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 500, color: resolvedColor, marginBottom: 8,
       }}>{typeof value === 'number' ? value.toFixed(1) : value}</div>
       <div style={{ height: 2, background: '#ffffff08', borderRadius: 1 }}>
         <div style={{

@@ -11,16 +11,17 @@ export default function MetricHero({ label, value, sub, color = 'var(--purple)',
         borderRadius: '50%', background: `${glowColor}14`, pointerEvents: 'none',
       }} />
       <div style={{
-        fontFamily: 'var(--text-mono)', fontSize: 10, fontWeight: 600,
+        fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600,
         letterSpacing: 2.5, textTransform: 'uppercase', color: 'var(--text-dim)',
         marginBottom: 12, position: 'relative',
       }}>{label}</div>
-      <div style={{
-        fontFamily: 'var(--text-mono)', fontSize: 42, fontWeight: 500,
+      <div className="tabular" style={{
+        fontFamily: 'var(--font-mono)', fontSize: 42, fontWeight: 500,
         lineHeight: 1, letterSpacing: -2, color, position: 'relative',
+        fontVariantNumeric: 'tabular-nums',
       }}>{value}</div>
-      {sub && <div style={{
-        fontFamily: 'var(--text-mono)', fontSize: 11, color: 'var(--text-dim)',
+      {sub && <div className="tabular" style={{
+        fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)',
         marginTop: 8, position: 'relative',
       }}>{sub}</div>}
     </div>
