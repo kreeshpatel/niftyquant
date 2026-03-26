@@ -8,6 +8,8 @@ import RegimeCard from '../components/RegimeCard'
 import MonthlyHeatmap from '../components/MonthlyHeatmap'
 import SectorChart from '../components/SectorChart'
 import TopLoader from '../components/TopLoader'
+import AICommentary from '../components/AICommentary'
+import EconomicCalendar from '../components/EconomicCalendar'
 
 function useCountUp(target, duration = 1200) {
   const [value, setValue] = useState(0)
@@ -104,6 +106,8 @@ export default function Overview() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <RegimeVerdict regime="BEAR" confidence={80} />
 
+          <AICommentary regime="BEAR" breadth="9.2" vix="15.0" rsi="33.9" adx="28" />
+
           <SectionHeader title="Market regime" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <RegimeCard label="India VIX" value={15.0} max={40} />
@@ -114,6 +118,8 @@ export default function Overview() {
 
           <SectionHeader title="Engine" />
           <EngineStatus />
+
+          <EconomicCalendar />
 
           <SectionHeader title="Signals" action={<Link to="/signals" style={{ color: 'var(--purple)', textDecoration: 'none', fontSize: 11 }}>View all &rarr;</Link>} />
           <EmptyState text="No signals today · BEAR regime blocks entries" />

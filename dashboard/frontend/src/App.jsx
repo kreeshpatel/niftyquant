@@ -11,6 +11,8 @@ import Signals from './pages/Signals'
 import Analytics from './pages/Analytics'
 import Backtest from './pages/Backtest'
 import TradeLog from './pages/TradeLog'
+import Heatmap from './pages/Heatmap'
+import Portfolio3D from './pages/Portfolio3D'
 
 function AuthedApp() {
   const [showShortcuts, setShowShortcuts] = useState(false)
@@ -35,7 +37,7 @@ function AuthedApp() {
       }
       if (gPressed) {
         gPressed = false
-        const routes = { o: '/', s: '/screener', n: '/signals', a: '/analytics', b: '/backtest', t: '/trades' }
+        const routes = { o: '/', s: '/screener', n: '/signals', h: '/heatmap', a: '/analytics', b: '/backtest', t: '/trades', d: '/3d' }
         if (routes[e.key]) { navigate(routes[e.key]); return }
       }
     }
@@ -53,9 +55,11 @@ function AuthedApp() {
             <Route path="/" element={<Overview />} />
             <Route path="/screener" element={<Screener />} />
             <Route path="/signals" element={<Signals />} />
+            <Route path="/heatmap" element={<Heatmap />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/backtest" element={<Backtest />} />
             <Route path="/trades" element={<TradeLog />} />
+            <Route path="/3d" element={<Portfolio3D />} />
           </Routes>
         </div>
       </Layout>

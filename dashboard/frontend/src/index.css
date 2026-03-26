@@ -171,6 +171,14 @@ body::after {
   to   { width: var(--target-w); }
 }
 
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-wrap:hover > div {
+  animation-play-state: paused;
+}
+
 /* Animation utility classes */
 .anim-fade-up   { animation: fadeUp 0.5s ease both; }
 .anim-scale-in  { animation: scaleIn 0.3s ease both; }
@@ -251,6 +259,10 @@ body::after {
 
 /* Danger pulse */
 @keyframes danger-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Nav tabs overflow */
+.desktop-tabs::-webkit-scrollbar { display: none; }
+.desktop-tabs { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* Mobile */
 @media (max-width: 768px) {

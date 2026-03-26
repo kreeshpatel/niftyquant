@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import StockSearch from './StockSearch'
 import Timestamp from './Timestamp'
+import TickerTape from './TickerTape'
 
 const tabs = [
   { to: '/', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4' },
   { to: '/screener', label: 'Screener', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
   { to: '/signals', label: 'Signals', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 11-6 0' },
+  { to: '/heatmap', label: 'Heatmap', icon: 'M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z' },
   { to: '/analytics', label: 'Analytics', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6m6 0h6m0 0v-9a2 2 0 012-2h2a2 2 0 012 2v9m-6 0h6' },
   { to: '/backtest', label: 'Backtest', icon: 'M13 10V3L4 14h7v7l9-11h-7' },
   { to: '/trades', label: 'Trades', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+  { to: '/3d', label: '3D', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', badge: 'NEW' },
 ]
 
 function NavIcon({ d, size = 18, color }) {
@@ -84,7 +87,7 @@ export default function Layout({ children }) {
           animation: 'float 3s ease-in-out infinite',
         }}>NiftyQuant</div>
 
-        <div style={{ display: 'flex', gap: 2 }} className="desktop-tabs">
+        <div style={{ display: 'flex', gap: 2, overflowX: 'auto', maxWidth: '50vw' }} className="desktop-tabs">
           {tabs.map(t => {
             const active = location.pathname === t.to
             return (
@@ -98,7 +101,16 @@ export default function Layout({ children }) {
               }}
                 onMouseEnter={e => { if (!active) { e.target.style.color = 'var(--text-sub)'; e.target.style.background = 'var(--bg-hover)' }}}
                 onMouseLeave={e => { if (!active) { e.target.style.color = 'var(--text-dim)'; e.target.style.background = 'transparent' }}}
-              >{t.label}</NavLink>
+              >
+                {t.label}
+                {t.badge && (
+                  <span style={{
+                    fontSize: 8, fontWeight: 700, padding: '1px 4px',
+                    borderRadius: 4, background: 'var(--purple-d)',
+                    color: 'var(--purple)', marginLeft: 4, letterSpacing: 0.5,
+                  }}>{t.badge}</span>
+                )}
+              </NavLink>
             )
           })}
         </div>
@@ -113,6 +125,9 @@ export default function Layout({ children }) {
           </span>
         </div>
       </nav>
+
+      {/* Ticker tape */}
+      <TickerTape />
 
       {/* Status bar */}
       <div style={{
