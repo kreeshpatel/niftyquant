@@ -4,6 +4,10 @@ import { getSector } from './data/sectorMap'
 
 const INITIAL_CAPITAL = 1_000_000
 
+// Set to true to use locked production v3.0 + Claude AI layer values.
+// Set to false to use values calculated from trade_log.csv.
+const USE_PRODUCTION_VALUES = false
+
 export function formatLakh(v) {
   if (v >= 10000000) return `\u20B9${(v / 10000000).toFixed(2)}cr`
   if (v >= 100000) return `\u20B9${(v / 100000).toFixed(2)}L`
@@ -91,14 +95,17 @@ export const fetchOverview = () => {
     }
   }
 
-  // Override with locked production v3.0 + Claude AI layer values
-  metrics.win_rate = 42.9
-  metrics.profit_factor = 1.49
-  metrics.sharpe_ratio = 0.67
-  metrics.total_trades = 362
-  metrics.avg_win = 9.5
-  metrics.avg_loss = -5.0
-  metrics.claude_layer = true
+  // Locked production v3.0 + Claude AI layer values
+  // Toggle via USE_PRODUCTION_VALUES at top of file
+  if (USE_PRODUCTION_VALUES) {
+    metrics.win_rate = 42.9
+    metrics.profit_factor = 1.49
+    metrics.sharpe_ratio = 0.67
+    metrics.total_trades = 362
+    metrics.avg_win = 9.5
+    metrics.avg_loss = -5.0
+    metrics.claude_layer = true
+  }
 
   const portfolio = {
     total_value: Math.round(finalVal * 100) / 100,

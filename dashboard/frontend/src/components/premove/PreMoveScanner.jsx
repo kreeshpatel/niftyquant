@@ -4,7 +4,7 @@ export default function PreMoveScanner({ scanning, lastScan, onScan, totalDetect
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '10px 14px',
+      padding: '10px 14px', position: 'relative', overflow: 'hidden',
       background: 'var(--bg-widget)',
       border: '1px solid var(--border-widget)',
       borderRadius: 'var(--r-md)',
@@ -17,7 +17,7 @@ export default function PreMoveScanner({ scanning, lastScan, onScan, totalDetect
         }} />
         <div>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
-            {scanning ? 'Scanning 360+ stocks...' : `${totalDetections} pre-move signals detected`}
+            {scanning ? 'Scanning 360+ stocks for volatility signals...' : `${totalDetections} volatility alerts detected`}
           </div>
           {lastScan && (
             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>

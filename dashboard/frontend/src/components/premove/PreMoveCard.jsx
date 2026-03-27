@@ -5,7 +5,7 @@ export default function PreMoveCard({ detection }) {
   const [expanded, setExpanded] = useState(false)
   const d = detection
   const strengthColor = d.strength === 'STRONG' ? 'var(--green)' : d.strength === 'MODERATE' ? 'var(--amber)' : 'var(--text-tertiary)'
-  const dirColor = d.direction === 'BULLISH' ? 'var(--green)' : d.direction === 'BEARISH' ? 'var(--red)' : 'var(--text-tertiary)'
+  const hintColor = d.hint?.includes('bullish') ? 'var(--green)' : d.hint?.includes('bearish') ? 'var(--red)' : 'var(--text-muted)'
 
   return (
     <div className="widget" style={{
@@ -16,24 +16,34 @@ export default function PreMoveCard({ detection }) {
       <div style={{ padding: '12px 14px' }}>
         {/* Header row */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{d.ticker}</span>
             <span className={`badge ${d.strength === 'STRONG' ? 'badge-green' : d.strength === 'MODERATE' ? 'badge-amber' : 'badge-purple'}`}>
               {d.strength}
             </span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: dirColor }}>
-              {d.direction === 'BULLISH' ? '\u25B2' : d.direction === 'BEARISH' ? '\u25BC' : '\u25C6'} {d.direction}
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontSize: 10, fontWeight: 700, color: 'var(--amber)', letterSpacing: '0.05em',
+              padding: '2px 8px', borderRadius: 4,
+              background: 'var(--amber-d)', border: '1px solid var(--amber-b)',
+            }}>
+              VOLATILITY
             </span>
+            {d.hint && d.hint !== 'direction unclear' && (
+              <span style={{ fontSize: 10, color: hintColor, fontStyle: 'italic' }}>
+                ({d.hint})
+              </span>
+            )}
           </div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--green)', fontVariantNumeric: 'tabular-nums' }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: strengthColor, fontVariantNumeric: 'tabular-nums' }}>
             {(d.composite * 100).toFixed(0)}%
           </div>
         </div>
 
         {/* Meta row */}
-        <div style={{ display: 'flex', gap: 16, fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 8 }}>
+        <div style={{ display: 'flex', gap: 16, fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 8, flexWrap: 'wrap' }}>
           <span>{d.sector}</span>
-          <span>\u20B9{d.price?.toLocaleString('en-IN', { maximumFractionDigits: 1 })}</span>
+          <span>{'\u20B9'}{d.price?.toLocaleString('en-IN', { maximumFractionDigits: 1 })}</span>
           <span style={{ color: (d.dayChange || 0) >= 0 ? 'var(--green)' : 'var(--red)' }}>
             {(d.dayChange || 0) >= 0 ? '+' : ''}{(d.dayChange || 0).toFixed(2)}%
           </span>

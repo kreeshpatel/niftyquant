@@ -3,20 +3,16 @@ import { detectPreMoves, getHistoricalAccuracy } from '../utils/preMove'
 
 export function usePreMoveDetection() {
   const [detections, setDetections] = useState([])
-  const [accuracy, setAccuracy] = useState(null)
+  const [accuracy] = useState(() => getHistoricalAccuracy())
   const [scanning, setScanning] = useState(false)
   const [lastScan, setLastScan] = useState(null)
 
   const scan = useCallback(() => {
     setScanning(true)
-    // Simulate scanning delay for UX
-    setTimeout(() => {
-      const results = detectPreMoves()
-      setDetections(results)
-      setAccuracy(getHistoricalAccuracy())
-      setLastScan(new Date())
-      setScanning(false)
-    }, 800)
+    const results = detectPreMoves()
+    setDetections(results)
+    setLastScan(new Date())
+    setScanning(false)
   }, [])
 
   useEffect(() => { scan() }, [scan])
@@ -27,6 +23,7 @@ export function usePreMoveDetection() {
 
   return {
     detections, accuracy, scanning, lastScan,
+    backtesting: false,
     strongSignals, moderateSignals, weakSignals,
     scan,
   }

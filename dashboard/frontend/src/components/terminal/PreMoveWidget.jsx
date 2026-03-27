@@ -12,10 +12,10 @@ export default function PreMoveWidget() {
       <div className="widget-header">
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{
-            width: 6, height: 6, borderRadius: '50%', background: 'var(--green)',
+            width: 6, height: 6, borderRadius: '50%', background: 'var(--amber)',
             animation: scanning ? 'pulse 0.8s infinite' : 'pulse 2s infinite',
           }} />
-          Pre-Move Alerts
+          Volatility Alerts
         </span>
         <button onClick={() => navigate('/premove')} style={{
           background: 'none', border: 'none', color: 'var(--green)',
@@ -32,7 +32,7 @@ export default function PreMoveWidget() {
         )}
         {top5.length === 0 ? (
           <div style={{ padding: 16, textAlign: 'center', fontSize: 11, color: 'var(--text-muted)' }}>
-            No pre-move signals detected
+            No volatility signals detected
           </div>
         ) : (
           top5.map((d, i) => (
@@ -48,15 +48,21 @@ export default function PreMoveWidget() {
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{d.ticker}</span>
-                  <span style={{
-                    fontSize: 10, fontWeight: 600,
-                    color: d.direction === 'BULLISH' ? 'var(--green)' : d.direction === 'BEARISH' ? 'var(--red)' : 'var(--text-tertiary)',
-                  }}>{d.direction}</span>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--amber)', letterSpacing: '0.04em' }}>
+                    VOLATILITY
+                  </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
-                  <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>{d.sector}</span>
+                  <div style={{ display: 'flex', gap: 6, fontSize: 10, color: 'var(--text-tertiary)' }}>
+                    <span>{d.sector}</span>
+                    {d.hint && d.hint !== 'direction unclear' && (
+                      <span style={{
+                        color: d.hint.includes('bullish') ? 'var(--green)' : 'var(--red)',
+                        fontStyle: 'italic',
+                      }}>{d.hint}</span>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {/* Signal strength bar */}
                     <div style={{ display: 'flex', gap: 1 }}>
                       {[0.2, 0.4, 0.6, 0.8, 1.0].map((threshold, j) => (
                         <div key={j} style={{
