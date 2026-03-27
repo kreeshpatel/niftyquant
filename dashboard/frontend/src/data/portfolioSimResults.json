@@ -1,0 +1,3268 @@
+{
+  "config": {
+    "startDate": "2025-01-01",
+    "endDate": "2026-03-27",
+    "startingCapital": 1000000,
+    "riskPerTrade": 0.015,
+    "maxPositionPct": 0.1,
+    "maxPositions": 10,
+    "targetPct": 5,
+    "stopPct": 3,
+    "maxHoldDays": 5,
+    "minStrength": "MODERATE",
+    "slippagePct": 0.1
+  },
+  "startingCapital": 1000000,
+  "endingValue": 866011,
+  "totalReturn": -133989,
+  "totalReturnPct": -13.4,
+  "maxDrawdown": 19.38,
+  "sharpeRatio": -0.64,
+  "totalTrades": 1062,
+  "winners": 424,
+  "losers": 638,
+  "winRate": 39.9,
+  "avgWin": 3.78,
+  "avgLoss": -2.71,
+  "profitFactor": 0.92,
+  "avgHoldDays": 2.9,
+  "byExit": {
+    "target_hit": 280,
+    "stop_loss": 523,
+    "time_stop": 249,
+    "end_of_sim": 10
+  },
+  "byStrength": {
+    "STRONG": {
+      "count": 923,
+      "winRate": 39.1,
+      "avgReturn": -0.19,
+      "totalPnl": -173419
+    },
+    "MODERATE": {
+      "count": 139,
+      "winRate": 45.3,
+      "avgReturn": 0.33,
+      "totalPnl": 38576
+    }
+  },
+  "equityCurve": [
+    {
+      "date": "2025-01-01",
+      "value": 999603,
+      "cash": 603077,
+      "invested": 396527,
+      "positions": 4,
+      "drawdown": 0.04
+    },
+    {
+      "date": "2025-01-02",
+      "value": 1007073,
+      "cash": 6146,
+      "invested": 1000928,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-01-03",
+      "value": 1008872,
+      "cash": 8870,
+      "invested": 1000002,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-01-06",
+      "value": 988018,
+      "cash": 1946,
+      "invested": 986072,
+      "positions": 10,
+      "drawdown": 2.07
+    },
+    {
+      "date": "2025-01-07",
+      "value": 991894,
+      "cash": 7340,
+      "invested": 984555,
+      "positions": 10,
+      "drawdown": 1.68
+    },
+    {
+      "date": "2025-01-08",
+      "value": 993359,
+      "cash": 1817,
+      "invested": 991542,
+      "positions": 10,
+      "drawdown": 1.54
+    },
+    {
+      "date": "2025-01-09",
+      "value": 982467,
+      "cash": 766,
+      "invested": 981701,
+      "positions": 10,
+      "drawdown": 2.62
+    },
+    {
+      "date": "2025-01-10",
+      "value": 968363,
+      "cash": 1422,
+      "invested": 966941,
+      "positions": 10,
+      "drawdown": 4.02
+    },
+    {
+      "date": "2025-01-13",
+      "value": 944213,
+      "cash": 5341,
+      "invested": 938872,
+      "positions": 10,
+      "drawdown": 6.41
+    },
+    {
+      "date": "2025-01-14",
+      "value": 952693,
+      "cash": 3495,
+      "invested": 949198,
+      "positions": 10,
+      "drawdown": 5.57
+    },
+    {
+      "date": "2025-01-15",
+      "value": 957978,
+      "cash": 7152,
+      "invested": 950826,
+      "positions": 10,
+      "drawdown": 5.04
+    },
+    {
+      "date": "2025-01-16",
+      "value": 963024,
+      "cash": 11498,
+      "invested": 951526,
+      "positions": 10,
+      "drawdown": 4.54
+    },
+    {
+      "date": "2025-01-17",
+      "value": 964111,
+      "cash": 14618,
+      "invested": 949493,
+      "positions": 10,
+      "drawdown": 4.44
+    },
+    {
+      "date": "2025-01-20",
+      "value": 974834,
+      "cash": 15601,
+      "invested": 959233,
+      "positions": 10,
+      "drawdown": 3.37
+    },
+    {
+      "date": "2025-01-21",
+      "value": 959078,
+      "cash": 9118,
+      "invested": 949959,
+      "positions": 10,
+      "drawdown": 4.94
+    },
+    {
+      "date": "2025-01-22",
+      "value": 950343,
+      "cash": 170,
+      "invested": 950173,
+      "positions": 10,
+      "drawdown": 5.8
+    },
+    {
+      "date": "2025-01-23",
+      "value": 956609,
+      "cash": 5022,
+      "invested": 951586,
+      "positions": 10,
+      "drawdown": 5.18
+    },
+    {
+      "date": "2025-01-24",
+      "value": 946661,
+      "cash": 11827,
+      "invested": 934834,
+      "positions": 10,
+      "drawdown": 6.17
+    },
+    {
+      "date": "2025-01-27",
+      "value": 922394,
+      "cash": 6743,
+      "invested": 915651,
+      "positions": 10,
+      "drawdown": 8.57
+    },
+    {
+      "date": "2025-01-28",
+      "value": 927726,
+      "cash": 5708,
+      "invested": 922018,
+      "positions": 10,
+      "drawdown": 8.04
+    },
+    {
+      "date": "2025-01-29",
+      "value": 942940,
+      "cash": 21302,
+      "invested": 921638,
+      "positions": 10,
+      "drawdown": 6.54
+    },
+    {
+      "date": "2025-01-30",
+      "value": 946911,
+      "cash": 27894,
+      "invested": 919017,
+      "positions": 10,
+      "drawdown": 6.14
+    },
+    {
+      "date": "2025-01-31",
+      "value": 948011,
+      "cash": 27894,
+      "invested": 920117,
+      "positions": 10,
+      "drawdown": 6.03
+    },
+    {
+      "date": "2025-02-01",
+      "value": 947028,
+      "cash": 21989,
+      "invested": 925039,
+      "positions": 10,
+      "drawdown": 6.13
+    },
+    {
+      "date": "2025-02-03",
+      "value": 937481,
+      "cash": 24116,
+      "invested": 913365,
+      "positions": 10,
+      "drawdown": 7.08
+    },
+    {
+      "date": "2025-02-04",
+      "value": 946505,
+      "cash": 13835,
+      "invested": 932670,
+      "positions": 10,
+      "drawdown": 6.18
+    },
+    {
+      "date": "2025-02-05",
+      "value": 950410,
+      "cash": 32408,
+      "invested": 918002,
+      "positions": 10,
+      "drawdown": 5.79
+    },
+    {
+      "date": "2025-02-06",
+      "value": 946547,
+      "cash": 11202,
+      "invested": 935345,
+      "positions": 10,
+      "drawdown": 6.18
+    },
+    {
+      "date": "2025-02-07",
+      "value": 945429,
+      "cash": 9984,
+      "invested": 935445,
+      "positions": 10,
+      "drawdown": 6.29
+    },
+    {
+      "date": "2025-02-10",
+      "value": 927258,
+      "cash": 1771,
+      "invested": 925488,
+      "positions": 10,
+      "drawdown": 8.09
+    },
+    {
+      "date": "2025-02-11",
+      "value": 912088,
+      "cash": 7843,
+      "invested": 904245,
+      "positions": 10,
+      "drawdown": 9.59
+    },
+    {
+      "date": "2025-02-12",
+      "value": 903966,
+      "cash": 11488,
+      "invested": 892479,
+      "positions": 10,
+      "drawdown": 10.4
+    },
+    {
+      "date": "2025-02-13",
+      "value": 906718,
+      "cash": 7703,
+      "invested": 899015,
+      "positions": 10,
+      "drawdown": 10.13
+    },
+    {
+      "date": "2025-02-14",
+      "value": 897057,
+      "cash": 13112,
+      "invested": 883945,
+      "positions": 10,
+      "drawdown": 11.08
+    },
+    {
+      "date": "2025-02-17",
+      "value": 881168,
+      "cash": 8257,
+      "invested": 872911,
+      "positions": 10,
+      "drawdown": 12.66
+    },
+    {
+      "date": "2025-02-18",
+      "value": 879499,
+      "cash": 2589,
+      "invested": 876909,
+      "positions": 10,
+      "drawdown": 12.82
+    },
+    {
+      "date": "2025-02-19",
+      "value": 883742,
+      "cash": 5620,
+      "invested": 878122,
+      "positions": 10,
+      "drawdown": 12.4
+    },
+    {
+      "date": "2025-02-20",
+      "value": 893456,
+      "cash": 10773,
+      "invested": 882683,
+      "positions": 10,
+      "drawdown": 11.44
+    },
+    {
+      "date": "2025-02-21",
+      "value": 895257,
+      "cash": 17453,
+      "invested": 877804,
+      "positions": 10,
+      "drawdown": 11.26
+    },
+    {
+      "date": "2025-02-24",
+      "value": 885589,
+      "cash": 7440,
+      "invested": 878149,
+      "positions": 10,
+      "drawdown": 12.22
+    },
+    {
+      "date": "2025-02-25",
+      "value": 876798,
+      "cash": 656,
+      "invested": 876141,
+      "positions": 10,
+      "drawdown": 13.09
+    },
+    {
+      "date": "2025-02-27",
+      "value": 859805,
+      "cash": 386,
+      "invested": 859419,
+      "positions": 10,
+      "drawdown": 14.78
+    },
+    {
+      "date": "2025-02-28",
+      "value": 848076,
+      "cash": 77347,
+      "invested": 770729,
+      "positions": 9,
+      "drawdown": 15.94
+    },
+    {
+      "date": "2025-03-03",
+      "value": 843534,
+      "cash": 76028,
+      "invested": 767506,
+      "positions": 9,
+      "drawdown": 16.39
+    },
+    {
+      "date": "2025-03-04",
+      "value": 842592,
+      "cash": 208,
+      "invested": 842384,
+      "positions": 10,
+      "drawdown": 16.48
+    },
+    {
+      "date": "2025-03-05",
+      "value": 865126,
+      "cash": 15982,
+      "invested": 849143,
+      "positions": 10,
+      "drawdown": 14.25
+    },
+    {
+      "date": "2025-03-06",
+      "value": 879918,
+      "cash": 16178,
+      "invested": 863740,
+      "positions": 10,
+      "drawdown": 12.78
+    },
+    {
+      "date": "2025-03-07",
+      "value": 884270,
+      "cash": 19268,
+      "invested": 865002,
+      "positions": 10,
+      "drawdown": 12.35
+    },
+    {
+      "date": "2025-03-10",
+      "value": 879125,
+      "cash": 17506,
+      "invested": 861619,
+      "positions": 10,
+      "drawdown": 12.86
+    },
+    {
+      "date": "2025-03-11",
+      "value": 872545,
+      "cash": 176513,
+      "invested": 696032,
+      "positions": 8,
+      "drawdown": 13.51
+    },
+    {
+      "date": "2025-03-12",
+      "value": 882731,
+      "cash": 5433,
+      "invested": 877298,
+      "positions": 10,
+      "drawdown": 12.5
+    },
+    {
+      "date": "2025-03-13",
+      "value": 868421,
+      "cash": 762,
+      "invested": 867659,
+      "positions": 10,
+      "drawdown": 13.92
+    },
+    {
+      "date": "2025-03-17",
+      "value": 870180,
+      "cash": 1955,
+      "invested": 868225,
+      "positions": 10,
+      "drawdown": 13.75
+    },
+    {
+      "date": "2025-03-18",
+      "value": 870180,
+      "cash": 1955,
+      "invested": 868225,
+      "positions": 10,
+      "drawdown": 13.75
+    },
+    {
+      "date": "2025-03-19",
+      "value": 897919,
+      "cash": 9067,
+      "invested": 888853,
+      "positions": 10,
+      "drawdown": 11
+    },
+    {
+      "date": "2025-03-20",
+      "value": 906290,
+      "cash": 3800,
+      "invested": 902489,
+      "positions": 10,
+      "drawdown": 10.17
+    },
+    {
+      "date": "2025-03-21",
+      "value": 930872,
+      "cash": 22628,
+      "invested": 908243,
+      "positions": 10,
+      "drawdown": 7.73
+    },
+    {
+      "date": "2025-03-24",
+      "value": 933239,
+      "cash": 21631,
+      "invested": 911608,
+      "positions": 10,
+      "drawdown": 7.5
+    },
+    {
+      "date": "2025-03-25",
+      "value": 926454,
+      "cash": 16109,
+      "invested": 910345,
+      "positions": 10,
+      "drawdown": 8.17
+    },
+    {
+      "date": "2025-03-26",
+      "value": 918945,
+      "cash": 10039,
+      "invested": 908906,
+      "positions": 10,
+      "drawdown": 8.91
+    },
+    {
+      "date": "2025-03-27",
+      "value": 911936,
+      "cash": 8637,
+      "invested": 903300,
+      "positions": 10,
+      "drawdown": 9.61
+    },
+    {
+      "date": "2025-03-28",
+      "value": 914064,
+      "cash": 25,
+      "invested": 914039,
+      "positions": 10,
+      "drawdown": 9.4
+    },
+    {
+      "date": "2025-04-01",
+      "value": 921096,
+      "cash": 89598,
+      "invested": 831498,
+      "positions": 9,
+      "drawdown": 8.7
+    },
+    {
+      "date": "2025-04-02",
+      "value": 930099,
+      "cash": 76,
+      "invested": 930022,
+      "positions": 10,
+      "drawdown": 7.81
+    },
+    {
+      "date": "2025-04-03",
+      "value": 936184,
+      "cash": 7461,
+      "invested": 928723,
+      "positions": 10,
+      "drawdown": 7.2
+    },
+    {
+      "date": "2025-04-04",
+      "value": 917414,
+      "cash": 110,
+      "invested": 917304,
+      "positions": 10,
+      "drawdown": 9.07
+    },
+    {
+      "date": "2025-04-07",
+      "value": 892099,
+      "cash": 17174,
+      "invested": 874926,
+      "positions": 10,
+      "drawdown": 11.57
+    },
+    {
+      "date": "2025-04-08",
+      "value": 910619,
+      "cash": 25184,
+      "invested": 885435,
+      "positions": 10,
+      "drawdown": 9.74
+    },
+    {
+      "date": "2025-04-09",
+      "value": 904605,
+      "cash": 22039,
+      "invested": 882566,
+      "positions": 10,
+      "drawdown": 10.33
+    },
+    {
+      "date": "2025-04-11",
+      "value": 913151,
+      "cash": 24674,
+      "invested": 888477,
+      "positions": 10,
+      "drawdown": 9.49
+    },
+    {
+      "date": "2025-04-15",
+      "value": 932858,
+      "cash": 23997,
+      "invested": 908861,
+      "positions": 10,
+      "drawdown": 7.53
+    },
+    {
+      "date": "2025-04-16",
+      "value": 937170,
+      "cash": 17175,
+      "invested": 919995,
+      "positions": 10,
+      "drawdown": 7.11
+    },
+    {
+      "date": "2025-04-17",
+      "value": 939552,
+      "cash": 13825,
+      "invested": 925727,
+      "positions": 10,
+      "drawdown": 6.87
+    },
+    {
+      "date": "2025-04-21",
+      "value": 962629,
+      "cash": 12399,
+      "invested": 950230,
+      "positions": 10,
+      "drawdown": 4.58
+    },
+    {
+      "date": "2025-04-22",
+      "value": 974873,
+      "cash": 16523,
+      "invested": 958350,
+      "positions": 10,
+      "drawdown": 3.37
+    },
+    {
+      "date": "2025-04-23",
+      "value": 975676,
+      "cash": 7567,
+      "invested": 968109,
+      "positions": 10,
+      "drawdown": 3.29
+    },
+    {
+      "date": "2025-04-24",
+      "value": 984895,
+      "cash": 10619,
+      "invested": 974276,
+      "positions": 10,
+      "drawdown": 2.38
+    },
+    {
+      "date": "2025-04-25",
+      "value": 963795,
+      "cash": 4030,
+      "invested": 959765,
+      "positions": 10,
+      "drawdown": 4.47
+    },
+    {
+      "date": "2025-04-28",
+      "value": 966988,
+      "cash": 889,
+      "invested": 966099,
+      "positions": 10,
+      "drawdown": 4.15
+    },
+    {
+      "date": "2025-04-29",
+      "value": 966485,
+      "cash": 4865,
+      "invested": 961620,
+      "positions": 10,
+      "drawdown": 4.2
+    },
+    {
+      "date": "2025-04-30",
+      "value": 956377,
+      "cash": 90765,
+      "invested": 865612,
+      "positions": 9,
+      "drawdown": 5.2
+    },
+    {
+      "date": "2025-05-02",
+      "value": 949629,
+      "cash": 1301,
+      "invested": 948328,
+      "positions": 10,
+      "drawdown": 5.87
+    },
+    {
+      "date": "2025-05-05",
+      "value": 962105,
+      "cash": 6346,
+      "invested": 955759,
+      "positions": 10,
+      "drawdown": 4.64
+    },
+    {
+      "date": "2025-05-06",
+      "value": 946807,
+      "cash": 1574,
+      "invested": 945233,
+      "positions": 10,
+      "drawdown": 6.15
+    },
+    {
+      "date": "2025-05-07",
+      "value": 940847,
+      "cash": 677,
+      "invested": 940170,
+      "positions": 10,
+      "drawdown": 6.74
+    },
+    {
+      "date": "2025-05-08",
+      "value": 938823,
+      "cash": 2240,
+      "invested": 936583,
+      "positions": 10,
+      "drawdown": 6.94
+    },
+    {
+      "date": "2025-05-09",
+      "value": 922849,
+      "cash": 91103,
+      "invested": 831746,
+      "positions": 9,
+      "drawdown": 8.53
+    },
+    {
+      "date": "2025-05-12",
+      "value": 956422,
+      "cash": 5010,
+      "invested": 951412,
+      "positions": 10,
+      "drawdown": 5.2
+    },
+    {
+      "date": "2025-05-13",
+      "value": 959532,
+      "cash": 94448,
+      "invested": 865084,
+      "positions": 9,
+      "drawdown": 4.89
+    },
+    {
+      "date": "2025-05-14",
+      "value": 973197,
+      "cash": 4421,
+      "invested": 968776,
+      "positions": 10,
+      "drawdown": 3.54
+    },
+    {
+      "date": "2025-05-15",
+      "value": 980384,
+      "cash": 7417,
+      "invested": 972967,
+      "positions": 10,
+      "drawdown": 2.82
+    },
+    {
+      "date": "2025-05-16",
+      "value": 993065,
+      "cash": 22847,
+      "invested": 970218,
+      "positions": 10,
+      "drawdown": 1.57
+    },
+    {
+      "date": "2025-05-19",
+      "value": 998616,
+      "cash": 25702,
+      "invested": 972914,
+      "positions": 10,
+      "drawdown": 1.02
+    },
+    {
+      "date": "2025-05-20",
+      "value": 993522,
+      "cash": 24066,
+      "invested": 969456,
+      "positions": 10,
+      "drawdown": 1.52
+    },
+    {
+      "date": "2025-05-21",
+      "value": 998302,
+      "cash": 13483,
+      "invested": 984819,
+      "positions": 10,
+      "drawdown": 1.05
+    },
+    {
+      "date": "2025-05-22",
+      "value": 993519,
+      "cash": 7151,
+      "invested": 986368,
+      "positions": 10,
+      "drawdown": 1.52
+    },
+    {
+      "date": "2025-05-23",
+      "value": 1000341,
+      "cash": 241,
+      "invested": 1000099,
+      "positions": 10,
+      "drawdown": 0.85
+    },
+    {
+      "date": "2025-05-26",
+      "value": 1009377,
+      "cash": 10620,
+      "invested": 998756,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-05-27",
+      "value": 1004411,
+      "cash": 9835,
+      "invested": 994576,
+      "positions": 10,
+      "drawdown": 0.49
+    },
+    {
+      "date": "2025-05-28",
+      "value": 1003915,
+      "cash": 8279,
+      "invested": 995636,
+      "positions": 10,
+      "drawdown": 0.54
+    },
+    {
+      "date": "2025-05-29",
+      "value": 1007997,
+      "cash": 6144,
+      "invested": 1001853,
+      "positions": 10,
+      "drawdown": 0.14
+    },
+    {
+      "date": "2025-05-30",
+      "value": 1006388,
+      "cash": 5363,
+      "invested": 1001025,
+      "positions": 10,
+      "drawdown": 0.3
+    },
+    {
+      "date": "2025-06-02",
+      "value": 1009459,
+      "cash": 10794,
+      "invested": 998665,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-06-03",
+      "value": 1004004,
+      "cash": 10639,
+      "invested": 993366,
+      "positions": 10,
+      "drawdown": 0.54
+    },
+    {
+      "date": "2025-06-04",
+      "value": 1004168,
+      "cash": 10515,
+      "invested": 993654,
+      "positions": 10,
+      "drawdown": 0.52
+    },
+    {
+      "date": "2025-06-05",
+      "value": 1004074,
+      "cash": 12703,
+      "invested": 991370,
+      "positions": 10,
+      "drawdown": 0.53
+    },
+    {
+      "date": "2025-06-06",
+      "value": 1017598,
+      "cash": 20409,
+      "invested": 997189,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-06-09",
+      "value": 1022081,
+      "cash": 15412,
+      "invested": 1006669,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-06-10",
+      "value": 1023043,
+      "cash": 20324,
+      "invested": 1002719,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-06-11",
+      "value": 1017637,
+      "cash": 15181,
+      "invested": 1002456,
+      "positions": 10,
+      "drawdown": 0.53
+    },
+    {
+      "date": "2025-06-12",
+      "value": 1009300,
+      "cash": 667,
+      "invested": 1008632,
+      "positions": 10,
+      "drawdown": 1.34
+    },
+    {
+      "date": "2025-06-13",
+      "value": 1000959,
+      "cash": 102133,
+      "invested": 898826,
+      "positions": 9,
+      "drawdown": 2.16
+    },
+    {
+      "date": "2025-06-16",
+      "value": 1008116,
+      "cash": 78,
+      "invested": 1008038,
+      "positions": 10,
+      "drawdown": 1.46
+    },
+    {
+      "date": "2025-06-17",
+      "value": 1003209,
+      "cash": 1317,
+      "invested": 1001892,
+      "positions": 10,
+      "drawdown": 1.94
+    },
+    {
+      "date": "2025-06-18",
+      "value": 996068,
+      "cash": 94301,
+      "invested": 901766,
+      "positions": 9,
+      "drawdown": 2.64
+    },
+    {
+      "date": "2025-06-19",
+      "value": 983089,
+      "cash": 195267,
+      "invested": 787823,
+      "positions": 8,
+      "drawdown": 3.91
+    },
+    {
+      "date": "2025-06-20",
+      "value": 984165,
+      "cash": 1359,
+      "invested": 982806,
+      "positions": 10,
+      "drawdown": 3.8
+    },
+    {
+      "date": "2025-06-23",
+      "value": 992063,
+      "cash": 10352,
+      "invested": 981712,
+      "positions": 10,
+      "drawdown": 3.03
+    },
+    {
+      "date": "2025-06-24",
+      "value": 993749,
+      "cash": 9648,
+      "invested": 984102,
+      "positions": 10,
+      "drawdown": 2.86
+    },
+    {
+      "date": "2025-06-25",
+      "value": 1002458,
+      "cash": 12792,
+      "invested": 989666,
+      "positions": 10,
+      "drawdown": 2.01
+    },
+    {
+      "date": "2025-06-26",
+      "value": 1005789,
+      "cash": 9892,
+      "invested": 995897,
+      "positions": 10,
+      "drawdown": 1.69
+    },
+    {
+      "date": "2025-06-27",
+      "value": 997714,
+      "cash": 5576,
+      "invested": 992139,
+      "positions": 10,
+      "drawdown": 2.48
+    },
+    {
+      "date": "2025-06-30",
+      "value": 1002158,
+      "cash": 5576,
+      "invested": 996582,
+      "positions": 10,
+      "drawdown": 2.04
+    },
+    {
+      "date": "2025-07-01",
+      "value": 1000539,
+      "cash": 5281,
+      "invested": 995258,
+      "positions": 10,
+      "drawdown": 2.2
+    },
+    {
+      "date": "2025-07-02",
+      "value": 999650,
+      "cash": 10588,
+      "invested": 989062,
+      "positions": 10,
+      "drawdown": 2.29
+    },
+    {
+      "date": "2025-07-03",
+      "value": 992406,
+      "cash": 9158,
+      "invested": 983248,
+      "positions": 10,
+      "drawdown": 2.99
+    },
+    {
+      "date": "2025-07-04",
+      "value": 993010,
+      "cash": 6015,
+      "invested": 986995,
+      "positions": 10,
+      "drawdown": 2.94
+    },
+    {
+      "date": "2025-07-07",
+      "value": 1002996,
+      "cash": 42388,
+      "invested": 960608,
+      "positions": 10,
+      "drawdown": 1.96
+    },
+    {
+      "date": "2025-07-08",
+      "value": 991891,
+      "cash": 34415,
+      "invested": 957476,
+      "positions": 10,
+      "drawdown": 3.05
+    },
+    {
+      "date": "2025-07-09",
+      "value": 1001639,
+      "cash": 35706,
+      "invested": 965933,
+      "positions": 10,
+      "drawdown": 2.09
+    },
+    {
+      "date": "2025-07-10",
+      "value": 1004051,
+      "cash": 36902,
+      "invested": 967149,
+      "positions": 10,
+      "drawdown": 1.86
+    },
+    {
+      "date": "2025-07-11",
+      "value": 1000243,
+      "cash": 33042,
+      "invested": 967201,
+      "positions": 10,
+      "drawdown": 2.23
+    },
+    {
+      "date": "2025-07-14",
+      "value": 1012370,
+      "cash": 10447,
+      "invested": 1001923,
+      "positions": 10,
+      "drawdown": 1.04
+    },
+    {
+      "date": "2025-07-15",
+      "value": 1019053,
+      "cash": 12297,
+      "invested": 1006756,
+      "positions": 10,
+      "drawdown": 0.39
+    },
+    {
+      "date": "2025-07-16",
+      "value": 1017810,
+      "cash": 8619,
+      "invested": 1009192,
+      "positions": 10,
+      "drawdown": 0.51
+    },
+    {
+      "date": "2025-07-17",
+      "value": 1017950,
+      "cash": 3455,
+      "invested": 1014495,
+      "positions": 10,
+      "drawdown": 0.5
+    },
+    {
+      "date": "2025-07-18",
+      "value": 1020257,
+      "cash": 11013,
+      "invested": 1009244,
+      "positions": 10,
+      "drawdown": 0.27
+    },
+    {
+      "date": "2025-07-21",
+      "value": 1023813,
+      "cash": 2957,
+      "invested": 1020856,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-07-22",
+      "value": 1027242,
+      "cash": 12567,
+      "invested": 1014675,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-07-23",
+      "value": 1026223,
+      "cash": 10493,
+      "invested": 1015730,
+      "positions": 10,
+      "drawdown": 0.1
+    },
+    {
+      "date": "2025-07-24",
+      "value": 1023117,
+      "cash": 16863,
+      "invested": 1006253,
+      "positions": 10,
+      "drawdown": 0.4
+    },
+    {
+      "date": "2025-07-25",
+      "value": 1013354,
+      "cash": 9385,
+      "invested": 1003969,
+      "positions": 10,
+      "drawdown": 1.35
+    },
+    {
+      "date": "2025-07-28",
+      "value": 1018475,
+      "cash": 862,
+      "invested": 1017613,
+      "positions": 10,
+      "drawdown": 0.85
+    },
+    {
+      "date": "2025-07-29",
+      "value": 1020281,
+      "cash": 12164,
+      "invested": 1008117,
+      "positions": 10,
+      "drawdown": 0.68
+    },
+    {
+      "date": "2025-07-30",
+      "value": 1020442,
+      "cash": 2219,
+      "invested": 1018223,
+      "positions": 10,
+      "drawdown": 0.66
+    },
+    {
+      "date": "2025-07-31",
+      "value": 1012384,
+      "cash": 1922,
+      "invested": 1010461,
+      "positions": 10,
+      "drawdown": 1.45
+    },
+    {
+      "date": "2025-08-01",
+      "value": 999357,
+      "cash": 6183,
+      "invested": 993174,
+      "positions": 10,
+      "drawdown": 2.71
+    },
+    {
+      "date": "2025-08-04",
+      "value": 1013032,
+      "cash": 20851,
+      "invested": 992181,
+      "positions": 10,
+      "drawdown": 1.38
+    },
+    {
+      "date": "2025-08-05",
+      "value": 1011124,
+      "cash": 12873,
+      "invested": 998251,
+      "positions": 10,
+      "drawdown": 1.57
+    },
+    {
+      "date": "2025-08-06",
+      "value": 997933,
+      "cash": 12181,
+      "invested": 985752,
+      "positions": 10,
+      "drawdown": 2.85
+    },
+    {
+      "date": "2025-08-07",
+      "value": 998645,
+      "cash": 5029,
+      "invested": 993616,
+      "positions": 10,
+      "drawdown": 2.78
+    },
+    {
+      "date": "2025-08-08",
+      "value": 989384,
+      "cash": 13488,
+      "invested": 975896,
+      "positions": 10,
+      "drawdown": 3.69
+    },
+    {
+      "date": "2025-08-11",
+      "value": 986660,
+      "cash": 3957,
+      "invested": 982704,
+      "positions": 10,
+      "drawdown": 3.95
+    },
+    {
+      "date": "2025-08-12",
+      "value": 985845,
+      "cash": 3957,
+      "invested": 981888,
+      "positions": 10,
+      "drawdown": 4.03
+    },
+    {
+      "date": "2025-08-13",
+      "value": 989881,
+      "cash": 7871,
+      "invested": 982010,
+      "positions": 10,
+      "drawdown": 3.64
+    },
+    {
+      "date": "2025-08-14",
+      "value": 999913,
+      "cash": 11168,
+      "invested": 988746,
+      "positions": 10,
+      "drawdown": 2.66
+    },
+    {
+      "date": "2025-08-18",
+      "value": 1010937,
+      "cash": 10353,
+      "invested": 1000584,
+      "positions": 10,
+      "drawdown": 1.59
+    },
+    {
+      "date": "2025-08-19",
+      "value": 1024604,
+      "cash": 10353,
+      "invested": 1014251,
+      "positions": 10,
+      "drawdown": 0.26
+    },
+    {
+      "date": "2025-08-20",
+      "value": 1024849,
+      "cash": 10655,
+      "invested": 1014194,
+      "positions": 10,
+      "drawdown": 0.23
+    },
+    {
+      "date": "2025-08-21",
+      "value": 1011232,
+      "cash": 7863,
+      "invested": 1003369,
+      "positions": 10,
+      "drawdown": 1.56
+    },
+    {
+      "date": "2025-08-22",
+      "value": 997921,
+      "cash": 1329,
+      "invested": 996592,
+      "positions": 10,
+      "drawdown": 2.85
+    },
+    {
+      "date": "2025-08-25",
+      "value": 1004307,
+      "cash": 2302,
+      "invested": 1002005,
+      "positions": 10,
+      "drawdown": 2.23
+    },
+    {
+      "date": "2025-08-26",
+      "value": 992160,
+      "cash": 1245,
+      "invested": 990915,
+      "positions": 10,
+      "drawdown": 3.42
+    },
+    {
+      "date": "2025-08-28",
+      "value": 989612,
+      "cash": 3933,
+      "invested": 985679,
+      "positions": 10,
+      "drawdown": 3.66
+    },
+    {
+      "date": "2025-08-29",
+      "value": 992485,
+      "cash": 8201,
+      "invested": 984284,
+      "positions": 10,
+      "drawdown": 3.38
+    },
+    {
+      "date": "2025-09-01",
+      "value": 1002551,
+      "cash": 4691,
+      "invested": 997859,
+      "positions": 10,
+      "drawdown": 2.4
+    },
+    {
+      "date": "2025-09-02",
+      "value": 1001307,
+      "cash": 3495,
+      "invested": 997813,
+      "positions": 10,
+      "drawdown": 2.52
+    },
+    {
+      "date": "2025-09-03",
+      "value": 1002321,
+      "cash": 10017,
+      "invested": 992304,
+      "positions": 10,
+      "drawdown": 2.43
+    },
+    {
+      "date": "2025-09-04",
+      "value": 999190,
+      "cash": 12979,
+      "invested": 986211,
+      "positions": 10,
+      "drawdown": 2.73
+    },
+    {
+      "date": "2025-09-05",
+      "value": 993617,
+      "cash": 7108,
+      "invested": 986509,
+      "positions": 10,
+      "drawdown": 3.27
+    },
+    {
+      "date": "2025-09-08",
+      "value": 989468,
+      "cash": 9286,
+      "invested": 980182,
+      "positions": 10,
+      "drawdown": 3.68
+    },
+    {
+      "date": "2025-09-09",
+      "value": 994116,
+      "cash": 9286,
+      "invested": 984830,
+      "positions": 10,
+      "drawdown": 3.22
+    },
+    {
+      "date": "2025-09-10",
+      "value": 997738,
+      "cash": 5559,
+      "invested": 992179,
+      "positions": 10,
+      "drawdown": 2.87
+    },
+    {
+      "date": "2025-09-11",
+      "value": 1000279,
+      "cash": 3183,
+      "invested": 997096,
+      "positions": 10,
+      "drawdown": 2.62
+    },
+    {
+      "date": "2025-09-12",
+      "value": 999038,
+      "cash": 2329,
+      "invested": 996709,
+      "positions": 10,
+      "drawdown": 2.75
+    },
+    {
+      "date": "2025-09-15",
+      "value": 1004998,
+      "cash": 322,
+      "invested": 1004676,
+      "positions": 10,
+      "drawdown": 2.17
+    },
+    {
+      "date": "2025-09-16",
+      "value": 1020616,
+      "cash": 4382,
+      "invested": 1016234,
+      "positions": 10,
+      "drawdown": 0.65
+    },
+    {
+      "date": "2025-09-17",
+      "value": 1031154,
+      "cash": 10319,
+      "invested": 1020834,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-09-18",
+      "value": 1023548,
+      "cash": 10291,
+      "invested": 1013256,
+      "positions": 10,
+      "drawdown": 0.74
+    },
+    {
+      "date": "2025-09-19",
+      "value": 1030376,
+      "cash": 13826,
+      "invested": 1016550,
+      "positions": 10,
+      "drawdown": 0.08
+    },
+    {
+      "date": "2025-09-22",
+      "value": 1026331,
+      "cash": 16260,
+      "invested": 1010071,
+      "positions": 10,
+      "drawdown": 0.47
+    },
+    {
+      "date": "2025-09-23",
+      "value": 1013256,
+      "cash": 5307,
+      "invested": 1007950,
+      "positions": 10,
+      "drawdown": 1.74
+    },
+    {
+      "date": "2025-09-24",
+      "value": 1004531,
+      "cash": 2696,
+      "invested": 1001836,
+      "positions": 10,
+      "drawdown": 2.58
+    },
+    {
+      "date": "2025-09-25",
+      "value": 993248,
+      "cash": 3055,
+      "invested": 990193,
+      "positions": 10,
+      "drawdown": 3.68
+    },
+    {
+      "date": "2025-09-26",
+      "value": 977391,
+      "cash": 1147,
+      "invested": 976243,
+      "positions": 10,
+      "drawdown": 5.21
+    },
+    {
+      "date": "2025-09-29",
+      "value": 987289,
+      "cash": 17236,
+      "invested": 970053,
+      "positions": 10,
+      "drawdown": 4.25
+    },
+    {
+      "date": "2025-09-30",
+      "value": 990694,
+      "cash": 17236,
+      "invested": 973459,
+      "positions": 10,
+      "drawdown": 3.92
+    },
+    {
+      "date": "2025-10-01",
+      "value": 998529,
+      "cash": 12726,
+      "invested": 985803,
+      "positions": 10,
+      "drawdown": 3.16
+    },
+    {
+      "date": "2025-10-03",
+      "value": 1006414,
+      "cash": 13490,
+      "invested": 992924,
+      "positions": 10,
+      "drawdown": 2.4
+    },
+    {
+      "date": "2025-10-06",
+      "value": 1005009,
+      "cash": 1650,
+      "invested": 1003359,
+      "positions": 10,
+      "drawdown": 2.54
+    },
+    {
+      "date": "2025-10-07",
+      "value": 1006651,
+      "cash": 403,
+      "invested": 1006248,
+      "positions": 10,
+      "drawdown": 2.38
+    },
+    {
+      "date": "2025-10-08",
+      "value": 1006765,
+      "cash": 3681,
+      "invested": 1003084,
+      "positions": 10,
+      "drawdown": 2.37
+    },
+    {
+      "date": "2025-10-09",
+      "value": 1010525,
+      "cash": 2552,
+      "invested": 1007973,
+      "positions": 10,
+      "drawdown": 2
+    },
+    {
+      "date": "2025-10-10",
+      "value": 1009178,
+      "cash": 2645,
+      "invested": 1006533,
+      "positions": 10,
+      "drawdown": 2.13
+    },
+    {
+      "date": "2025-10-13",
+      "value": 1015370,
+      "cash": 11490,
+      "invested": 1003879,
+      "positions": 10,
+      "drawdown": 1.53
+    },
+    {
+      "date": "2025-10-14",
+      "value": 1014438,
+      "cash": 16367,
+      "invested": 998071,
+      "positions": 10,
+      "drawdown": 1.62
+    },
+    {
+      "date": "2025-10-15",
+      "value": 1027885,
+      "cash": 16951,
+      "invested": 1010934,
+      "positions": 10,
+      "drawdown": 0.32
+    },
+    {
+      "date": "2025-10-16",
+      "value": 1030646,
+      "cash": 15355,
+      "invested": 1015291,
+      "positions": 10,
+      "drawdown": 0.05
+    },
+    {
+      "date": "2025-10-17",
+      "value": 1029123,
+      "cash": 15466,
+      "invested": 1013657,
+      "positions": 10,
+      "drawdown": 0.2
+    },
+    {
+      "date": "2025-10-20",
+      "value": 1033846,
+      "cash": 5825,
+      "invested": 1028021,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-10-21",
+      "value": 1035244,
+      "cash": 2517,
+      "invested": 1032727,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-10-23",
+      "value": 1032152,
+      "cash": 3223,
+      "invested": 1028930,
+      "positions": 10,
+      "drawdown": 0.3
+    },
+    {
+      "date": "2025-10-24",
+      "value": 1020785,
+      "cash": 96986,
+      "invested": 923800,
+      "positions": 9,
+      "drawdown": 1.4
+    },
+    {
+      "date": "2025-10-27",
+      "value": 1035079,
+      "cash": 579,
+      "invested": 1034501,
+      "positions": 10,
+      "drawdown": 0.02
+    },
+    {
+      "date": "2025-10-28",
+      "value": 1039940,
+      "cash": 8516,
+      "invested": 1031425,
+      "positions": 10,
+      "drawdown": 0
+    },
+    {
+      "date": "2025-10-29",
+      "value": 1039339,
+      "cash": 4760,
+      "invested": 1034578,
+      "positions": 10,
+      "drawdown": 0.06
+    },
+    {
+      "date": "2025-10-30",
+      "value": 1036404,
+      "cash": 4760,
+      "invested": 1031644,
+      "positions": 10,
+      "drawdown": 0.34
+    },
+    {
+      "date": "2025-10-31",
+      "value": 1026289,
+      "cash": 3574,
+      "invested": 1022716,
+      "positions": 10,
+      "drawdown": 1.31
+    },
+    {
+      "date": "2025-11-03",
+      "value": 1025438,
+      "cash": 1064,
+      "invested": 1024374,
+      "positions": 10,
+      "drawdown": 1.39
+    },
+    {
+      "date": "2025-11-04",
+      "value": 1016284,
+      "cash": 6170,
+      "invested": 1010115,
+      "positions": 10,
+      "drawdown": 2.27
+    },
+    {
+      "date": "2025-11-06",
+      "value": 1000303,
+      "cash": 25822,
+      "invested": 974480,
+      "positions": 10,
+      "drawdown": 3.81
+    },
+    {
+      "date": "2025-11-07",
+      "value": 989522,
+      "cash": 25430,
+      "invested": 964092,
+      "positions": 10,
+      "drawdown": 4.85
+    },
+    {
+      "date": "2025-11-10",
+      "value": 988378,
+      "cash": 24703,
+      "invested": 963675,
+      "positions": 10,
+      "drawdown": 4.96
+    },
+    {
+      "date": "2025-11-11",
+      "value": 995408,
+      "cash": 20511,
+      "invested": 974897,
+      "positions": 10,
+      "drawdown": 4.28
+    },
+    {
+      "date": "2025-11-12",
+      "value": 1005849,
+      "cash": 27371,
+      "invested": 978478,
+      "positions": 10,
+      "drawdown": 3.28
+    },
+    {
+      "date": "2025-11-13",
+      "value": 1005410,
+      "cash": 22288,
+      "invested": 983123,
+      "positions": 10,
+      "drawdown": 3.32
+    },
+    {
+      "date": "2025-11-14",
+      "value": 1006640,
+      "cash": 23114,
+      "invested": 983526,
+      "positions": 10,
+      "drawdown": 3.2
+    },
+    {
+      "date": "2025-11-17",
+      "value": 1006112,
+      "cash": 22375,
+      "invested": 983737,
+      "positions": 10,
+      "drawdown": 3.25
+    },
+    {
+      "date": "2025-11-18",
+      "value": 1006591,
+      "cash": 21469,
+      "invested": 985122,
+      "positions": 10,
+      "drawdown": 3.21
+    },
+    {
+      "date": "2025-11-19",
+      "value": 1009490,
+      "cash": 14138,
+      "invested": 995351,
+      "positions": 10,
+      "drawdown": 2.93
+    },
+    {
+      "date": "2025-11-20",
+      "value": 1011995,
+      "cash": 2055,
+      "invested": 1009940,
+      "positions": 10,
+      "drawdown": 2.69
+    },
+    {
+      "date": "2025-11-21",
+      "value": 1000344,
+      "cash": 97204,
+      "invested": 903140,
+      "positions": 9,
+      "drawdown": 3.81
+    },
+    {
+      "date": "2025-11-24",
+      "value": 1001404,
+      "cash": 1775,
+      "invested": 999629,
+      "positions": 10,
+      "drawdown": 3.71
+    },
+    {
+      "date": "2025-11-25",
+      "value": 1001221,
+      "cash": 5333,
+      "invested": 995888,
+      "positions": 10,
+      "drawdown": 3.72
+    },
+    {
+      "date": "2025-11-26",
+      "value": 1020111,
+      "cash": 23124,
+      "invested": 996987,
+      "positions": 10,
+      "drawdown": 1.91
+    },
+    {
+      "date": "2025-11-27",
+      "value": 1023470,
+      "cash": 47078,
+      "invested": 976393,
+      "positions": 10,
+      "drawdown": 1.58
+    },
+    {
+      "date": "2025-11-28",
+      "value": 1018899,
+      "cash": 44408,
+      "invested": 974491,
+      "positions": 10,
+      "drawdown": 2.02
+    },
+    {
+      "date": "2025-12-01",
+      "value": 1009030,
+      "cash": 15066,
+      "invested": 993964,
+      "positions": 10,
+      "drawdown": 2.97
+    },
+    {
+      "date": "2025-12-02",
+      "value": 1002136,
+      "cash": 173,
+      "invested": 1001963,
+      "positions": 10,
+      "drawdown": 3.64
+    },
+    {
+      "date": "2025-12-03",
+      "value": 992646,
+      "cash": 3965,
+      "invested": 988681,
+      "positions": 10,
+      "drawdown": 4.55
+    },
+    {
+      "date": "2025-12-04",
+      "value": 992854,
+      "cash": 8043,
+      "invested": 984811,
+      "positions": 10,
+      "drawdown": 4.53
+    },
+    {
+      "date": "2025-12-05",
+      "value": 990463,
+      "cash": 6007,
+      "invested": 984456,
+      "positions": 10,
+      "drawdown": 4.76
+    },
+    {
+      "date": "2025-12-08",
+      "value": 973173,
+      "cash": 5750,
+      "invested": 967423,
+      "positions": 10,
+      "drawdown": 6.42
+    },
+    {
+      "date": "2025-12-09",
+      "value": 974721,
+      "cash": 29353,
+      "invested": 945368,
+      "positions": 10,
+      "drawdown": 6.27
+    },
+    {
+      "date": "2025-12-10",
+      "value": 977790,
+      "cash": 39977,
+      "invested": 937813,
+      "positions": 10,
+      "drawdown": 5.98
+    },
+    {
+      "date": "2025-12-11",
+      "value": 978118,
+      "cash": 23860,
+      "invested": 954257,
+      "positions": 10,
+      "drawdown": 5.94
+    },
+    {
+      "date": "2025-12-12",
+      "value": 983341,
+      "cash": 79471,
+      "invested": 903870,
+      "positions": 10,
+      "drawdown": 5.44
+    },
+    {
+      "date": "2025-12-15",
+      "value": 982858,
+      "cash": 77205,
+      "invested": 905652,
+      "positions": 10,
+      "drawdown": 5.49
+    },
+    {
+      "date": "2025-12-16",
+      "value": 972663,
+      "cash": 53962,
+      "invested": 918701,
+      "positions": 10,
+      "drawdown": 6.47
+    },
+    {
+      "date": "2025-12-17",
+      "value": 958320,
+      "cash": 53690,
+      "invested": 904629,
+      "positions": 10,
+      "drawdown": 7.85
+    },
+    {
+      "date": "2025-12-18",
+      "value": 954905,
+      "cash": 28698,
+      "invested": 926207,
+      "positions": 10,
+      "drawdown": 8.18
+    },
+    {
+      "date": "2025-12-19",
+      "value": 963703,
+      "cash": 22306,
+      "invested": 941396,
+      "positions": 10,
+      "drawdown": 7.33
+    },
+    {
+      "date": "2025-12-22",
+      "value": 971537,
+      "cash": 25445,
+      "invested": 946092,
+      "positions": 10,
+      "drawdown": 6.58
+    },
+    {
+      "date": "2025-12-23",
+      "value": 978878,
+      "cash": 30791,
+      "invested": 948087,
+      "positions": 10,
+      "drawdown": 5.87
+    },
+    {
+      "date": "2025-12-24",
+      "value": 981313,
+      "cash": 46911,
+      "invested": 934402,
+      "positions": 10,
+      "drawdown": 5.64
+    },
+    {
+      "date": "2025-12-26",
+      "value": 984423,
+      "cash": 38931,
+      "invested": 945491,
+      "positions": 10,
+      "drawdown": 5.34
+    },
+    {
+      "date": "2025-12-29",
+      "value": 977306,
+      "cash": 11133,
+      "invested": 966174,
+      "positions": 10,
+      "drawdown": 6.02
+    },
+    {
+      "date": "2025-12-30",
+      "value": 968029,
+      "cash": 31572,
+      "invested": 936457,
+      "positions": 10,
+      "drawdown": 6.91
+    },
+    {
+      "date": "2025-12-31",
+      "value": 975835,
+      "cash": 34672,
+      "invested": 941163,
+      "positions": 10,
+      "drawdown": 6.16
+    },
+    {
+      "date": "2026-01-01",
+      "value": 982335,
+      "cash": 55745,
+      "invested": 926589,
+      "positions": 10,
+      "drawdown": 5.54
+    },
+    {
+      "date": "2026-01-02",
+      "value": 985350,
+      "cash": 39745,
+      "invested": 945605,
+      "positions": 10,
+      "drawdown": 5.25
+    },
+    {
+      "date": "2026-01-05",
+      "value": 979504,
+      "cash": 11006,
+      "invested": 968498,
+      "positions": 10,
+      "drawdown": 5.81
+    },
+    {
+      "date": "2026-01-06",
+      "value": 973579,
+      "cash": 4342,
+      "invested": 969237,
+      "positions": 10,
+      "drawdown": 6.38
+    },
+    {
+      "date": "2026-01-07",
+      "value": 976683,
+      "cash": 38520,
+      "invested": 938162,
+      "positions": 10,
+      "drawdown": 6.08
+    },
+    {
+      "date": "2026-01-08",
+      "value": 964760,
+      "cash": 38261,
+      "invested": 926499,
+      "positions": 10,
+      "drawdown": 7.23
+    },
+    {
+      "date": "2026-01-09",
+      "value": 950870,
+      "cash": 33730,
+      "invested": 917140,
+      "positions": 10,
+      "drawdown": 8.56
+    },
+    {
+      "date": "2026-01-12",
+      "value": 945301,
+      "cash": 1425,
+      "invested": 943876,
+      "positions": 10,
+      "drawdown": 9.1
+    },
+    {
+      "date": "2026-01-13",
+      "value": 940203,
+      "cash": 6361,
+      "invested": 933843,
+      "positions": 10,
+      "drawdown": 9.59
+    },
+    {
+      "date": "2026-01-14",
+      "value": 938562,
+      "cash": 6361,
+      "invested": 932201,
+      "positions": 10,
+      "drawdown": 9.75
+    },
+    {
+      "date": "2026-01-15",
+      "value": 938466,
+      "cash": 101972,
+      "invested": 836494,
+      "positions": 9,
+      "drawdown": 9.76
+    },
+    {
+      "date": "2026-01-16",
+      "value": 934682,
+      "cash": 13548,
+      "invested": 921134,
+      "positions": 10,
+      "drawdown": 10.12
+    },
+    {
+      "date": "2026-01-19",
+      "value": 929362,
+      "cash": 10466,
+      "invested": 918895,
+      "positions": 10,
+      "drawdown": 10.63
+    },
+    {
+      "date": "2026-01-20",
+      "value": 910056,
+      "cash": 3571,
+      "invested": 906484,
+      "positions": 10,
+      "drawdown": 12.49
+    },
+    {
+      "date": "2026-01-21",
+      "value": 899759,
+      "cash": 927,
+      "invested": 898832,
+      "positions": 10,
+      "drawdown": 13.48
+    },
+    {
+      "date": "2026-01-22",
+      "value": 911800,
+      "cash": 5343,
+      "invested": 906456,
+      "positions": 10,
+      "drawdown": 12.32
+    },
+    {
+      "date": "2026-01-23",
+      "value": 899957,
+      "cash": 5004,
+      "invested": 894953,
+      "positions": 10,
+      "drawdown": 13.46
+    },
+    {
+      "date": "2026-01-27",
+      "value": 909364,
+      "cash": 9053,
+      "invested": 900311,
+      "positions": 10,
+      "drawdown": 12.56
+    },
+    {
+      "date": "2026-01-28",
+      "value": 917616,
+      "cash": 6879,
+      "invested": 910737,
+      "positions": 10,
+      "drawdown": 11.76
+    },
+    {
+      "date": "2026-01-29",
+      "value": 913342,
+      "cash": 2343,
+      "invested": 910999,
+      "positions": 10,
+      "drawdown": 12.17
+    },
+    {
+      "date": "2026-01-30",
+      "value": 921617,
+      "cash": 16241,
+      "invested": 905376,
+      "positions": 10,
+      "drawdown": 11.38
+    },
+    {
+      "date": "2026-02-02",
+      "value": 910598,
+      "cash": 5562,
+      "invested": 905036,
+      "positions": 10,
+      "drawdown": 12.44
+    },
+    {
+      "date": "2026-02-03",
+      "value": 929168,
+      "cash": 17022,
+      "invested": 912146,
+      "positions": 10,
+      "drawdown": 10.65
+    },
+    {
+      "date": "2026-02-04",
+      "value": 935552,
+      "cash": 20098,
+      "invested": 915454,
+      "positions": 10,
+      "drawdown": 10.04
+    },
+    {
+      "date": "2026-02-05",
+      "value": 927859,
+      "cash": 12794,
+      "invested": 915065,
+      "positions": 10,
+      "drawdown": 10.78
+    },
+    {
+      "date": "2026-02-06",
+      "value": 933002,
+      "cash": 1762,
+      "invested": 931240,
+      "positions": 10,
+      "drawdown": 10.28
+    },
+    {
+      "date": "2026-02-09",
+      "value": 946687,
+      "cash": 4688,
+      "invested": 941999,
+      "positions": 10,
+      "drawdown": 8.97
+    },
+    {
+      "date": "2026-02-10",
+      "value": 962678,
+      "cash": 13873,
+      "invested": 948804,
+      "positions": 10,
+      "drawdown": 7.43
+    },
+    {
+      "date": "2026-02-11",
+      "value": 959769,
+      "cash": 9755,
+      "invested": 950015,
+      "positions": 10,
+      "drawdown": 7.71
+    },
+    {
+      "date": "2026-02-12",
+      "value": 960673,
+      "cash": 7265,
+      "invested": 953408,
+      "positions": 10,
+      "drawdown": 7.62
+    },
+    {
+      "date": "2026-02-13",
+      "value": 953158,
+      "cash": 267,
+      "invested": 952892,
+      "positions": 10,
+      "drawdown": 8.34
+    },
+    {
+      "date": "2026-02-16",
+      "value": 952497,
+      "cash": 12513,
+      "invested": 939984,
+      "positions": 10,
+      "drawdown": 8.41
+    },
+    {
+      "date": "2026-02-17",
+      "value": 952141,
+      "cash": 12513,
+      "invested": 939628,
+      "positions": 10,
+      "drawdown": 8.44
+    },
+    {
+      "date": "2026-02-18",
+      "value": 947823,
+      "cash": 17241,
+      "invested": 930582,
+      "positions": 10,
+      "drawdown": 8.86
+    },
+    {
+      "date": "2026-02-19",
+      "value": 946834,
+      "cash": 1270,
+      "invested": 945565,
+      "positions": 10,
+      "drawdown": 8.95
+    },
+    {
+      "date": "2026-02-20",
+      "value": 940531,
+      "cash": 614,
+      "invested": 939917,
+      "positions": 10,
+      "drawdown": 9.56
+    },
+    {
+      "date": "2026-02-23",
+      "value": 949111,
+      "cash": 4185,
+      "invested": 944926,
+      "positions": 10,
+      "drawdown": 8.73
+    },
+    {
+      "date": "2026-02-24",
+      "value": 946868,
+      "cash": 607,
+      "invested": 946261,
+      "positions": 10,
+      "drawdown": 8.95
+    },
+    {
+      "date": "2026-02-25",
+      "value": 944323,
+      "cash": 3954,
+      "invested": 940369,
+      "positions": 10,
+      "drawdown": 9.19
+    },
+    {
+      "date": "2026-02-26",
+      "value": 950005,
+      "cash": 4990,
+      "invested": 945015,
+      "positions": 10,
+      "drawdown": 8.65
+    },
+    {
+      "date": "2026-02-27",
+      "value": 939483,
+      "cash": 24712,
+      "invested": 914771,
+      "positions": 10,
+      "drawdown": 9.66
+    },
+    {
+      "date": "2026-03-02",
+      "value": 911830,
+      "cash": 817,
+      "invested": 911013,
+      "positions": 10,
+      "drawdown": 12.32
+    },
+    {
+      "date": "2026-03-04",
+      "value": 895149,
+      "cash": 203,
+      "invested": 894946,
+      "positions": 10,
+      "drawdown": 13.92
+    },
+    {
+      "date": "2026-03-05",
+      "value": 905192,
+      "cash": 42,
+      "invested": 905149,
+      "positions": 10,
+      "drawdown": 12.96
+    },
+    {
+      "date": "2026-03-06",
+      "value": 903973,
+      "cash": 3321,
+      "invested": 900652,
+      "positions": 10,
+      "drawdown": 13.07
+    },
+    {
+      "date": "2026-03-09",
+      "value": 884572,
+      "cash": 1927,
+      "invested": 882645,
+      "positions": 10,
+      "drawdown": 14.94
+    },
+    {
+      "date": "2026-03-10",
+      "value": 905408,
+      "cash": 4076,
+      "invested": 901333,
+      "positions": 10,
+      "drawdown": 12.94
+    },
+    {
+      "date": "2026-03-11",
+      "value": 898671,
+      "cash": 3000,
+      "invested": 895671,
+      "positions": 10,
+      "drawdown": 13.58
+    },
+    {
+      "date": "2026-03-12",
+      "value": 891144,
+      "cash": 86043,
+      "invested": 805100,
+      "positions": 9,
+      "drawdown": 14.31
+    },
+    {
+      "date": "2026-03-13",
+      "value": 873861,
+      "cash": 1108,
+      "invested": 872753,
+      "positions": 10,
+      "drawdown": 15.97
+    },
+    {
+      "date": "2026-03-16",
+      "value": 870287,
+      "cash": 10655,
+      "invested": 859631,
+      "positions": 10,
+      "drawdown": 16.31
+    },
+    {
+      "date": "2026-03-17",
+      "value": 872055,
+      "cash": 9984,
+      "invested": 862071,
+      "positions": 10,
+      "drawdown": 16.14
+    },
+    {
+      "date": "2026-03-18",
+      "value": 883536,
+      "cash": 13432,
+      "invested": 870104,
+      "positions": 10,
+      "drawdown": 15.04
+    },
+    {
+      "date": "2026-03-19",
+      "value": 855870,
+      "cash": 13824,
+      "invested": 842045,
+      "positions": 10,
+      "drawdown": 17.7
+    },
+    {
+      "date": "2026-03-20",
+      "value": 857368,
+      "cash": 14254,
+      "invested": 843113,
+      "positions": 10,
+      "drawdown": 17.56
+    },
+    {
+      "date": "2026-03-23",
+      "value": 838400,
+      "cash": 83245,
+      "invested": 755155,
+      "positions": 9,
+      "drawdown": 19.38
+    },
+    {
+      "date": "2026-03-24",
+      "value": 849293,
+      "cash": 935,
+      "invested": 848359,
+      "positions": 10,
+      "drawdown": 18.33
+    },
+    {
+      "date": "2026-03-25",
+      "value": 864483,
+      "cash": 8990,
+      "invested": 855493,
+      "positions": 10,
+      "drawdown": 16.87
+    },
+    {
+      "date": "2026-03-27",
+      "value": 866011,
+      "cash": 9084,
+      "invested": 856926,
+      "positions": 10,
+      "drawdown": 16.72
+    }
+  ],
+  "trades": [
+    {
+      "ticker": "TANLA",
+      "sector": "IT",
+      "entryDate": "2025-01-01",
+      "entryPrice": 727.29,
+      "exitDate": "2025-01-02",
+      "exitPrice": 762.89,
+      "shares": 137,
+      "pnl": 4877,
+      "pnlPct": 4.89,
+      "holdDays": 1,
+      "exitReason": "target_hit",
+      "strength": "MODERATE",
+      "composite": 0.537258064516129
+    },
+    {
+      "ticker": "SHYAMMETL",
+      "sector": "Metals",
+      "entryDate": "2025-01-02",
+      "entryPrice": 738.01,
+      "exitDate": "2025-01-03",
+      "exitPrice": 774.13,
+      "shares": 136,
+      "pnl": 4913,
+      "pnlPct": 4.9,
+      "holdDays": 1,
+      "exitReason": "target_hit",
+      "strength": "MODERATE",
+      "composite": 0.5431565984875958
+    },
+    {
+      "ticker": "TANLA",
+      "sector": "IT",
+      "entryDate": "2025-01-02",
+      "entryPrice": 729.42,
+      "exitDate": "2025-01-03",
+      "exitPrice": 706.83,
+      "shares": 138,
+      "pnl": -3117,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.7556890024435907
+    },
+    {
+      "ticker": "MUTHOOTFIN",
+      "sector": "Finance",
+      "entryDate": "2025-01-03",
+      "entryPrice": 2212.41,
+      "exitDate": "2025-01-06",
+      "exitPrice": 2143.89,
+      "shares": 45,
+      "pnl": -3083,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.7129752708586317
+    },
+    {
+      "ticker": "ENDURANCE",
+      "sector": "Auto",
+      "entryDate": "2025-01-03",
+      "entryPrice": 2185.69,
+      "exitDate": "2025-01-06",
+      "exitPrice": 2118,
+      "shares": 46,
+      "pnl": -3114,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.7886214338867591
+    },
+    {
+      "ticker": "TATACHEM",
+      "sector": "Chemicals",
+      "entryDate": "2025-01-02",
+      "entryPrice": 1020.66,
+      "exitDate": "2025-01-06",
+      "exitPrice": 989.05,
+      "shares": 98,
+      "pnl": -3098,
+      "pnlPct": -3.1,
+      "holdDays": 2,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6085876521364797
+    },
+    {
+      "ticker": "TATAELXSI",
+      "sector": "IT",
+      "entryDate": "2025-01-02",
+      "entryPrice": 6636.88,
+      "exitDate": "2025-01-06",
+      "exitPrice": 6431.34,
+      "shares": 15,
+      "pnl": -3083,
+      "pnlPct": -3.1,
+      "holdDays": 2,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6401190616559994
+    },
+    {
+      "ticker": "WELCORP",
+      "sector": "Metals",
+      "entryDate": "2025-01-02",
+      "entryPrice": 816.92,
+      "exitDate": "2025-01-06",
+      "exitPrice": 791.62,
+      "shares": 123,
+      "pnl": -3112,
+      "pnlPct": -3.1,
+      "holdDays": 2,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6989445149796857
+    },
+    {
+      "ticker": "BLUESTARCO",
+      "sector": "Industrials",
+      "entryDate": "2025-01-01",
+      "entryPrice": 2251.25,
+      "exitDate": "2025-01-06",
+      "exitPrice": 2361.45,
+      "shares": 44,
+      "pnl": 4849,
+      "pnlPct": 4.89,
+      "holdDays": 3,
+      "exitReason": "target_hit",
+      "strength": "MODERATE",
+      "composite": 0.5456521739130434
+    },
+    {
+      "ticker": "ECLERX",
+      "sector": "IT",
+      "entryDate": "2025-01-01",
+      "entryPrice": 1734.82,
+      "exitDate": "2025-01-06",
+      "exitPrice": 1681.1,
+      "shares": 57,
+      "pnl": -3062,
+      "pnlPct": -3.1,
+      "holdDays": 3,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.7474638180496369
+    },
+    {
+      "ticker": "AVALON",
+      "sector": "IT",
+      "entryDate": "2025-01-01",
+      "entryPrice": 973.97,
+      "exitDate": "2025-01-06",
+      "exitPrice": 943.81,
+      "shares": 102,
+      "pnl": -3077,
+      "pnlPct": -3.1,
+      "holdDays": 3,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.7501581956458435
+    },
+    {
+      "ticker": "THYROCARE",
+      "sector": "Pharma",
+      "entryDate": "2025-01-06",
+      "entryPrice": 332.43,
+      "exitDate": "2025-01-07",
+      "exitPrice": 322.14,
+      "shares": 297,
+      "pnl": -3058,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.61425
+    },
+    {
+      "ticker": "VIJAYA",
+      "sector": "Banking",
+      "entryDate": "2025-01-06",
+      "entryPrice": 1125.16,
+      "exitDate": "2025-01-07",
+      "exitPrice": 1180.24,
+      "shares": 87,
+      "pnl": 4792,
+      "pnlPct": 4.89,
+      "holdDays": 1,
+      "exitReason": "target_hit",
+      "strength": "STRONG",
+      "composite": 0.6343181818181818
+    },
+    {
+      "ticker": "PARADEEP",
+      "sector": "Chemicals",
+      "entryDate": "2025-01-06",
+      "entryPrice": 119.85,
+      "exitDate": "2025-01-07",
+      "exitPrice": 125.72,
+      "shares": 825,
+      "pnl": 4840,
+      "pnlPct": 4.89,
+      "holdDays": 1,
+      "exitReason": "target_hit",
+      "strength": "STRONG",
+      "composite": 0.6962251050493223
+    },
+    {
+      "ticker": "PARAS",
+      "sector": "Pharma",
+      "entryDate": "2025-01-07",
+      "entryPrice": 533.17,
+      "exitDate": "2025-01-08",
+      "exitPrice": 559.27,
+      "shares": 186,
+      "pnl": 4854,
+      "pnlPct": 4.9,
+      "holdDays": 1,
+      "exitReason": "target_hit",
+      "strength": "STRONG",
+      "composite": 0.6529130740855884
+    },
+    {
+      "ticker": "UNIONBANK",
+      "sector": "Banking",
+      "entryDate": "2025-01-06",
+      "entryPrice": 111.07,
+      "exitDate": "2025-01-08",
+      "exitPrice": 107.63,
+      "shares": 890,
+      "pnl": -3061,
+      "pnlPct": -3.1,
+      "holdDays": 2,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6143181818181818
+    },
+    {
+      "ticker": "JUBLFOOD",
+      "sector": "Consumer",
+      "entryDate": "2025-01-06",
+      "entryPrice": 766.04,
+      "exitDate": "2025-01-08",
+      "exitPrice": 742.31,
+      "shares": 129,
+      "pnl": -3060,
+      "pnlPct": -3.1,
+      "holdDays": 2,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.7921574941640819
+    },
+    {
+      "ticker": "EICHERMOT",
+      "sector": "Auto",
+      "entryDate": "2025-01-02",
+      "entryPrice": 5245.39,
+      "exitDate": "2025-01-08",
+      "exitPrice": 5082.94,
+      "shares": 19,
+      "pnl": -3087,
+      "pnlPct": -3.1,
+      "holdDays": 4,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6003846153846154
+    },
+    {
+      "ticker": "PARAS",
+      "sector": "Pharma",
+      "entryDate": "2025-01-08",
+      "entryPrice": 555.47,
+      "exitDate": "2025-01-09",
+      "exitPrice": 538.27,
+      "shares": 179,
+      "pnl": -3079,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6310958131983327
+    },
+    {
+      "ticker": "KALYANKJIL",
+      "sector": "Consumer",
+      "entryDate": "2025-01-08",
+      "entryPrice": 705.04,
+      "exitDate": "2025-01-09",
+      "exitPrice": 683.21,
+      "shares": 141,
+      "pnl": -3079,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6928256847116733
+    },
+    {
+      "ticker": "IBREALEST",
+      "sector": "Realty",
+      "entryDate": "2025-01-08",
+      "entryPrice": 143.48,
+      "exitDate": "2025-01-09",
+      "exitPrice": 139.04,
+      "shares": 693,
+      "pnl": -3079,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.7426536774593229
+    },
+    {
+      "ticker": "PETRONET",
+      "sector": "Energy",
+      "entryDate": "2025-01-02",
+      "entryPrice": 316.66,
+      "exitDate": "2025-01-09",
+      "exitPrice": 315.2,
+      "shares": 318,
+      "pnl": -462,
+      "pnlPct": -0.46,
+      "holdDays": 5,
+      "exitReason": "time_stop",
+      "strength": "STRONG",
+      "composite": 0.6291666666666665
+    },
+    {
+      "ticker": "SAREGAMA",
+      "sector": "Consumer",
+      "entryDate": "2025-01-09",
+      "entryPrice": 542.17,
+      "exitDate": "2025-01-10",
+      "exitPrice": 525.38,
+      "shares": 181,
+      "pnl": -3039,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6815795128557668
+    },
+    {
+      "ticker": "GALLANTT",
+      "sector": "Metals",
+      "entryDate": "2025-01-08",
+      "entryPrice": 338.09,
+      "exitDate": "2025-01-10",
+      "exitPrice": 327.62,
+      "shares": 294,
+      "pnl": -3078,
+      "pnlPct": -3.1,
+      "holdDays": 2,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6525448751331241
+    },
+    {
+      "ticker": "CROMPTON",
+      "sector": "Industrials",
+      "entryDate": "2025-01-06",
+      "entryPrice": 368.05,
+      "exitDate": "2025-01-10",
+      "exitPrice": 356.65,
+      "shares": 268,
+      "pnl": -3055,
+      "pnlPct": -3.1,
+      "holdDays": 4,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.635
+    },
+    {
+      "ticker": "MPHASIS",
+      "sector": "IT",
+      "entryDate": "2025-01-10",
+      "entryPrice": 2860.75,
+      "exitDate": "2025-01-13",
+      "exitPrice": 2772.15,
+      "shares": 33,
+      "pnl": -2924,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6271895863655434
+    },
+    {
+      "ticker": "TARSONS",
+      "sector": "Pharma",
+      "entryDate": "2025-01-10",
+      "entryPrice": 405.46,
+      "exitDate": "2025-01-13",
+      "exitPrice": 392.9,
+      "shares": 239,
+      "pnl": -3001,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6883078582114962
+    },
+    {
+      "ticker": "TIMKEN",
+      "sector": "Auto",
+      "entryDate": "2025-01-09",
+      "entryPrice": 2907.64,
+      "exitDate": "2025-01-13",
+      "exitPrice": 2817.59,
+      "shares": 33,
+      "pnl": -2972,
+      "pnlPct": -3.1,
+      "holdDays": 2,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6111470865042967
+    },
+    {
+      "ticker": "MANAPPURAM",
+      "sector": "Finance",
+      "entryDate": "2025-01-09",
+      "entryPrice": 176.95,
+      "exitDate": "2025-01-13",
+      "exitPrice": 171.47,
+      "shares": 555,
+      "pnl": -3041,
+      "pnlPct": -3.1,
+      "holdDays": 2,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.719569823049022
+    },
+    {
+      "ticker": "DEEPAKNTR",
+      "sector": "Chemicals",
+      "entryDate": "2025-01-09",
+      "entryPrice": 2450.82,
+      "exitDate": "2025-01-13",
+      "exitPrice": 2374.92,
+      "shares": 40,
+      "pnl": -3036,
+      "pnlPct": -3.1,
+      "holdDays": 2,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.7785794820609595
+    },
+    {
+      "ticker": "SUNTV",
+      "sector": "Telecom",
+      "entryDate": "2025-01-07",
+      "entryPrice": 646.91,
+      "exitDate": "2025-01-13",
+      "exitPrice": 626.87,
+      "shares": 153,
+      "pnl": -3065,
+      "pnlPct": -3.1,
+      "holdDays": 4,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.650641076351172
+    },
+    {
+      "ticker": "ENDURANCE",
+      "sector": "Auto",
+      "entryDate": "2025-01-07",
+      "entryPrice": 2096.4,
+      "exitDate": "2025-01-13",
+      "exitPrice": 2031.48,
+      "shares": 47,
+      "pnl": -3052,
+      "pnlPct": -3.1,
+      "holdDays": 4,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.7389458476551339
+    },
+    {
+      "ticker": "TITAN",
+      "sector": "Consumer",
+      "entryDate": "2025-01-06",
+      "entryPrice": 3463.45,
+      "exitDate": "2025-01-13",
+      "exitPrice": 3356.19,
+      "shares": 28,
+      "pnl": -3003,
+      "pnlPct": -3.1,
+      "holdDays": 5,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.5848958289296476
+    },
+    {
+      "ticker": "SBICARD",
+      "sector": "Finance",
+      "entryDate": "2025-01-06",
+      "entryPrice": 726.51,
+      "exitDate": "2025-01-13",
+      "exitPrice": 704.01,
+      "shares": 136,
+      "pnl": -3060,
+      "pnlPct": -3.1,
+      "holdDays": 5,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.7410784265157826
+    },
+    {
+      "ticker": "INDUSTOWER",
+      "sector": "Telecom",
+      "entryDate": "2025-01-13",
+      "entryPrice": 320.82,
+      "exitDate": "2025-01-14",
+      "exitPrice": 336.52,
+      "shares": 294,
+      "pnl": 4617,
+      "pnlPct": 4.89,
+      "holdDays": 1,
+      "exitReason": "target_hit",
+      "strength": "MODERATE",
+      "composite": 0.5489615038023513
+    },
+    {
+      "ticker": "PRSMJOHNSN",
+      "sector": "Cement",
+      "entryDate": "2025-01-13",
+      "entryPrice": 162.34,
+      "exitDate": "2025-01-14",
+      "exitPrice": 157.31,
+      "shares": 582,
+      "pnl": -2926,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "MODERATE",
+      "composite": 0.5632177490114509
+    },
+    {
+      "ticker": "HCLTECH",
+      "sector": "IT",
+      "entryDate": "2025-01-13",
+      "entryPrice": 1904.64,
+      "exitDate": "2025-01-14",
+      "exitPrice": 1845.66,
+      "shares": 49,
+      "pnl": -2890,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6021479559963197
+    },
+    {
+      "ticker": "JUSTDIAL",
+      "sector": "IT",
+      "entryDate": "2025-01-13",
+      "entryPrice": 900.2,
+      "exitDate": "2025-01-14",
+      "exitPrice": 872.32,
+      "shares": 105,
+      "pnl": -2927,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6237096774193548
+    },
+    {
+      "ticker": "BIOCON",
+      "sector": "Pharma",
+      "entryDate": "2025-01-13",
+      "entryPrice": 365.07,
+      "exitDate": "2025-01-14",
+      "exitPrice": 382.95,
+      "shares": 259,
+      "pnl": 4628,
+      "pnlPct": 4.89,
+      "holdDays": 1,
+      "exitReason": "target_hit",
+      "strength": "STRONG",
+      "composite": 0.6383749999999999
+    },
+    {
+      "ticker": "ADANIGREEN",
+      "sector": "Energy",
+      "entryDate": "2025-01-14",
+      "entryPrice": 1007.86,
+      "exitDate": "2025-01-15",
+      "exitPrice": 1057.19,
+      "shares": 94,
+      "pnl": 4637,
+      "pnlPct": 4.9,
+      "holdDays": 1,
+      "exitReason": "target_hit",
+      "strength": "MODERATE",
+      "composite": 0.5452755164940628
+    },
+    {
+      "ticker": "RBA",
+      "sector": "Industrials",
+      "entryDate": "2025-01-13",
+      "entryPrice": 75.38,
+      "exitDate": "2025-01-16",
+      "exitPrice": 79.06,
+      "shares": 1254,
+      "pnl": 4627,
+      "pnlPct": 4.9,
+      "holdDays": 3,
+      "exitReason": "target_hit",
+      "strength": "STRONG",
+      "composite": 0.5883851033238953
+    },
+    {
+      "ticker": "MASTEK",
+      "sector": "IT",
+      "entryDate": "2025-01-16",
+      "entryPrice": 2708.61,
+      "exitDate": "2025-01-17",
+      "exitPrice": 2624.72,
+      "shares": 35,
+      "pnl": -2936,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.8042610176429638
+    },
+    {
+      "ticker": "ENDURANCE",
+      "sector": "Auto",
+      "entryDate": "2025-01-14",
+      "entryPrice": 2022.07,
+      "exitDate": "2025-01-17",
+      "exitPrice": 2121.05,
+      "shares": 47,
+      "pnl": 4652,
+      "pnlPct": 4.9,
+      "holdDays": 3,
+      "exitReason": "target_hit",
+      "strength": "STRONG",
+      "composite": 0.6578906710799006
+    },
+    {
+      "ticker": "HAVELLS",
+      "sector": "Consumer",
+      "entryDate": "2025-01-14",
+      "entryPrice": 1512.19,
+      "exitDate": "2025-01-17",
+      "exitPrice": 1586.21,
+      "shares": 63,
+      "pnl": 4663,
+      "pnlPct": 4.9,
+      "holdDays": 3,
+      "exitReason": "target_hit",
+      "strength": "STRONG",
+      "composite": 0.7343046442637192
+    },
+    {
+      "ticker": "ROSSARI",
+      "sector": "Chemicals",
+      "entryDate": "2025-01-13",
+      "entryPrice": 825.65,
+      "exitDate": "2025-01-17",
+      "exitPrice": 800.08,
+      "shares": 114,
+      "pnl": -2915,
+      "pnlPct": -3.1,
+      "holdDays": 4,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.6209534386282971
+    },
+    {
+      "ticker": "TATAELXSI",
+      "sector": "IT",
+      "entryDate": "2025-01-10",
+      "entryPrice": 5939.41,
+      "exitDate": "2025-01-17",
+      "exitPrice": 6136.47,
+      "shares": 16,
+      "pnl": 3153,
+      "pnlPct": 3.32,
+      "holdDays": 5,
+      "exitReason": "time_stop",
+      "strength": "STRONG",
+      "composite": 0.637258064516129
+    },
+    {
+      "ticker": "JUSTDIAL",
+      "sector": "IT",
+      "entryDate": "2025-01-14",
+      "entryPrice": 902.4,
+      "exitDate": "2025-01-20",
+      "exitPrice": 946.57,
+      "shares": 105,
+      "pnl": 4638,
+      "pnlPct": 4.9,
+      "holdDays": 4,
+      "exitReason": "target_hit",
+      "strength": "STRONG",
+      "composite": 0.7950993742297056
+    },
+    {
+      "ticker": "GPPL",
+      "sector": "Infrastructure",
+      "entryDate": "2025-01-13",
+      "entryPrice": 155.89,
+      "exitDate": "2025-01-20",
+      "exitPrice": 158.61,
+      "shares": 606,
+      "pnl": 1652,
+      "pnlPct": 1.75,
+      "holdDays": 5,
+      "exitReason": "time_stop",
+      "strength": "MODERATE",
+      "composite": 0.5470162893525918
+    },
+    {
+      "ticker": "DIVISLAB",
+      "sector": "Pharma",
+      "entryDate": "2025-01-13",
+      "entryPrice": 5712.23,
+      "exitDate": "2025-01-20",
+      "exitPrice": 5991.84,
+      "shares": 16,
+      "pnl": 4474,
+      "pnlPct": 4.9,
+      "holdDays": 5,
+      "exitReason": "target_hit",
+      "strength": "STRONG",
+      "composite": 0.5867821695941262
+    },
+    {
+      "ticker": "YATHARTH",
+      "sector": "Pharma",
+      "entryDate": "2025-01-20",
+      "entryPrice": 438.89,
+      "exitDate": "2025-01-21",
+      "exitPrice": 425.3,
+      "shares": 222,
+      "pnl": -3018,
+      "pnlPct": -3.1,
+      "holdDays": 1,
+      "exitReason": "stop_loss",
+      "strength": "STRONG",
+      "composite": 0.7233821968587842
+    }
+  ],
+  "generatedAt": "2026-03-27T23:34:41.632Z"
+}

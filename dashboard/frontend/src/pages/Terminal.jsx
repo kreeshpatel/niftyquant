@@ -7,6 +7,7 @@ import PortfolioWidget from '../components/terminal/PortfolioWidget'
 import WatchlistWidget from '../components/terminal/WatchlistWidget'
 import NewsWidget from '../components/terminal/NewsWidget'
 import RefreshWidget from '../components/terminal/RefreshWidget'
+import StrategyWidget from '../components/terminal/StrategyWidget'
 
 export default function Terminal() {
   return (
@@ -36,6 +37,7 @@ export default function Terminal() {
         {/* Right column — 4 cols */}
         <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <PortfolioWidget />
+          <StrategyWidget />
           <NewsWidget />
           <RefreshWidget />
         </div>

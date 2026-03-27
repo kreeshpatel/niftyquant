@@ -5,47 +5,13 @@ import PreMoveCard from '../components/premove/PreMoveCard'
 import PreMoveScanner from '../components/premove/PreMoveScanner'
 import HistoricalAccuracy from '../components/premove/HistoricalAccuracy'
 
-function RegimeBanner({ regime }) {
-  if (!regime) return null
-  const color = regime.regime === 'BULLISH' ? 'var(--green)' : regime.regime === 'BEARISH' ? 'var(--red)' : 'var(--amber)'
-  const bgColor = regime.regime === 'BULLISH' ? 'var(--green-d)' : regime.regime === 'BEARISH' ? 'var(--red-d)' : 'var(--amber-d)'
-  const borderColor = regime.regime === 'BULLISH' ? 'var(--green-b)' : regime.regime === 'BEARISH' ? 'var(--red-b)' : 'var(--amber-b)'
-
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '8px 14px', marginBottom: 12, borderRadius: 'var(--r-md)',
-      background: bgColor, border: `1px solid ${borderColor}`,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{
-          width: 8, height: 8, borderRadius: '50%', background: color,
-          animation: regime.regime !== 'NEUTRAL' ? 'pulse 2s infinite' : 'none',
-        }} />
-        <span style={{ fontSize: 12, fontWeight: 700, color, letterSpacing: '0.05em' }}>
-          {regime.regime} REGIME
-        </span>
-        <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
-          Avg: {regime.avgDayChange >= 0 ? '+' : ''}{regime.avgDayChange}%
-        </span>
-        <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-          (directional hint for volatility alerts)
-        </span>
-      </div>
-      <div style={{ display: 'flex', gap: 12, fontSize: 10, color: 'var(--text-tertiary)' }}>
-        <span><span style={{ color: 'var(--green)' }}>{regime.pctPositive}%</span> up</span>
-        <span><span style={{ color: 'var(--red)' }}>{regime.pctNegative}%</span> down</span>
-      </div>
-    </div>
-  )
-}
-
 export default function PreMove() {
   const { detections, accuracy, scanning, lastScan, strongSignals, moderateSignals, backtesting, scan } = usePreMoveDetection()
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('STRONG')
   const [sectorFilter, setSectorFilter] = useState('all')
 
   const regime = useMemo(() => detectRegime(), [])
+  const isBullish = regime?.regime === 'BULLISH'
 
   const sectors = useMemo(() => {
     const set = new Set(detections.map(d => d.sector))
@@ -78,20 +44,49 @@ export default function PreMove() {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 4 }}>
           <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Pre-Move Detection Engine</h1>
           <span style={{
-            fontSize: 10, fontWeight: 700, color: 'var(--amber)', letterSpacing: '0.08em',
-            padding: '2px 8px', background: 'var(--amber-d)', borderRadius: 4, border: '1px solid var(--amber-b)',
-          }}>VOLATILITY ALERTS</span>
+            fontSize: 10, fontWeight: 700, color: 'var(--green)', letterSpacing: '0.08em',
+            padding: '2px 8px', background: 'var(--green-d)', borderRadius: 4, border: '1px solid var(--green-b)',
+          }}>+3.5% BACKTESTED</span>
         </div>
         <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>
-          Detects stocks about to experience volatility (3%+ move in either direction within 5 days).
-          Regime provides directional hint.
+          Detects stocks about to move 3%+ &middot; Trade STRONG signals in BULLISH regime
         </p>
       </div>
 
-      {/* Regime banner */}
-      <RegimeBanner regime={regime} />
+      {/* Regime + trading status banner */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '10px 14px', marginBottom: 12, borderRadius: 'var(--r-md)',
+        background: isBullish ? 'var(--green-d)' : regime?.regime === 'BEARISH' ? 'var(--red-d)' : 'var(--amber-d)',
+        border: `1px solid ${isBullish ? 'var(--green-b)' : regime?.regime === 'BEARISH' ? 'var(--red-b)' : 'var(--amber-b)'}`,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{
+            width: 10, height: 10, borderRadius: '50%',
+            background: isBullish ? 'var(--green)' : regime?.regime === 'BEARISH' ? 'var(--red)' : 'var(--amber)',
+            animation: 'pulse 2s infinite',
+          }} />
+          <div>
+            <div style={{
+              fontSize: 13, fontWeight: 700, letterSpacing: '0.03em',
+              color: isBullish ? 'var(--green)' : regime?.regime === 'BEARISH' ? 'var(--red)' : 'var(--amber)',
+            }}>
+              {isBullish ? 'BULLISH REGIME \u2014 Trading enabled' : regime?.regime === 'BEARISH' ? 'BEARISH REGIME \u2014 Trading disabled' : 'NEUTRAL REGIME \u2014 Wait for better conditions'}
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 2 }}>
+              Avg: {regime?.avgDayChange >= 0 ? '+' : ''}{regime?.avgDayChange}% &middot;
+              {regime?.pctPositive}% up / {regime?.pctNegative}% down
+            </div>
+          </div>
+        </div>
+        {!isBullish && (
+          <span style={{ fontSize: 10, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+            Only STRONG signals in BULLISH regime are tradeable
+          </span>
+        )}
+      </div>
 
-      {/* Scanner status */}
+      {/* Scanner */}
       <PreMoveScanner scanning={scanning} lastScan={lastScan} onScan={scan} totalDetections={detections.length} />
 
       {/* Summary cards */}
@@ -100,8 +95,8 @@ export default function PreMove() {
           <div className="label">Total Alerts</div>
           <div className="value" style={{ color: 'var(--text-primary)' }}>{detections.length}</div>
         </div>
-        <div className="metric-card">
-          <div className="label">Strong</div>
+        <div className="metric-card" style={{ borderColor: 'var(--green-b)' }}>
+          <div className="label">Strong (tradeable)</div>
           <div className="value" style={{ color: 'var(--green)' }}>{strongSignals.length}</div>
         </div>
         <div className="metric-card">
@@ -109,15 +104,16 @@ export default function PreMove() {
           <div className="value" style={{ color: 'var(--amber)' }}>{moderateSignals.length}</div>
         </div>
         <div className="metric-card">
-          <div className="label">Regime Hint</div>
+          <div className="label">Regime</div>
           <div className="value" style={{
-            color: regime?.regime === 'BULLISH' ? 'var(--green)' : regime?.regime === 'BEARISH' ? 'var(--red)' : 'var(--amber)',
+            color: isBullish ? 'var(--green)' : regime?.regime === 'BEARISH' ? 'var(--red)' : 'var(--amber)',
             fontSize: 16,
           }}>{regime?.regime || '--'}</div>
+          <div className="sub">{isBullish ? 'Trading ON' : 'Trading OFF'}</div>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters — default to STRONG */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
         <span style={{ fontSize: 10, color: 'var(--text-muted)', alignSelf: 'center', marginRight: 4 }}>STRENGTH:</span>
         {filterBtn('all', filter, setFilter, 'All')}
@@ -142,7 +138,7 @@ export default function PreMove() {
           <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.08em', fontWeight: 600 }}>
             {filtered.length} ALERTS {filter !== 'all' ? `(${filter})` : ''}
           </div>
-          {filtered.map(d => <PreMoveCard key={d.ticker} detection={d} />)}
+          {filtered.map(d => <PreMoveCard key={d.ticker} detection={d} regime={regime} />)}
           {filtered.length === 0 && (
             <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
               No alerts match your filters.
@@ -150,8 +146,30 @@ export default function PreMove() {
           )}
         </div>
 
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <HistoricalAccuracy accuracy={accuracy} backtesting={backtesting} />
+
+          {/* Strategy config panel */}
+          <div className="widget">
+            <div className="widget-header">Active Strategy</div>
+            <div className="widget-body" style={{ fontSize: 11 }}>
+              {[
+                ['Signal', 'STRONG only (\u22650.58)'],
+                ['Regime', isBullish ? 'BULLISH (active)' : `${regime?.regime} (waiting)`],
+                ['Target', '+5%'],
+                ['Stop', '-3%'],
+                ['Max hold', '5 days'],
+                ['Positions', 'Max 10'],
+                ['Risk/trade', '1.5%'],
+                ['Backtest', '+3.5% (454 trades)'],
+              ].map(([k, v]) => (
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>{k}</span>
+                  <span style={{ color: k === 'Regime' ? (isBullish ? 'var(--green)' : 'var(--amber)') : 'var(--text-secondary)', fontWeight: 600 }}>{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

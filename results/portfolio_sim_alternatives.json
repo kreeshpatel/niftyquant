@@ -1,0 +1,274 @@
+{
+  "scenarios": {
+    "Baseline (+5/-3)": {
+      "endingValue": 866011,
+      "totalReturnPct": -13.4,
+      "maxDrawdown": 19.38,
+      "sharpeRatio": -0.64,
+      "totalTrades": 1062,
+      "winners": 424,
+      "losers": 638,
+      "winRate": 39.9,
+      "avgWin": 3.78,
+      "avgLoss": -2.71,
+      "profitFactor": 0.92,
+      "avgHoldDays": 2.9,
+      "byExit": {
+        "target_hit": 280,
+        "stop_loss": 523,
+        "time_stop": 249,
+        "end_of_sim": 10
+      },
+      "byStrength": {
+        "STRONG": {
+          "count": 923,
+          "winRate": 39.1,
+          "avgReturn": -0.19
+        },
+        "MODERATE": {
+          "count": 139,
+          "winRate": 45.3,
+          "avgReturn": 0.33
+        }
+      },
+      "config": {
+        "startingCapital": 1000000,
+        "riskPerTrade": 0.015,
+        "maxPositionPct": 0.1,
+        "maxPositions": 10,
+        "minStrength": "MODERATE",
+        "regimeFilter": false,
+        "trailingStop": false,
+        "targetPct": 5,
+        "stopPct": 3,
+        "maxHoldDays": 5
+      }
+    },
+    "Sim1: Symmetric (+3/-3)": {
+      "endingValue": 915061,
+      "totalReturnPct": -8.49,
+      "maxDrawdown": 16.77,
+      "sharpeRatio": -0.41,
+      "totalTrades": 1309,
+      "winners": 649,
+      "losers": 660,
+      "winRate": 49.6,
+      "avgWin": 2.69,
+      "avgLoss": -2.76,
+      "profitFactor": 0.95,
+      "avgHoldDays": 2.3,
+      "byExit": {
+        "target_hit": 583,
+        "stop_loss": 555,
+        "time_stop": 161,
+        "end_of_sim": 10
+      },
+      "byStrength": {
+        "STRONG": {
+          "count": 1107,
+          "winRate": 48.8,
+          "avgReturn": -0.1
+        },
+        "MODERATE": {
+          "count": 202,
+          "winRate": 54,
+          "avgReturn": 0.16
+        }
+      },
+      "config": {
+        "startingCapital": 1000000,
+        "riskPerTrade": 0.015,
+        "maxPositionPct": 0.1,
+        "maxPositions": 10,
+        "minStrength": "MODERATE",
+        "regimeFilter": false,
+        "trailingStop": false,
+        "targetPct": 3,
+        "stopPct": 3,
+        "maxHoldDays": 5
+      }
+    },
+    "Sim2: Regime Filter (+5/-3)": {
+      "endingValue": 991943,
+      "totalReturnPct": -0.81,
+      "maxDrawdown": 12.57,
+      "sharpeRatio": -0.01,
+      "totalTrades": 556,
+      "winners": 231,
+      "losers": 325,
+      "winRate": 41.5,
+      "avgWin": 3.85,
+      "avgLoss": -2.75,
+      "profitFactor": 0.99,
+      "avgHoldDays": 2.9,
+      "byExit": {
+        "target_hit": 156,
+        "stop_loss": 269,
+        "time_stop": 123,
+        "end_of_sim": 8
+      },
+      "byStrength": {
+        "STRONG": {
+          "count": 413,
+          "winRate": 41.9,
+          "avgReturn": 0.03
+        },
+        "MODERATE": {
+          "count": 143,
+          "winRate": 40.6,
+          "avgReturn": -0.11
+        }
+      },
+      "config": {
+        "startingCapital": 1000000,
+        "riskPerTrade": 0.015,
+        "maxPositionPct": 0.1,
+        "maxPositions": 10,
+        "minStrength": "MODERATE",
+        "regimeFilter": true,
+        "trailingStop": false,
+        "targetPct": 5,
+        "stopPct": 3,
+        "maxHoldDays": 5
+      }
+    },
+    "Sim3: Trailing Stop (+5/-2, trail)": {
+      "endingValue": 882298,
+      "totalReturnPct": -11.77,
+      "maxDrawdown": 16.17,
+      "sharpeRatio": -0.65,
+      "totalTrades": 1877,
+      "winners": 844,
+      "losers": 1033,
+      "winRate": 45,
+      "avgWin": 2.35,
+      "avgLoss": -2.03,
+      "profitFactor": 0.94,
+      "avgHoldDays": 1.6,
+      "byExit": {
+        "target_hit": 227,
+        "stop_loss": 985,
+        "trail_stop": 594,
+        "time_stop": 61,
+        "end_of_sim": 10
+      },
+      "byStrength": {
+        "STRONG": {
+          "count": 1476,
+          "winRate": 44.6,
+          "avgReturn": -0.08
+        },
+        "MODERATE": {
+          "count": 401,
+          "winRate": 46.1,
+          "avgReturn": -0.01
+        }
+      },
+      "config": {
+        "startingCapital": 1000000,
+        "riskPerTrade": 0.015,
+        "maxPositionPct": 0.1,
+        "maxPositions": 10,
+        "minStrength": "MODERATE",
+        "regimeFilter": false,
+        "trailingStop": true,
+        "targetPct": 5,
+        "stopPct": 2,
+        "maxHoldDays": 5,
+        "trailActivate": 2,
+        "trailPct": 1.5
+      }
+    },
+    "Sim4: Regime+Symmetric (+3/-3)": {
+      "endingValue": 991048,
+      "totalReturnPct": -0.9,
+      "maxDrawdown": 11.76,
+      "sharpeRatio": -0.03,
+      "totalTrades": 638,
+      "winners": 321,
+      "losers": 317,
+      "winRate": 50.3,
+      "avgWin": 2.7,
+      "avgLoss": -2.75,
+      "profitFactor": 0.99,
+      "avgHoldDays": 2.3,
+      "byExit": {
+        "target_hit": 290,
+        "stop_loss": 262,
+        "time_stop": 79,
+        "end_of_sim": 7
+      },
+      "byStrength": {
+        "STRONG": {
+          "count": 475,
+          "winRate": 51.4,
+          "avgReturn": 0.09
+        },
+        "MODERATE": {
+          "count": 163,
+          "winRate": 47.2,
+          "avgReturn": -0.29
+        }
+      },
+      "config": {
+        "startingCapital": 1000000,
+        "riskPerTrade": 0.015,
+        "maxPositionPct": 0.1,
+        "maxPositions": 10,
+        "minStrength": "MODERATE",
+        "regimeFilter": true,
+        "trailingStop": false,
+        "targetPct": 3,
+        "stopPct": 3,
+        "maxHoldDays": 5
+      }
+    },
+    "Sim5: STRONG only + Regime (+5/-3)": {
+      "endingValue": 1034829,
+      "totalReturnPct": 3.48,
+      "maxDrawdown": 8.79,
+      "sharpeRatio": 0.35,
+      "totalTrades": 454,
+      "winners": 194,
+      "losers": 260,
+      "winRate": 42.7,
+      "avgWin": 3.82,
+      "avgLoss": -2.7,
+      "profitFactor": 1.05,
+      "avgHoldDays": 2.9,
+      "byExit": {
+        "stop_loss": 208,
+        "target_hit": 127,
+        "time_stop": 111,
+        "end_of_sim": 8
+      },
+      "byStrength": {
+        "STRONG": {
+          "count": 454,
+          "winRate": 42.7,
+          "avgReturn": 0.09
+        },
+        "MODERATE": {
+          "count": 0,
+          "winRate": 0,
+          "avgReturn": 0
+        }
+      },
+      "config": {
+        "startingCapital": 1000000,
+        "riskPerTrade": 0.015,
+        "maxPositionPct": 0.1,
+        "maxPositions": 10,
+        "minStrength": "STRONG",
+        "regimeFilter": true,
+        "trailingStop": false,
+        "targetPct": 5,
+        "stopPct": 3,
+        "maxHoldDays": 5
+      }
+    }
+  },
+  "winner": "Sim5: STRONG only + Regime (+5/-3)",
+  "generatedAt": "2026-03-27T23:38:19.888Z",
+  "elapsed": 2.7
+}

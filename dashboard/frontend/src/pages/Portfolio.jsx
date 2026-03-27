@@ -70,6 +70,42 @@ export default function Portfolio() {
         </div>
       </div>
 
+      {/* Simulated strategy performance */}
+      <div className="widget" style={{ marginBottom: 12, borderLeft: '3px solid var(--green)' }}>
+        <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>
+              Strategy: STRONG + Regime Filter
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
+              Backtested Jan 2025 &ndash; Mar 2026 &middot; STRONG signals in BULLISH regime only
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 16, fontSize: 11 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: 'var(--green)', fontWeight: 700, fontSize: 16 }}>+3.5%</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 9 }}>RETURN</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 16 }}>454</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 9 }}>TRADES</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: 'var(--amber)', fontWeight: 700, fontSize: 16 }}>42.7%</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 9 }}>WIN RATE</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: 'var(--red)', fontWeight: 700, fontSize: 16 }}>-8.8%</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 9 }}>MAX DD</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: 'var(--blue)', fontWeight: 700, fontSize: 16 }}>0.35</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 9 }}>SHARPE</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Capital overview */}
       <CapitalOverview />
 
