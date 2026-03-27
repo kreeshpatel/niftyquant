@@ -3,20 +3,20 @@ import React, { useState } from 'react'
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 function cellColor(ret) {
-  if (ret == null) return '#ffffff05'
-  if (ret > 8) return 'rgba(52,211,153,1)'
-  if (ret > 5) return 'rgba(52,211,153,0.75)'
-  if (ret > 2) return 'rgba(52,211,153,0.50)'
-  if (ret > 0) return 'rgba(52,211,153,0.25)'
-  if (ret > -2) return 'rgba(248,113,113,0.25)'
-  if (ret > -5) return 'rgba(248,113,113,0.50)'
-  if (ret > -8) return 'rgba(248,113,113,0.75)'
-  return 'rgba(248,113,113,1)'
+  if (ret == null) return 'rgba(255,255,255,0.03)'
+  if (ret > 8) return 'rgba(0,200,150,1)'
+  if (ret > 5) return 'rgba(0,200,150,0.7)'
+  if (ret > 2) return 'rgba(0,200,150,0.45)'
+  if (ret > 0) return 'rgba(0,200,150,0.22)'
+  if (ret > -2) return 'rgba(255,69,58,0.22)'
+  if (ret > -5) return 'rgba(255,69,58,0.45)'
+  if (ret > -8) return 'rgba(255,69,58,0.7)'
+  return 'rgba(255,69,58,1)'
 }
 
 function textColor(ret) {
-  if (ret == null) return 'var(--text-dim)'
-  if (Math.abs(ret) > 5) return '#fff'
+  if (ret == null) return 'var(--text-muted)'
+  if (Math.abs(ret) > 5) return '#f5f5f7'
   if (Math.abs(ret) > 2) return 'rgba(255,255,255,0.85)'
   return 'rgba(255,255,255,0.5)'
 }
@@ -44,16 +44,16 @@ export default function MonthlyHeatmap({ data = [] }) {
           {MONTH_LABELS.map(m => (
             <div key={m} style={{
               flex: 1, minWidth: 52, textAlign: 'center',
-              fontFamily: 'var(--mono)', fontSize: 9,
-              color: 'rgba(255,255,255,0.2)', letterSpacing: 0.5,
-              textTransform: 'uppercase',
+              fontFamily: 'var(--mono)', fontSize: 11,
+              color: 'var(--text-muted)', letterSpacing: '0.05em',
+              textTransform: 'uppercase', fontWeight: 500,
             }}>{m}</div>
           ))}
           <div style={{
             width: 60, textAlign: 'center',
-            fontFamily: 'var(--mono)', fontSize: 9,
-            color: 'rgba(255,255,255,0.2)', letterSpacing: 0.5,
-            textTransform: 'uppercase',
+            fontFamily: 'var(--mono)', fontSize: 11,
+            color: 'var(--text-muted)', letterSpacing: '0.05em',
+            textTransform: 'uppercase', fontWeight: 500,
           }}>Year</div>
         </div>
 
@@ -64,7 +64,7 @@ export default function MonthlyHeatmap({ data = [] }) {
             <div key={year} style={{ display: 'flex', gap: 4, marginBottom: 4, alignItems: 'center' }}>
               <div style={{
                 width: 44, fontFamily: 'var(--mono)', fontSize: 11,
-                color: 'rgba(255,255,255,0.35)', textAlign: 'right', paddingRight: 4,
+                color: 'var(--text-secondary)', textAlign: 'right', paddingRight: 4,
               }}>{year}</div>
 
               {Array.from({ length: 12 }, (_, i) => {
@@ -79,15 +79,15 @@ export default function MonthlyHeatmap({ data = [] }) {
                     onMouseEnter={() => setHovered(key)}
                     onMouseLeave={() => setHovered(null)}
                     style={{
-                      flex: 1, minWidth: 52, height: 40, borderRadius: 6,
+                      flex: 1, minWidth: 52, height: 40, borderRadius: 8,
                       background: cellColor(ret),
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontFamily: 'var(--mono)', fontSize: 11, color: textColor(ret),
                       cursor: 'default',
-                      transition: 'transform 0.15s, box-shadow 0.15s',
+                      transition: 'transform 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out)',
                       transform: isHovered ? 'scale(1.08)' : 'scale(1)',
                       zIndex: isHovered ? 10 : 1,
-                      boxShadow: isHovered ? '0 4px 20px rgba(0,0,0,0.4)' : 'none',
+                      boxShadow: isHovered ? '0 4px 20px rgba(0,0,0,0.5)' : 'none',
                       position: 'relative',
                     }}
                   >
@@ -96,10 +96,10 @@ export default function MonthlyHeatmap({ data = [] }) {
                       <div style={{
                         position: 'absolute', bottom: '110%', left: '50%',
                         transform: 'translateX(-50%)',
-                        background: '#111114', border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: 6, padding: '4px 10px', whiteSpace: 'nowrap',
-                        fontFamily: 'var(--mono)', fontSize: 10, color: '#e8e8f0',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 20,
+                        background: 'var(--bg-elevated)', border: '0.5px solid var(--border-default)',
+                        borderRadius: 8, padding: '5px 12px', whiteSpace: 'nowrap',
+                        fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-primary)',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.5)', zIndex: 20,
                         pointerEvents: 'none',
                       }}>
                         {MONTH_LABELS[i]} {year}: {ret >= 0 ? '+' : ''}{ret.toFixed(2)}%
@@ -111,8 +111,8 @@ export default function MonthlyHeatmap({ data = [] }) {
 
               <div style={{
                 width: 60, textAlign: 'center',
-                fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 700,
-                color: annual >= 0 ? 'var(--green)' : 'var(--red)',
+                fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 600,
+                color: annual >= 0 ? 'var(--accent-green)' : 'var(--accent-red)',
               }}>{annual >= 0 ? '+' : ''}{annual.toFixed(1)}%</div>
             </div>
           )

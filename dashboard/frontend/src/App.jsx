@@ -1,21 +1,28 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import PasswordGate from './auth/PasswordGate'
 import Layout from './components/Layout'
-import ShortcutsModal from './components/ShortcutsModal'
-import Cursor from './components/Cursor'
-import ScrollProgress from './components/ScrollProgress'
-import Overview from './pages/Overview'
-import Screener from './pages/Screener'
-import Signals from './pages/Signals'
-import Analytics from './pages/Analytics'
-import Backtest from './pages/Backtest'
-import TradeLog from './pages/TradeLog'
-import Heatmap from './pages/Heatmap'
-import Portfolio3D from './pages/Portfolio3D'
+import { PortfolioProvider } from './context/PortfolioContext'
+
+const Terminal = lazy(() => import('./pages/Terminal'))
+const PreMove = lazy(() => import('./pages/PreMove'))
+const Portfolio = lazy(() => import('./pages/Portfolio'))
+const PnL = lazy(() => import('./pages/PnL'))
+const Journal = lazy(() => import('./pages/Journal'))
+const Backtest = lazy(() => import('./pages/Backtest'))
+
+function LoadingFallback() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div className="skeleton" style={{ width: 200, height: 8, margin: '0 auto 12px', borderRadius: 4 }} />
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.08em' }}>LOADING...</div>
+      </div>
+    </div>
+  )
+}
 
 function AuthedApp() {
-  const [showShortcuts, setShowShortcuts] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -25,19 +32,17 @@ function AuthedApp() {
     const handler = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return
 
-      if (e.key === '?') { setShowShortcuts(s => !s); return }
-      if (e.key === 'Escape') { setShowShortcuts(false); return }
       if (e.key === '/') { e.preventDefault(); document.getElementById('stock-search')?.focus(); return }
 
       if (e.key === 'g' || e.key === 'G') {
         gPressed = true
         clearTimeout(gTimeout)
-        gTimeout = setTimeout(() => { gPressed = false }, 1000)
+        gTimeout = setTimeout(() => { gPressed = false }, 800)
         return
       }
       if (gPressed) {
         gPressed = false
-        const routes = { o: '/', s: '/screener', n: '/signals', h: '/heatmap', a: '/analytics', b: '/backtest', t: '/trades', d: '/3d' }
+        const routes = { t: '/', p: '/premove', f: '/portfolio', l: '/pnl', j: '/journal', b: '/backtest' }
         if (routes[e.key]) { navigate(routes[e.key]); return }
       }
     }
@@ -46,25 +51,22 @@ function AuthedApp() {
   }, [navigate])
 
   return (
-    <>
-      <Cursor />
-      <ScrollProgress />
+    <PortfolioProvider>
       <Layout>
-        <div key={location.pathname} style={{ animation: 'pageEnter 0.35s ease both' }}>
-          <Routes location={location}>
-            <Route path="/" element={<Overview />} />
-            <Route path="/screener" element={<Screener />} />
-            <Route path="/signals" element={<Signals />} />
-            <Route path="/heatmap" element={<Heatmap />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/backtest" element={<Backtest />} />
-            <Route path="/trades" element={<TradeLog />} />
-            <Route path="/3d" element={<Portfolio3D />} />
-          </Routes>
+        <div key={location.pathname} style={{ animation: 'pageEnter 0.25s ease both' }}>
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes location={location}>
+              <Route path="/" element={<Terminal />} />
+              <Route path="/premove" element={<PreMove />} />
+              <Route path="/portfolio" element={<Portfolio />} />
+              <Route path="/pnl" element={<PnL />} />
+              <Route path="/journal" element={<Journal />} />
+              <Route path="/backtest" element={<Backtest />} />
+            </Routes>
+          </Suspense>
         </div>
       </Layout>
-      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
-    </>
+    </PortfolioProvider>
   )
 }
 

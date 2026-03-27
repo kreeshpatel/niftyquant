@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
@@ -6,8 +6,8 @@ function TickerSkeleton() {
   return (
     <div style={{
       height: 32,
-      background: 'rgba(0,0,0,0.4)',
-      borderBottom: '1px solid rgba(255,255,255,0.05)',
+      background: 'var(--bg-card)',
+      borderBottom: '0.5px solid var(--border-subtle)',
       display: 'flex',
       alignItems: 'center',
       padding: '0 24px',
@@ -32,7 +32,6 @@ export default function TickerTape() {
         setStocks(data)
       }
     } catch {
-      // Use fallback data on error
       const fallback = [
         'RELIANCE','TCS','HDFCBANK','INFY','ICICIBANK',
         'HINDUNILVR','SBIN','BHARTIARTL','BAJFINANCE',
@@ -63,8 +62,8 @@ export default function TickerTape() {
     <div className="ticker-wrap" style={{
       height: 32,
       overflow: 'hidden',
-      background: 'rgba(0,0,0,0.4)',
-      borderBottom: '1px solid rgba(255,255,255,0.05)',
+      background: 'var(--bg-card)',
+      borderBottom: '0.5px solid var(--border-subtle)',
       display: 'flex',
       alignItems: 'center',
     }}>
@@ -79,7 +78,7 @@ export default function TickerTape() {
             padding: '0 24px',
             fontFamily: 'var(--mono)',
             fontSize: 11,
-            borderRight: '1px solid rgba(255,255,255,0.06)',
+            borderRight: '0.5px solid var(--border-subtle)',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
@@ -87,16 +86,18 @@ export default function TickerTape() {
             flexShrink: 0,
           }}>
             <span style={{
-              color: 'rgba(255,255,255,0.5)',
-              letterSpacing: '0.5px',
+              color: 'var(--text-secondary)',
+              letterSpacing: '0.3px',
             }}>{s.ticker}</span>
             <span style={{
-              color: '#e8e8f0',
+              color: 'var(--text-primary)',
               fontWeight: 500,
+              fontFeatureSettings: '"tnum" 1',
             }}>{'\u20B9'}{Number(s.price).toLocaleString('en-IN', { maximumFractionDigits: 1 })}</span>
             <span style={{
-              color: s.change_pct >= 0 ? '#34d399' : '#f87171',
-              fontSize: 10,
+              color: s.change_pct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)',
+              fontSize: 11,
+              fontFeatureSettings: '"tnum" 1',
             }}>
               {s.change_pct >= 0 ? '\u25B2' : '\u25BC'}
               {Math.abs(s.change_pct).toFixed(2)}%

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 const CACHE_KEY = 'nq_ai_commentary'
-const CACHE_DURATION = 30 * 60 * 1000 // 30 minutes
+const CACHE_DURATION = 30 * 60 * 1000
 
 function timeAgo(dateStr) {
   if (!dateStr) return ''
@@ -47,7 +47,6 @@ export default function AICommentary({ regime = 'BEAR', breadth = '9.2', vix = '
   }, [])
 
   const fetchCommentary = useCallback(async (force = false) => {
-    // Check sessionStorage cache
     if (!force) {
       try {
         const cached = sessionStorage.getItem(CACHE_KEY)
@@ -74,7 +73,6 @@ export default function AICommentary({ regime = 'BEAR', breadth = '9.2', vix = '
       setLoading(false)
       typeText(data.commentary)
 
-      // Cache it
       sessionStorage.setItem(CACHE_KEY, JSON.stringify({
         commentary: data.commentary,
         generated_at: data.generated_at,
@@ -96,12 +94,13 @@ export default function AICommentary({ regime = 'BEAR', breadth = '9.2', vix = '
 
   return (
     <div style={{
-      background: 'rgba(129,140,248,0.05)',
-      border: '1px solid rgba(129,140,248,0.15)',
-      borderRadius: 14,
-      padding: '16px 18px',
+      background: 'var(--bg-card)',
+      border: '0.5px solid var(--border-subtle)',
+      borderRadius: 16,
+      padding: '16px 20px',
       marginBottom: 12,
       position: 'relative',
+      boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.03), 0 1px 3px rgba(0,0,0,0.2)',
     }}>
       <div style={{
         display: 'flex',
@@ -112,22 +111,23 @@ export default function AICommentary({ regime = 'BEAR', breadth = '9.2', vix = '
         <div style={{
           width: 6, height: 6,
           borderRadius: '50%',
-          background: '#818cf8',
-          boxShadow: '0 0 8px #818cf8',
+          background: 'var(--accent-purple)',
+          boxShadow: '0 0 8px var(--accent-purple)',
           animation: 'pulse 2s infinite',
         }} />
         <span style={{
           fontFamily: 'var(--mono)',
-          fontSize: 9,
-          letterSpacing: 2,
-          color: 'rgba(255,255,255,0.3)',
+          fontSize: 12,
+          letterSpacing: '0.05em',
+          color: 'var(--text-tertiary)',
           textTransform: 'uppercase',
+          fontWeight: 500,
         }}>AI Commentary</span>
         <span style={{
           marginLeft: 'auto',
           fontFamily: 'var(--mono)',
-          fontSize: 9,
-          color: 'rgba(255,255,255,0.2)',
+          fontSize: 11,
+          color: 'var(--text-muted)',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
@@ -139,15 +139,15 @@ export default function AICommentary({ regime = 'BEAR', breadth = '9.2', vix = '
             style={{
               background: 'none',
               border: 'none',
-              color: 'rgba(255,255,255,0.3)',
+              color: 'var(--text-muted)',
               cursor: loading ? 'wait' : 'pointer',
               fontSize: 13,
               padding: 0,
               lineHeight: 1,
-              transition: 'color 0.2s',
+              transition: 'color 0.2s var(--ease-out)',
             }}
-            onMouseEnter={e => e.target.style.color = '#818cf8'}
-            onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.3)'}
+            onMouseEnter={e => e.target.style.color = 'var(--accent-purple)'}
+            onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
             title="Refresh commentary"
           >{'\u21BB'}</button>
         </span>
@@ -155,8 +155,8 @@ export default function AICommentary({ regime = 'BEAR', breadth = '9.2', vix = '
 
       <p style={{
         fontFamily: 'var(--mono)',
-        fontSize: 12,
-        color: 'rgba(255,255,255,0.6)',
+        fontSize: 13,
+        color: 'var(--text-secondary)',
         lineHeight: 1.7,
         margin: 0,
         minHeight: 34,
@@ -169,7 +169,7 @@ export default function AICommentary({ regime = 'BEAR', breadth = '9.2', vix = '
                 display: 'inline-block',
                 width: 2,
                 height: 14,
-                background: '#818cf8',
+                background: 'var(--accent-purple)',
                 marginLeft: 2,
                 animation: 'pulse 1s infinite',
                 verticalAlign: 'text-bottom',

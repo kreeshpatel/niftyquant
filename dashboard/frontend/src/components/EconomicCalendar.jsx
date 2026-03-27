@@ -3,16 +3,16 @@ import React, { useState, useEffect } from 'react'
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
 const TYPE_COLORS = {
-  RBI: '#60a5fa',
-  EXPIRY: '#fbbf24',
-  RESULTS: '#818cf8',
-  BUDGET: '#f87171',
+  RBI: '#0A84FF',
+  EXPIRY: '#FF9F0A',
+  RESULTS: '#BF5AF2',
+  BUDGET: '#FF453A',
 }
 
 const IMPACT_STYLES = {
-  HIGH: { bg: 'var(--red-d)', color: 'var(--red)', border: 'var(--red-b)', label: 'HIGH' },
-  MEDIUM: { bg: 'var(--amber-d)', color: 'var(--amber)', border: 'var(--amber-b)', label: 'MED' },
-  LOW: { bg: 'rgba(255,255,255,0.04)', color: 'var(--text-dim)', border: 'var(--border)', label: 'LOW' },
+  HIGH: { bg: 'var(--red-d)', color: 'var(--accent-red)', border: 'var(--red-b)', label: 'HIGH' },
+  MEDIUM: { bg: 'var(--amber-d)', color: 'var(--accent-orange)', border: 'var(--amber-b)', label: 'MED' },
+  LOW: { bg: 'var(--bg-glass)', color: 'var(--text-tertiary)', border: 'var(--border-subtle)', label: 'LOW' },
 }
 
 function getLocalEvents() {
@@ -66,7 +66,6 @@ export default function EconomicCalendar() {
   const [events, setEvents] = useState([])
 
   useEffect(() => {
-    // Try API first, fall back to local computation
     fetch(`${API_BASE}/api/calendar`)
       .then(r => r.json())
       .then(data => {
@@ -83,8 +82,8 @@ export default function EconomicCalendar() {
     <div>
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        margin: '20px 0 8px', fontFamily: 'var(--mono)', fontSize: 10,
-        color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1.5,
+        margin: '20px 0 8px', fontFamily: 'var(--mono)', fontSize: 12,
+        color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500,
       }}>
         <span>Upcoming events</span>
       </div>
@@ -93,68 +92,62 @@ export default function EconomicCalendar() {
         {events.length === 0 ? (
           <div style={{
             padding: 20, textAlign: 'center',
-            fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text-dim)',
+            fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text-tertiary)',
           }}>No upcoming events</div>
         ) : events.map((event, i) => {
           const days = daysUntil(event.date)
           const isNear = days <= 1
           const impact = IMPACT_STYLES[event.impact] || IMPACT_STYLES.LOW
-          const dotColor = TYPE_COLORS[event.type] || 'var(--text-dim)'
+          const dotColor = TYPE_COLORS[event.type] || 'var(--text-tertiary)'
 
           return (
             <div key={i} style={{
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              padding: '10px 14px',
-              borderBottom: i < events.length - 1 ? '1px solid var(--border)' : 'none',
-              background: isNear ? 'rgba(52,211,153,0.04)' : 'transparent',
+              padding: '10px 16px',
+              borderBottom: i < events.length - 1 ? '0.5px solid var(--border-subtle)' : 'none',
+              background: isNear ? 'rgba(0,200,150,0.04)' : 'transparent',
+              transition: 'background 0.2s var(--ease-out)',
             }}>
-              {/* Type dot */}
               <div style={{
                 width: 8, height: 8, borderRadius: '50%',
                 background: dotColor, flexShrink: 0,
                 boxShadow: isNear ? `0 0 8px ${dotColor}` : 'none',
               }} />
-
-              {/* Date */}
               <span style={{
                 fontFamily: 'var(--mono)',
                 fontSize: 11,
-                color: isNear ? 'var(--green)' : 'var(--text-dim)',
+                color: isNear ? 'var(--accent-green)' : 'var(--text-tertiary)',
                 minWidth: 52,
                 fontWeight: isNear ? 600 : 400,
+                fontFeatureSettings: '"tnum" 1',
               }}>{formatDate(event.date)}</span>
-
-              {/* Title */}
               <span style={{
-                fontFamily: 'var(--mono)',
-                fontSize: 12,
-                color: 'var(--text)',
+                fontFamily: 'var(--sans)',
+                fontSize: 13,
+                color: 'var(--text-primary)',
                 flex: 1,
               }}>{event.title}</span>
-
-              {/* Impact badge */}
               <span style={{
                 fontFamily: 'var(--mono)',
-                fontSize: 9,
-                fontWeight: 600,
+                fontSize: 10,
+                fontWeight: 500,
                 padding: '2px 8px',
                 borderRadius: 10,
                 background: impact.bg,
                 color: impact.color,
-                border: `1px solid ${impact.border}`,
-                letterSpacing: 0.5,
+                border: `0.5px solid ${impact.border}`,
+                letterSpacing: '0.05em',
               }}>{impact.label}</span>
-
-              {/* Days until */}
               <span style={{
                 fontFamily: 'var(--mono)',
-                fontSize: 10,
-                color: isNear ? 'var(--green)' : 'var(--text-dim)',
+                fontSize: 11,
+                color: isNear ? 'var(--accent-green)' : 'var(--text-tertiary)',
                 minWidth: 52,
                 textAlign: 'right',
                 fontWeight: isNear ? 600 : 400,
+                fontFeatureSettings: '"tnum" 1',
               }}>
                 {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `in ${days}d`}
               </span>
