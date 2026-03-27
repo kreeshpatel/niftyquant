@@ -1,11 +1,24 @@
 import React, { useState } from 'react'
 import SignalBreakdown from './SignalBreakdown'
+import { usePortfolioContext } from '../../context/PortfolioContext'
 
 export default function PreMoveCard({ detection }) {
   const [expanded, setExpanded] = useState(false)
+  const [bought, setBought] = useState(false)
+  const { addPreMoveTrade, trades } = usePortfolioContext()
   const d = detection
   const strengthColor = d.strength === 'STRONG' ? 'var(--green)' : d.strength === 'MODERATE' ? 'var(--amber)' : 'var(--text-tertiary)'
   const hintColor = d.hint?.includes('bullish') ? 'var(--green)' : d.hint?.includes('bearish') ? 'var(--red)' : 'var(--text-muted)'
+
+  // Check if already in portfolio
+  const alreadyTracked = trades.some(t => t.ticker === d.ticker && t.source === 'premove' && !t.exit_price)
+
+  const handleBuy = (e) => {
+    e.stopPropagation()
+    if (alreadyTracked || bought) return
+    addPreMoveTrade(d)
+    setBought(true)
+  }
 
   return (
     <div className="widget" style={{
@@ -35,8 +48,22 @@ export default function PreMoveCard({ detection }) {
               </span>
             )}
           </div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: strengthColor, fontVariantNumeric: 'tabular-nums' }}>
-            {(d.composite * 100).toFixed(0)}%
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: strengthColor, fontVariantNumeric: 'tabular-nums' }}>
+              {(d.composite * 100).toFixed(0)}%
+            </div>
+            <button onClick={handleBuy} disabled={alreadyTracked || bought} style={{
+              padding: '4px 12px', borderRadius: 4, fontSize: 10, fontWeight: 700,
+              fontFamily: 'var(--mono)', cursor: (alreadyTracked || bought) ? 'default' : 'pointer',
+              border: '1px solid',
+              background: (alreadyTracked || bought) ? 'var(--bg-elevated)' : 'var(--green-d)',
+              borderColor: (alreadyTracked || bought) ? 'var(--border-widget)' : 'var(--green-b)',
+              color: (alreadyTracked || bought) ? 'var(--text-muted)' : 'var(--green)',
+              transition: 'all 0.15s',
+              letterSpacing: '0.05em',
+            }}>
+              {alreadyTracked ? 'TRACKING' : bought ? 'ADDED' : 'PAPER BUY'}
+            </button>
           </div>
         </div>
 

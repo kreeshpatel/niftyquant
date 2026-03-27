@@ -26,7 +26,7 @@ function ChartTip({ active, payload }) {
 }
 
 export default function Portfolio() {
-  const { holdings, totalDeployed, mode, sync, loading } = usePortfolioContext()
+  const { holdings, totalDeployed, mode, sync, loading, preMoveStats, trades, updateTrade } = usePortfolioContext()
   const [showAddTrade, setShowAddTrade] = useState(false)
 
   // Sector allocation
@@ -129,6 +129,157 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
+
+      {/* Pre-Move Paper Trades */}
+      {preMoveStats.total > 0 && (
+        <div className="widget" style={{ marginTop: 16, borderLeft: '3px solid var(--amber)' }}>
+          <div className="widget-header">
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              Pre-Move Entries
+              <span className="badge badge-amber">{preMoveStats.total} trades</span>
+            </span>
+            <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 400 }}>Paper Trading</span>
+          </div>
+          <div className="widget-body">
+            {/* Stats row */}
+            <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 11 }}>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Open: </span>
+                <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{preMoveStats.open}</span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Closed: </span>
+                <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{preMoveStats.closed}</span>
+              </div>
+              {preMoveStats.closed > 0 && (
+                <>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)' }}>Win Rate: </span>
+                    <span style={{ color: preMoveStats.winRate >= 50 ? 'var(--green)' : 'var(--red)', fontWeight: 700 }}>
+                      {preMoveStats.winRate}%
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)' }}>Total P&L: </span>
+                    <span style={{ color: preMoveStats.totalPnl >= 0 ? 'var(--green)' : 'var(--red)', fontWeight: 700 }}>
+                      {preMoveStats.totalPnl >= 0 ? '+' : ''}{'\u20B9'}{Math.abs(preMoveStats.totalPnl).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Performance vs Backtest */}
+            {preMoveStats.closed >= 3 && (
+              <div style={{
+                marginBottom: 12, padding: '8px 12px', borderRadius: 'var(--r-sm)',
+                background: 'var(--bg-elevated)', border: '1px solid var(--border-widget)',
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.08em', marginBottom: 6 }}>
+                  PERFORMANCE VS BACKTEST
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
+                  <span style={{ color: 'var(--text-tertiary)' }}>Target hit rate (3.39%+ move)</span>
+                  <span style={{ fontWeight: 700, color: preMoveStats.targetHitRate >= preMoveStats.backtestExpected ? 'var(--green)' : 'var(--amber)' }}>
+                    {preMoveStats.targetHitRate}%
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
+                  <span style={{ color: 'var(--text-tertiary)' }}>Backtest expected</span>
+                  <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    {preMoveStats.backtestExpected}%
+                  </span>
+                </div>
+                <div style={{
+                  height: 6, borderRadius: 3, background: 'var(--bg-terminal)', overflow: 'hidden',
+                  position: 'relative', marginTop: 4,
+                }}>
+                  <div style={{
+                    position: 'absolute', height: '100%', width: `${Math.min(100, preMoveStats.targetHitRate)}%`,
+                    background: preMoveStats.targetHitRate >= preMoveStats.backtestExpected ? 'var(--green)' : 'var(--amber)',
+                    borderRadius: 3,
+                  }} />
+                  <div style={{
+                    position: 'absolute', left: `${Math.min(98, preMoveStats.backtestExpected)}%`,
+                    top: -2, bottom: -2, width: 2, background: 'var(--text-secondary)', borderRadius: 1,
+                  }} />
+                </div>
+                <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 4, textAlign: 'center' }}>
+                  {preMoveStats.targetHits}/{preMoveStats.closed} trades hit {preMoveStats.targetPct}%+ target
+                  {preMoveStats.targetHitRate >= preMoveStats.backtestExpected
+                    ? ' — beating backtest expectation'
+                    : ` — below ${preMoveStats.backtestExpected}% expectation (n=${preMoveStats.closed}, needs more data)`}
+                </div>
+              </div>
+            )}
+
+            {/* Open Pre-Move trades */}
+            {trades.filter(t => t.source === 'premove' && !t.exit_price).map(t => (
+              <div key={t.id} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '8px 0', borderBottom: '1px solid var(--border-subtle)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 3, height: 24, borderRadius: 2, background: 'var(--amber)' }} />
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {t.ticker}
+                      <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6 }}>
+                        {t.premove_data?.strength}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                      Entry: {'\u20B9'}{t.entry_price?.toFixed(1)} x {t.quantity} &middot; {t.entry_date}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {t.premove_data?.hint && (
+                    <span style={{
+                      fontSize: 9, fontStyle: 'italic',
+                      color: t.premove_data.hint.includes('bullish') ? 'var(--green)' : t.premove_data.hint.includes('bearish') ? 'var(--red)' : 'var(--text-muted)',
+                    }}>{t.premove_data.hint}</span>
+                  )}
+                  <button onClick={() => {
+                    const exitPrice = prompt(`Exit price for ${t.ticker}?`)
+                    if (exitPrice && !isNaN(parseFloat(exitPrice))) {
+                      updateTrade(t.id, {
+                        exit_price: parseFloat(exitPrice),
+                        exit_date: new Date().toISOString().split('T')[0],
+                      })
+                    }
+                  }} className="btn" style={{ fontSize: 9, padding: '2px 8px' }}>
+                    CLOSE
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Closed Pre-Move trades (last 5) */}
+            {preMoveStats.closed > 0 && (
+              <>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.08em', fontWeight: 600, marginTop: 10, marginBottom: 6 }}>
+                  RECENT CLOSED
+                </div>
+                {trades.filter(t => t.source === 'premove' && t.exit_price).slice(0, 5).map(t => (
+                  <div key={t.id} style={{
+                    display: 'flex', justifyContent: 'space-between', padding: '4px 0',
+                    fontSize: 11, borderBottom: '1px solid var(--border-subtle)',
+                  }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>{t.ticker}</span>
+                    <span style={{
+                      fontWeight: 700, fontVariantNumeric: 'tabular-nums',
+                      color: (t.pnl_pct || 0) >= 0 ? 'var(--green)' : 'var(--red)',
+                    }}>
+                      {(t.pnl_pct || 0) >= 0 ? '+' : ''}{(t.pnl_pct || 0).toFixed(1)}%
+                    </span>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {showAddTrade && <AddTradeModal onClose={() => setShowAddTrade(false)} />}
 

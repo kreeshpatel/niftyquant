@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-03-27T23:25:03.502Z",
+  "date": "2026-03-27",
+  "elapsed": 98.6,
+  "success": true,
+  "steps": {
+    "fetch": true,
+    "features": true,
+    "stockData": true,
+    "backtest": true
+  }
+}

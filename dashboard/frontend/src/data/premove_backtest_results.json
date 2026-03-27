@@ -172,7 +172,7 @@
   "mode": "direction-free",
   "dataSource": "historical_ohlcv",
   "stockCount": 364,
-  "generatedAt": "2026-03-27T23:00:03.053Z",
+  "generatedAt": "2026-03-27T23:25:03.038Z",
   "signalOverlap": {
     "tradesWithSignal": {
       "count": 49,
