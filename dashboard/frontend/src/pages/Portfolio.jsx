@@ -3,6 +3,7 @@ import { usePortfolioContext } from '../context/PortfolioContext'
 import CapitalOverview from '../components/portfolio/CapitalOverview'
 import HoldingsTable from '../components/portfolio/HoldingsTable'
 import AddTradeModal from '../components/portfolio/AddTradeModal'
+import simAlternatives from '../data/portfolioSimAlternatives.json'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from 'recharts'
 
 const SECTOR_COLORS = {
@@ -317,6 +318,9 @@ export default function Portfolio() {
         </div>
       )}
 
+      {/* Backtest History (read-only) */}
+      <BacktestHistory />
+
       {showAddTrade && <AddTradeModal onClose={() => setShowAddTrade(false)} />}
 
       <style>{`
@@ -326,6 +330,131 @@ export default function Portfolio() {
           }
         }
       `}</style>
+    </div>
+  )
+}
+
+function BacktestHistory() {
+  const [expanded, setExpanded] = useState(false)
+  const [showTrades, setShowTrades] = useState(false)
+  const sim = simAlternatives?.scenarios?.['Sim5: STRONG only + Regime (+5/-3)']
+  if (!sim) return null
+
+  const exitData = [
+    { reason: 'Target hit (+5%)', count: sim.byExit?.target_hit || 0, color: 'var(--green)' },
+    { reason: 'Stop loss (-3%)', count: sim.byExit?.stop_loss || 0, color: 'var(--red)' },
+    { reason: 'Time stop (5d)', count: sim.byExit?.time_stop || 0, color: 'var(--amber)' },
+  ]
+
+  // Load trade list from the full sim results if available
+  let simTrades = []
+  try { simTrades = require('../data/portfolioSimResults.json')?.trades || [] } catch {}
+
+  return (
+    <div className="widget" style={{ marginTop: 16 }}>
+      <div className="widget-header" style={{ cursor: 'pointer' }} onClick={() => setExpanded(e => !e)}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          Historical Backtest
+          <span style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 400, border: '1px solid var(--border-widget)', padding: '1px 6px', borderRadius: 3 }}>READ-ONLY</span>
+        </span>
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 400 }}>
+          Jan 2025 – Mar 2026 &middot; {expanded ? '\u25B2' : '\u25BC'}
+        </span>
+      </div>
+
+      {expanded && (
+        <div className="widget-body">
+          {/* Summary metrics */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+            {[
+              { label: 'RETURN', value: `+${sim.totalReturnPct}%`, color: sim.totalReturnPct >= 0 ? 'var(--green)' : 'var(--red)' },
+              { label: 'TRADES', value: sim.totalTrades, color: 'var(--text-primary)' },
+              { label: 'WIN RATE', value: `${sim.winRate}%`, color: sim.winRate >= 50 ? 'var(--green)' : 'var(--amber)' },
+              { label: 'MAX DD', value: `-${sim.maxDrawdown}%`, color: 'var(--red)' },
+              { label: 'SHARPE', value: sim.sharpeRatio, color: 'var(--blue)' },
+              { label: 'PF', value: sim.profitFactor, color: sim.profitFactor >= 1 ? 'var(--green)' : 'var(--red)' },
+            ].map(m => (
+              <div key={m.label} style={{ textAlign: 'center', minWidth: 60 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: m.color, fontVariantNumeric: 'tabular-nums' }}>{m.value}</div>
+                <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{m.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Strategy config */}
+          <div style={{
+            padding: '8px 10px', borderRadius: 4, marginBottom: 12,
+            background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+            fontSize: 10, color: 'var(--text-tertiary)',
+          }}>
+            STRONG signals only &middot; BULLISH regime &middot; +5% target / -3% stop &middot; 5d max hold &middot; 10 positions max
+          </div>
+
+          {/* Exit breakdown */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.08em', marginBottom: 6 }}>EXIT REASONS</div>
+            {exitData.map(e => (
+              <div key={e.reason} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <div style={{ flex: 1, fontSize: 11, color: 'var(--text-secondary)' }}>{e.reason}</div>
+                <div style={{ width: 100, height: 6, borderRadius: 3, background: 'var(--bg-terminal)', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${(e.count / sim.totalTrades) * 100}%`, background: e.color, borderRadius: 3 }} />
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-tertiary)', fontVariantNumeric: 'tabular-nums', minWidth: 50, textAlign: 'right' }}>
+                  {e.count} ({Math.round(e.count / sim.totalTrades * 100)}%)
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Strength breakdown */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.08em', marginBottom: 6 }}>BY STRENGTH</div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+              STRONG: {sim.byStrength?.STRONG?.count || 0} trades, {sim.byStrength?.STRONG?.winRate || 0}% win rate, avg {sim.byStrength?.STRONG?.avgReturn >= 0 ? '+' : ''}{sim.byStrength?.STRONG?.avgReturn || 0}%
+            </div>
+          </div>
+
+          {/* Trade list toggle */}
+          <button onClick={() => setShowTrades(s => !s)} className="btn" style={{ fontSize: 10, width: '100%', justifyContent: 'center' }}>
+            {showTrades ? 'HIDE TRADE LIST' : `SHOW RECENT TRADES (${simTrades.length} of ${sim.totalTrades})`}
+          </button>
+
+          {showTrades && simTrades.length > 0 && (
+            <div style={{ marginTop: 8, maxHeight: 300, overflow: 'auto' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Ticker</th>
+                    <th style={{ textAlign: 'right' }}>Entry</th>
+                    <th style={{ textAlign: 'right' }}>Exit</th>
+                    <th style={{ textAlign: 'right' }}>P&L</th>
+                    <th style={{ textAlign: 'right' }}>Days</th>
+                    <th>Exit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {simTrades.slice(0, 50).map((t, i) => (
+                    <tr key={i}>
+                      <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{t.ticker}</td>
+                      <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{'\u20B9'}{t.entryPrice}</td>
+                      <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{'\u20B9'}{t.exitPrice}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: t.pnlPct >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                        {t.pnlPct >= 0 ? '+' : ''}{t.pnlPct}%
+                      </td>
+                      <td style={{ textAlign: 'right' }}>{t.holdDays}d</td>
+                      <td><span style={{ fontSize: 9, color: t.exitReason === 'target_hit' ? 'var(--green)' : t.exitReason === 'stop_loss' ? 'var(--red)' : 'var(--text-muted)' }}>{t.exitReason?.replace(/_/g, ' ')}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div style={{ marginTop: 8, fontSize: 9, color: 'var(--text-muted)', textAlign: 'center' }}>
+            Simulated on real OHLCV data. Past performance does not guarantee future results.
+          </div>
+        </div>
+      )}
     </div>
   )
 }

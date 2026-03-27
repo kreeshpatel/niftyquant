@@ -47,7 +47,7 @@ export function PortfolioProvider({ children }) {
   useEffect(() => { saveJSON(STORAGE_KEYS.journal, journal) }, [journal])
   useEffect(() => { saveJSON(STORAGE_KEYS.settings, settings) }, [settings])
 
-  // ── Sync data (live or demo) ────────────────────
+  // ── Sync data ──────────────────────────────────
   const sync = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -64,23 +64,44 @@ export function PortfolioProvider({ children }) {
         setPositions(p.net || p)
         setMargins(m)
       } else {
-        setHoldings(zerodha.getDemoHoldings().map(item => ({ ...item, sector: getSector(item.tradingsymbol) })))
-        setPositions(zerodha.getDemoPositions())
-        setMargins(zerodha.getDemoMargins())
+        // Paper trading mode: derive holdings from open trades + stockData prices
+        const openTrades = trades.filter(t => !t.exit_price)
+        const paperHoldings = openTrades.map(t => {
+          const sd = stockData[t.ticker]
+          const ltp = sd?.close || t.last_price || t.entry_price
+          const pnl = (ltp - t.entry_price) * t.quantity
+          const dayChangePct = sd?.dayChange || 0
+          return {
+            tradingsymbol: t.ticker,
+            quantity: t.quantity,
+            average_price: t.entry_price,
+            last_price: ltp,
+            pnl,
+            day_change_percentage: dayChangePct,
+            exchange: 'NSE',
+            sector: getSector(t.ticker),
+            source: t.source || 'manual',
+          }
+        })
+        setHoldings(paperHoldings)
+        setPositions(paperHoldings)
+        // Capital: initial - deployed + unrealized
+        const deployed = paperHoldings.reduce((s, h) => s + h.average_price * h.quantity, 0)
+        setMargins({ equity: { available: { cash: settings.initialCapital - deployed } } })
       }
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
-  }, [mode])
+  }, [mode, trades, settings.initialCapital])
 
-  // Auto-sync on mount
+  // Auto-sync on mount and when trades change
   useEffect(() => { sync() }, [sync])
 
   // ── Derived values ──────────────────────────────
   const totalDeployed = holdings.reduce((s, h) => s + h.last_price * h.quantity, 0)
-  const totalCash = margins?.equity?.available?.cash || (mode === 'demo' ? 1380000 : 0)
+  const totalCash = margins?.equity?.available?.cash || 0
   const totalCapital = totalDeployed + totalCash
   const todayPnl = holdings.reduce((s, h) => s + h.pnl, 0)
   const utilization = totalCapital > 0 ? (totalDeployed / totalCapital * 100) : 0

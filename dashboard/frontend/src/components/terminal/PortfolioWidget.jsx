@@ -43,30 +43,41 @@ export default function PortfolioWidget() {
         </div>
 
         {/* Holdings list */}
-        {holdings.slice(0, 4).map(h => (
-          <div key={h.tradingsymbol} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '6px 0',
-            borderBottom: '1px solid var(--border-subtle)',
-          }}>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{h.tradingsymbol}</div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{h.quantity} shares</div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: h.pnl >= 0 ? 'var(--green)' : 'var(--red)', fontVariantNumeric: 'tabular-nums' }}>
-                {formatINR(h.pnl)}
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
-                {h.day_change_percentage >= 0 ? '+' : ''}{h.day_change_percentage.toFixed(2)}%
-              </div>
-            </div>
+        {holdings.length === 0 ? (
+          <div style={{ padding: '12px 0', textAlign: 'center', fontSize: 10, color: 'var(--text-muted)' }}>
+            No open positions. Use Pre-Move signals to trade.
           </div>
-        ))}
-        {holdings.length > 4 && (
-          <div style={{ textAlign: 'center', padding: '8px 0', fontSize: 10, color: 'var(--text-muted)' }}>
-            +{holdings.length - 4} more positions
-          </div>
+        ) : (
+          <>
+            {holdings.slice(0, 4).map(h => (
+              <div key={h.tradingsymbol} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '6px 0',
+                borderBottom: '1px solid var(--border-subtle)',
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{h.tradingsymbol}</span>
+                    {h.source === 'premove' && <span style={{ fontSize: 8, color: 'var(--amber)', fontWeight: 600 }}>PM</span>}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{h.quantity} shares</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: h.pnl >= 0 ? 'var(--green)' : 'var(--red)', fontVariantNumeric: 'tabular-nums' }}>
+                    {formatINR(h.pnl)}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                    {(h.day_change_percentage || 0) >= 0 ? '+' : ''}{(h.day_change_percentage || 0).toFixed(2)}%
+                  </div>
+                </div>
+              </div>
+            ))}
+            {holdings.length > 4 && (
+              <div style={{ textAlign: 'center', padding: '8px 0', fontSize: 10, color: 'var(--text-muted)' }}>
+                +{holdings.length - 4} more positions
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -30,6 +30,20 @@ export default function HoldingsTable() {
     </th>
   )
 
+  if (holdings.length === 0) {
+    return (
+      <div style={{
+        padding: 32, textAlign: 'center',
+        background: 'var(--bg-widget)', border: '1px solid var(--border-widget)', borderRadius: 'var(--r-md)',
+      }}>
+        <div style={{ fontSize: 14, color: 'var(--text-tertiary)', marginBottom: 4 }}>No open positions</div>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+          Use Pre-Move signals to add paper trades, or connect Zerodha for live holdings.
+        </div>
+      </div>
+    )
+  }
+
   if (view === 'card') {
     return (
       <div>
@@ -99,6 +113,7 @@ export default function HoldingsTable() {
               <SortHeader field="pnl" label="P&L" align="right" />
               <th style={{ textAlign: 'right' }}>P&L %</th>
               <SortHeader field="day_change_percentage" label="Day" align="right" />
+              <th style={{ textAlign: 'center' }}>Source</th>
             </tr>
           </thead>
           <tbody>
@@ -134,9 +149,18 @@ export default function HoldingsTable() {
                   </td>
                   <td style={{
                     textAlign: 'right', fontVariantNumeric: 'tabular-nums',
-                    color: h.day_change_percentage >= 0 ? 'var(--green)' : 'var(--red)',
+                    color: (h.day_change_percentage || 0) >= 0 ? 'var(--green)' : 'var(--red)',
                   }}>
-                    {h.day_change_percentage >= 0 ? '+' : ''}{h.day_change_percentage.toFixed(2)}%
+                    {(h.day_change_percentage || 0) >= 0 ? '+' : ''}{(h.day_change_percentage || 0).toFixed(2)}%
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    {h.source === 'premove' ? (
+                      <span className="badge badge-amber" style={{ fontSize: 8 }}>PREMOVE</span>
+                    ) : h.source === 'manual' ? (
+                      <span className="badge badge-blue" style={{ fontSize: 8 }}>MANUAL</span>
+                    ) : (
+                      <span className="badge badge-purple" style={{ fontSize: 8 }}>ZERODHA</span>
+                    )}
                   </td>
                 </tr>
               )
