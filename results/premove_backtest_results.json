@@ -3,8 +3,8 @@
   "endDate": "2026-03-24",
   "tradingDays": 1045,
   "totalDetections": 32910,
-  "correctPredictions": 19426,
-  "accuracy": 59,
+  "correctPredictions": 19445,
+  "accuracy": 59.1,
   "avgMove": 5.1,
   "avgTimeToMove": 3.8,
   "targetMove": 3.39,
@@ -24,39 +24,39 @@
   "byStrength": {
     "STRONG": {
       "total": 9915,
-      "correct": 6005,
+      "correct": 6012,
       "accuracy": 60.6,
       "avgMove": 5.4,
       "sampleSize": 9915,
       "reliable": true
     },
     "MODERATE": {
-      "total": 11422,
-      "correct": 6812,
-      "accuracy": 59.6,
+      "total": 11421,
+      "correct": 6817,
+      "accuracy": 59.7,
       "avgMove": 5.1,
-      "sampleSize": 11422,
+      "sampleSize": 11421,
       "reliable": true
     },
     "WEAK": {
-      "total": 11573,
-      "correct": 6609,
-      "accuracy": 57.1,
+      "total": 11574,
+      "correct": 6616,
+      "accuracy": 57.2,
       "avgMove": 4.9,
-      "sampleSize": 11573,
+      "sampleSize": 11574,
       "reliable": true
     }
   },
   "bySector": {
     "IT": {
       "total": 2593,
-      "correct": 1581,
+      "correct": 1582,
       "accuracy": 61
     },
     "Chemicals": {
       "total": 2824,
-      "correct": 1657,
-      "accuracy": 58.7
+      "correct": 1661,
+      "accuracy": 58.8
     },
     "Banking": {
       "total": 1899,
@@ -65,23 +65,23 @@
     },
     "Auto": {
       "total": 2414,
-      "correct": 1338,
-      "accuracy": 55.4
+      "correct": 1339,
+      "accuracy": 55.5
     },
     "Consumer": {
       "total": 3255,
-      "correct": 1927,
-      "accuracy": 59.2
+      "correct": 1929,
+      "accuracy": 59.3
     },
     "Pharma": {
       "total": 3814,
-      "correct": 2195,
+      "correct": 2196,
       "accuracy": 57.6
     },
     "Industrials": {
       "total": 2240,
-      "correct": 1412,
-      "accuracy": 63
+      "correct": 1415,
+      "accuracy": 63.2
     },
     "Infrastructure": {
       "total": 1975,
@@ -90,7 +90,7 @@
     },
     "Finance": {
       "total": 3239,
-      "correct": 1959,
+      "correct": 1961,
       "accuracy": 60.5
     },
     "Realty": {
@@ -100,13 +100,13 @@
     },
     "FMCG": {
       "total": 2111,
-      "correct": 923,
-      "accuracy": 43.7
+      "correct": 924,
+      "accuracy": 43.8
     },
     "Cement": {
       "total": 1313,
-      "correct": 670,
-      "accuracy": 51
+      "correct": 672,
+      "accuracy": 51.2
     },
     "Metals": {
       "total": 1514,
@@ -115,8 +115,8 @@
     },
     "Energy": {
       "total": 2121,
-      "correct": 1312,
-      "accuracy": 61.9
+      "correct": 1314,
+      "accuracy": 62
     },
     "Telecom": {
       "total": 490,
@@ -152,27 +152,27 @@
     },
     "2026": {
       "total": 1882,
-      "correct": 1170,
-      "accuracy": 62.2
+      "correct": 1189,
+      "accuracy": 63.2
     }
   },
   "signalQuality": {
     "highConviction": {
-      "total": 21337,
-      "correct": 12817,
+      "total": 21336,
+      "correct": 12829,
       "accuracy": 60.1
     },
     "lowConviction": {
-      "total": 11573,
-      "correct": 6609,
-      "accuracy": 57.1
+      "total": 11574,
+      "correct": 6616,
+      "accuracy": 57.2
     },
-    "edge": 3
+    "edge": 2.9
   },
   "mode": "direction-free",
   "dataSource": "historical_ohlcv",
   "stockCount": 364,
-  "generatedAt": "2026-03-27T22:42:21.312Z",
+  "generatedAt": "2026-03-27T23:00:03.053Z",
   "signalOverlap": {
     "tradesWithSignal": {
       "count": 49,
